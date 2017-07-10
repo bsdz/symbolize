@@ -2,6 +2,8 @@ from typing import List
 from copy import deepcopy
 
 from .arity import A0, ArityArrow, ArityCross
+from .render.typestring import TypeStringRenderer
+from .render.latex import LatexRenderer
 
 class ExpressionException(Exception): pass
 
@@ -12,7 +14,11 @@ class ExpressionBase(object):
     pass
 
 class Expression(ExpressionBase):
-    def __init__(self, baserepr = None, arity=A0, canonical=None):
+    
+    # this is applied if arity not provided.
+    default_arity = A0
+    
+    def __init__(self, baserepr = None, arity=None, canonical=None, latexrepr=None):
         """
         Args:
             baserepr (str): the string representation of the expression
@@ -22,8 +28,9 @@ class Expression(ExpressionBase):
         self.baserepr = baserepr
         self.applications = None
         self.abstractions = None
-        self.arity = arity
+        self.arity = arity if arity is not None else self.__class__.default_arity
         self.canonical = canonical
+        self.latexrepr = latexrepr if latexrepr is not None else baserepr
         
     def __eq__(self, other):
         """Overload == and compare expressions.
@@ -59,14 +66,17 @@ class Expression(ExpressionBase):
         return new_expr
     
     def __repr__(self):
-        srepr = ""
-        if self.baserepr is not None:
-            srepr = self.baserepr
-        if self.applications is not None:
-            srepr += "(%s)" % (", ".join([repr(e) for e in self.applications]))
-        if self.abstractions is not None:
-            srepr = "(%s)%s" % (", ".join([repr(e) for e in self.abstractions]), srepr)
-        return srepr
+        return self.render_type_string()
+    
+    def render_type_string(self):
+        return TypeStringRenderer(self).render()
+    
+    def render_latex(self):
+        return LatexRenderer(self).render()
+    
+    def _repr_latex_(self):
+        """For Jupyter/IPython"""
+        return "$$%s$$" % self.render_latex()
     
     def list_copies(self):
         print([k for k,v in globals().items() if v is self])

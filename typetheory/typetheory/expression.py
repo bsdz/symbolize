@@ -4,14 +4,19 @@ from copy import deepcopy
 from .arity import A0, ArityArrow, ArityCross
 from .render.typestring import TypeStringRenderer
 from .render.latex import LatexRenderer
+from .render.graph import GraphRenderer
 
-class ExpressionException(Exception): pass
+
+class ExpressionException(Exception):
+    pass
 
 # todo: should we have different classes for CombinationExpression, AbstractExpression etc?
 #       perhaps at least for a combination expression?
 
+
 class ExpressionBase(object):
     pass
+
 
 class Expression(ExpressionBase):
     
@@ -95,7 +100,7 @@ class ExpressionCombination(ExpressionBase):
         """Overload == and compare expressions.
         Following (1) 3.9.
         """
-        # combinations are dealt with separatly
+        # combinations are dealt with separately
         if self.expressions is not None and other.expressions is not None:
             return all([t == o and t.arity == o.arity for t,o in zip(self.expressions, other.expressions)])
         

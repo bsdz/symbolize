@@ -20,8 +20,7 @@ class LatexRenderer(Renderer):
         super(LatexRenderer, self).__init__(expression)
         self.jinja2_env = jinja2.Environment(trim_blocks=True,autoescape=False)
         self.jinja2_env.globals["LatexRenderer"] = LatexRenderer
-        
-        
+
     def render(self) -> str:
         baserepr_rendered = self.expression.latexrepr
         if hasattr(self.expression, "render_latex_baserepr"):

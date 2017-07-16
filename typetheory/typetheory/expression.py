@@ -23,19 +23,20 @@ class Expression(ExpressionBase):
     # this is applied if arity not provided.
     default_arity = A0
     
-    def __init__(self, baserepr = None, arity=None, canonical=None, latexrepr=None):
+    def __init__(self, baserepr=None, arity=None, canonical=None, latexrepr=None):
         """
         Args:
             baserepr (str): the string representation of the expression
             arity (ArityExpression): the arity of the expression. defaults to single/saturated.
-            canonical (bool): expression is cannonical or not. defaults to None (ie unknown).
+            canonical (bool): expression is canonical or not. defaults to None (ie unknown).
         """
         self.baserepr = baserepr
-        self.applications = None
-        self.abstractions = None
+        self.applications = []
+        self.abstractions = []
         self.arity = arity if arity is not None else self.__class__.default_arity
         self.canonical = canonical
         self.latexrepr = latexrepr if latexrepr is not None else baserepr
+        self.parent = None # place holder for parent expression
         
     def __eq__(self, other):
         """Overload == and compare expressions.
@@ -44,15 +45,19 @@ class Expression(ExpressionBase):
         if self.baserepr != other.baserepr or self.arity != other.arity:
             return False
         
-        if self.applications is not None and other.applications is not None:
-            if not all([t == o and t.arity == o.arity for t,o in zip(self.applications, other.applications)]):
+        if self.applications and other.applications:
+            if not all([t == o and t.arity == o.arity for t, o in zip(self.applications, other.applications)]):
                 return False
             
-        if self.abstractions is not None and other.abstractions is not None:
-            if not all([t == o and t.arity == o.arity for t,o in zip(self.abstractions, other.abstractions)]):
+        if self.abstractions and other.abstractions:
+            if not all([t == o and t.arity == o.arity for t, o in zip(self.abstractions, other.abstractions)]):
                 return False
             
         return True
+    
+    def __hash__(self):
+        # hash using rendered type string
+        return hash(self.render_type_string())
        
     def apply(self, *expressions: List["Expression"]) -> "Expression":
         if not isinstance(self.arity, ArityArrow):
@@ -60,31 +65,39 @@ class Expression(ExpressionBase):
         if not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)]):
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity")
         new_expr = deepcopy(self)
-        new_expr.applications = expressions
-        new_expr.arity = self.arity.rhs # (1) 3.8.4
+        new_expr.applications = deepcopy(expressions)  # todo inplace replace
+        for e in new_expr.applications: e.parent = self
+        new_expr.arity = self.arity.rhs  # (1) 3.8.4
         return new_expr
     
     def abstract(self, *expressions: List["Expression"]) -> "Expression":
         new_expr = deepcopy(self)
-        new_expr.abstractions = expressions
-        new_expr.arity = ArityArrow(ArityCross(*[e.arity for e in expressions]),self.arity) # (1) 3.8.5
+        new_expr.abstractions = deepcopy(expressions)  # todo inplace replace
+        for e in new_expr.abstractions: e.parent = self
+        new_expr.arity = ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)  # (1) 3.8.5
         return new_expr
+    
+    def walk(self):
+        pass
     
     def __repr__(self):
         return self.render_type_string()
     
     def render_type_string(self):
-        return TypeStringRenderer(self).render()
+        return TypeStringRenderer().render(self)
     
     def render_latex(self):
-        return LatexRenderer(self).render()
+        return LatexRenderer().render(self)
+
+    def render_graph(self):
+        return GraphRenderer().render(self)
     
     def _repr_latex_(self):
         """For Jupyter/IPython"""
         return "$$%s$$" % self.render_latex()
     
     def list_copies(self):
-        print([k for k,v in globals().items() if v is self])
+        print([k for k, v in globals().items() if v is self])
 
 
 class ExpressionCombination(ExpressionBase):    
@@ -101,7 +114,7 @@ class ExpressionCombination(ExpressionBase):
         Following (1) 3.9.
         """
         # combinations are dealt with separately
-        if self.expressions is not None and other.expressions is not None:
+        if self.expressions and other.expressions:
             return all([t == o and t.arity == o.arity for t,o in zip(self.expressions, other.expressions)])
         
     def select(self, i: int) -> Expression:

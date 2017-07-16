@@ -28,10 +28,13 @@ class RendererTest(unittest.TestCase):
     def test_render_graph(self):
         a = Expression('a')
         b = Expression('b')
+        x = Expression('x')
         y = Expression('y')
         sin_y = Expression('sin(y)')
-        expr = integral.apply(plus.apply(y, sin_y).abstract(y), a, b)
-        graph = GraphRenderer(expr).render()
+        #expr = integral.apply(plus.apply(y, sin_y).abstract(y), a, b)
+        #expr = plus.apply(y, sin_y)
+        expr = plus.apply(x,plus.apply(x, y))
+        graph = GraphRenderer().render(expr)
         self.assertIsNotNone(graph)
 
 if __name__ == "__main__":

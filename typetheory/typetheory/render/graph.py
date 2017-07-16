@@ -3,33 +3,73 @@ Created on 10 Jul 2017
 
 @author: bsdz
 '''
-from graph_tool.all import Graph, graph_union
+from graph_tool import Graph
+from graph_tool.generation import graph_union
+from graph_tool.draw import graph_draw
+
 
 from .base import Renderer
 
 
+def _repr_png_(self):
+    """For Jupyter/IPython"""
+    graph_draw(
+        self,
+        vertex_text=self.vertex_properties["label"],
+        vertex_font_size=18,
+        vertex_shape="circle",
+        output_size=(200, 200),
+        output="test.png"
+    )
+Graph._repr_png_ = _repr_png_
+
 class GraphRenderer(Renderer):
-    def render(self) -> Graph:
+    def render(self, expression: "Expression") -> Graph:
         graph = Graph(directed=True)
-        vprop = graph.new_vertex_property("string")
+        graph.vp["label"] = graph.new_vertex_property("string")
         base_vertex = graph.add_vertex()
-        vprop[base_vertex] = self.expression.baserepr
-        graph.vertex_properties["name"] = vprop
+        graph.gp["basevertex"] = graph.new_graph_property("int", base_vertex)
+        graph.vp["label"][base_vertex] = expression.baserepr
+        
+        for e in expression.applications:
+            subgraph = self.render(e)
+            intersection_map = subgraph.new_vertex_property("int")
+            
+            subgraph_placeholder_vertex = graph.add_vertex()
+            graph.add_edge(base_vertex, subgraph_placeholder_vertex)
 
-        if
-        for e in self.expression.applications:
-            subgraph = GraphRenderer(e).render()
-            graph = graph_union(graph, subgraph)
-            graph.add_edge(base_vertex, subgraph.vertex(0))
+            for v in subgraph.vertices():
+                intersection_map[v] = -1
+            intersection_map[subgraph.vertex(subgraph.gp["basevertex"])] = subgraph_placeholder_vertex
+             
+            graph, combined_props = graph_union(graph, subgraph,
+                   props=[(graph.vp["label"], subgraph.vp["label"])],
+                   intersection=intersection_map)
+            graph.vp["label"] = combined_props[0]
+            graph.gp["basevertex"] = graph.new_graph_property("int", base_vertex)
 
-        if self.expression.abstractions:
+
+        if expression.abstractions:
             lambda_vertex = graph.add_vertex()
-            vprop[lambda_vertex] = "lambda"
-            graph.vertex_properties["name"] = vprop
-            graph.add_edge(lambda_vertex, base_vertex)
-            for e in self.expression.abstractions:
-                subgraph = GraphRenderer(e).render()
-                graph = graph_union(graph, subgraph)
-                graph.add_edge(lambda_vertex, subgraph.vertex(0))
+            graph.gp["basevertex"] = graph.new_graph_property("int", lambda_vertex)
+            graph.vp["label"][lambda_vertex] = "λ"
+            graph.add_edge(base_vertex, lambda_vertex)
+            
+            for e in expression.abstractions:
+                subgraph = self.render(e)
+                intersection_map = subgraph.new_vertex_property("int")
+                 
+                subgraph_placeholder_vertex = graph.add_vertex()
+                graph.add_edge(lambda_vertex, subgraph_placeholder_vertex)
+                 
+                for v in subgraph.vertices():
+                    intersection_map[v] = -1
+                intersection_map[subgraph.vertex(subgraph.gp["basevertex"])] = subgraph_placeholder_vertex
+                 
+                graph, combined_props = graph_union(graph, subgraph,
+                       props=[(graph.vp["label"], subgraph.vp["label"])],
+                       intersection=intersection_map)
+                graph.vp["label"] = combined_props[0]
+                graph.gp["basevertex"] = graph.new_graph_property("int", lambda_vertex)
 
         return graph

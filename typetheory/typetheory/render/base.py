@@ -1,11 +1,10 @@
-'''
+"""
 Created on 10 Jul 2017
 
 @author: bsdz
-'''
+"""
+
 class Renderer(object):
-    def __init__(self, expression: "Expression"):
-        self.expression = expression
     
-    def render(self):
+    def render(self, expression: "Expression"):
         raise NotImplementedError()

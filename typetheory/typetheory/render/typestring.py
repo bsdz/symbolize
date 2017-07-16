@@ -7,13 +7,12 @@ from .base import Renderer
 
 
 class TypeStringRenderer(Renderer):
-    def render(self) -> str:
-        expression = self.expression
+    def render(self, expression: "Expression") -> str:
         rendered = ""
         if expression.baserepr is not None:
             rendered = expression.baserepr
-        if expression.applications is not None:
-            rendered += "(%s)" % (", ".join([TypeStringRenderer(e).render() for e in expression.applications]))
-        if expression.abstractions is not None:
-            rendered = "(%s)%s" % (", ".join([TypeStringRenderer(e).render() for e in expression.abstractions]), rendered)
+        if expression.applications:
+            rendered += "(%s)" % (", ".join([self.render(e) for e in expression.applications]))
+        if expression.abstractions:
+            rendered = "(%s)%s" % (", ".join([self.render(e) for e in expression.abstractions]), rendered)
         return rendered

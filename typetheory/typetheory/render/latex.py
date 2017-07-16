@@ -7,9 +7,20 @@ from textwrap import dedent
 import jinja2
 
 from .base import Renderer
+from ..utility import extend_instance
 
-#class LatexRenderMixin(object):
-#    def render_latex_baserepr(self, ):
+class LatexRendererExpressionMixin(object):
+    def render_latex_baserepr(self, renderer):  # @UnusedVariable
+        return self.latexrepr
+    
+    def render_latex_applications(self, renderer):
+        return ", ".join([renderer.render(e) for e in self.applications])
+    
+    def render_latex_abstractions(self, renderer):
+        return ", ".join([renderer.render(e) for e in self.abstractions])
+    
+    def render_latex_parenthesize_applications(self, renderer):  # @UnusedVariable
+        return self.parent is not None
 
 class LatexRenderer(Renderer):
     """
@@ -25,23 +36,14 @@ class LatexRenderer(Renderer):
         self.postfix_hooks = [] # function that generate latex for postfix 
 
     def render(self, expression: "Expression") -> str:
-        baserepr_rendered = expression.latexrepr
-        if hasattr(expression, "render_latex_baserepr"):
-            baserepr_rendered = expression.render_latex_baserepr(self)
-
-        applications_rendered = None
-        if expression.applications:
-            if hasattr(expression, "render_latex_applications"):
-                applications_rendered = expression.render_latex_applications(self)
-            else:
-                applications_rendered = ", ".join([self.render(e) for e in expression.applications])
         
-        abstractions_rendered = None
-        if expression.abstractions:
-            if hasattr(expression, "render_latex_abstractions"):
-                abstractions_rendered = expression.render_latex_abstractions(self)
-            else:
-                abstractions_rendered = ", ".join([self.render(e) for e in expression.abstractions])
+        if not isinstance(expression, LatexRendererExpressionMixin):
+            extend_instance(expression, LatexRendererExpressionMixin)
+        
+        baserepr_rendered = expression.render_latex_baserepr(self)
+        applications_rendered = expression.render_latex_applications(self) if expression.applications else None
+        abstractions_rendered = expression.render_latex_abstractions(self) if expression.abstractions else None
+        parenthesize_applications = expression.render_latex_parenthesize_applications(self)
         
         # we genrate postfix only if we are top level expression, i.e no parent
         postfix = "".join([h(self) for h in self.postfix_hooks]) if expression.parent is None and self.postfix_hooks else None
@@ -50,9 +52,9 @@ class LatexRenderer(Renderer):
             {% if abstractions != None %}\\lambda({{abstractions}}).({% endif %}
             {{ baserepr if baserepr != None else '' }}
             {% if applications != None %}
-            {% if expression.parent is not none %}({% endif %}
+            {% if parenthesize_applications %}({% endif %}
             {{applications}}
-            {% if expression.parent is not none %}){% endif %}
+            {% if parenthesize_applications %}){% endif %}
             {% endif %}
             {% if abstractions != None %}){% endif %}
             {% if postfix != None %}\quad{{postfix}}{% endif %}
@@ -63,5 +65,6 @@ class LatexRenderer(Renderer):
             baserepr=baserepr_rendered,
             applications=applications_rendered,
             abstractions=abstractions_rendered,
+            parenthesize_applications=parenthesize_applications,
             postfix=postfix)
         

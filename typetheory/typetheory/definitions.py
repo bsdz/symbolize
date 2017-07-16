@@ -4,6 +4,8 @@ from collections import defaultdict
 from .expression import Expression
 from .arity import ArityArrow, ArityCross, A0
 
+from .render.latex import LatexRendererExpressionMixin
+
 x = Expression('x')
 y = Expression('y')
 z = Expression('z')
@@ -32,7 +34,7 @@ funsplit = Expression('funsplit', ArityArrow(ArityCross(A0,ArityArrow(A0,A0)),A0
 N = Expression('N', latexrepr=r'\mathbb{N}')
 R = Expression('R', latexrepr=r'\mathbb{R}')
 
-class NAryInfixExpression(Expression):
+class NAryInfixExpression(Expression, LatexRendererExpressionMixin):
     default_arity = ArityArrow(ArityCross(A0,A0),A0)
     
     def render_latex_baserepr(self, renderer):  # @UnusedVariable
@@ -41,7 +43,7 @@ class NAryInfixExpression(Expression):
     def render_latex_applications(self, renderer):
         return (" %s " % self.latexrepr).join([renderer.render(e) for e in self.applications])
 
-class BinaryInfixExpression(Expression):
+class BinaryInfixExpression(Expression, LatexRendererExpressionMixin):
     default_arity = ArityArrow(ArityCross(A0,A0),A0)
     
     def render_latex_baserepr(self, renderer):  # @UnusedVariable
@@ -51,9 +53,9 @@ class BinaryInfixExpression(Expression):
         return "%s %s %s" % (renderer.render(self.applications[0]), self.latexrepr, renderer.render(self.applications[1]))
     
 plus = BinaryInfixExpression('+')
-mult = BinaryInfixExpression('*', latexrepr=r'\mult')
+mult = BinaryInfixExpression('*', latexrepr=r'\cdot')
 
-class InclusionExclusionExpression(Expression):
+class InclusionExclusionExpression(Expression, LatexRendererExpressionMixin):
     """
     We store into the latex render a dict of tuples grouping the
     inclusions/exclusions so they may be rendered at end of final
@@ -79,11 +81,13 @@ class InclusionExclusionExpression(Expression):
         renderer._inclusion_exclusion_groups[(self.latexrepr, self.applications[1])].add(self.applications[0])
         return renderer.render(self.applications[0])
     
+    def render_latex_parenthesize_applications(self, renderer):  # @UnusedVariable
+        return False
 
     
 in_ = InclusionExclusionExpression('in', latexrepr=r'\in')
 
-class IntegralExpression(Expression):
+class IntegralExpression(Expression, LatexRendererExpressionMixin):
     default_arity = ArityArrow(ArityCross(ArityArrow(A0,A0),A0,A0),A0)
     
     def render_latex_baserepr(self, renderer):  # @UnusedVariable

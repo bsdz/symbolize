@@ -24,6 +24,12 @@ class RendererTest(unittest.TestCase):
         sin_y = Expression('sin(y)')
         rendered = integral.apply(plus.apply(y, sin_y).abstract(y), a, b).render_latex()
         self.assertGreater(len(rendered), 0)
+        
+    def test_render_latex_binary_infix(self):
+        a = Expression('a')
+        b = Expression('b')
+        rendered = plus.apply(a, b).render_latex()
+        self.assertGreater(len(rendered), 0)
 
     def test_render_graph(self):
         a = Expression('a')

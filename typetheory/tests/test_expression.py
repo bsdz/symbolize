@@ -2,9 +2,9 @@
 import unittest
 
 from typetheory.expression import Expression, ExpressionException, ExpressionCombination
-from typetheory.arity import ArityArrow, ArityCross, A0
-from typetheory.definitions import plus
+from typetheory.expression.arity import ArityArrow, ArityCross, A0
 
+plus = Expression('+', arity=ArityArrow(ArityCross(A0,A0),A0))
 
 class ExpressionTest(unittest.TestCase):
     def test_expression_simple(self):
@@ -20,6 +20,9 @@ class ExpressionTest(unittest.TestCase):
         z = Expression('z', ArityArrow(ArityCross(A0,A0),A0))
         self.assertEqual(repr(z.apply(x,y)), 'z(x, y)')
         self.assertEqual(z.apply(x,y).arity, A0, "correct arity after apply")
+        
+        sin = Expression('sin', arity=ArityArrow(A0,A0))
+        self.assertEqual(sin.apply(x).arity, A0, "correct arity after apply")
         
     def test_apply_bad_arity(self):
         y = Expression('y')

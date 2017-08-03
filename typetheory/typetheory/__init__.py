@@ -6,4 +6,4 @@ References
 
 """
 from .expression import *
-from .arity import *
+from .expression.arity import *

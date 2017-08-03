@@ -7,7 +7,7 @@ from textwrap import dedent
 import jinja2
 
 from .base import Renderer
-from ..utility import extend_instance
+from ...utility import extend_instance
 
 class LatexRendererExpressionMixin(object):
     def render_latex_baserepr(self, renderer):  # @UnusedVariable
@@ -20,7 +20,7 @@ class LatexRendererExpressionMixin(object):
         return ", ".join([renderer.render(e) for e in self.abstractions])
     
     def render_latex_parenthesize_applications(self, renderer):  # @UnusedVariable
-        return self.parent is not None
+        return self.parent is not None or self.render_latex_baserepr(renderer) is not None
 
 class LatexRenderer(Renderer):
     """

@@ -58,11 +58,14 @@ class Expression(ExpressionBase):
     def __hash__(self):
         # hash using rendered type string
         return hash(self.render_type_string())
+    
+    def __call__(self, *expressions):
+        return self.apply(*expressions)
        
     def apply(self, *expressions: List["Expression"]) -> "Expression":
         if not isinstance(self.arity, ArityArrow):
             raise ExpressionException("Cannot apply when arity has no arrow")
-        if not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)]):
+        if (len(expressions) == 1 and expressions[0].arity != self.arity.lhs) or (len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)])):
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity")
         new_expr = deepcopy(self)
         new_expr.applications = deepcopy(expressions)  # todo inplace replace
@@ -128,5 +131,18 @@ class ExpressionCombination(ExpressionBase):
             return new_expr
         
     def __repr__(self):
-        if self.expressions is not None:
-            return ", ".join([repr(e) for e in self.expressions])
+        return self.render_type_string()
+        
+    def render_type_string(self):
+        if self.expressions:
+            rr = TypeStringRenderer()
+            return ", ".join([rr.render(e) for e in self.expressions])
+        
+    def render_latex(self):
+        if self.expressions:
+            rr = LatexRenderer()
+            return ", ".join([rr.render(e) for e in self.expressions])
+    
+    def _repr_latex_(self):
+        """For Jupyter/IPython"""
+        return "$$%s$$" % self.render_latex()

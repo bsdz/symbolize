@@ -1,7 +1,8 @@
 
 import unittest
 
-from typetheory.definitions import natrec, listrec, NaturalNumber
+from typetheory.definitions.misc import natrec, listrec
+from typetheory.natural import NaturalNumber
 
 
 class DefinitionsTest(unittest.TestCase):

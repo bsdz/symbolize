@@ -3,7 +3,7 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expression import BinaryInfixExpression, InclusionExclusionExpression, Expression, ArityArrow, ArityCross, A0
+from ..expressions import BinaryInfixExpression, InclusionExclusionExpression, Expression, ArityArrow, ArityCross, A0
 
 
 plus = BinaryInfixExpression('+')

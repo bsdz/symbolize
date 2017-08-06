@@ -1,7 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 
-from .base import Expression
+from .expression import Expression
 from .arity import ArityArrow, ArityCross, A0
 from .render.latex import LatexRendererExpressionMixin
 

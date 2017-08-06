@@ -3,7 +3,7 @@ Created on 31 Jul 2017
 
 @author: bsdz
 '''
-from .expression import Expression, InclusionExclusionExpression
+from .expressions import Expression, InclusionExclusionExpression
 from .definitions.sets import N
 
 class NaturalNumber(InclusionExclusionExpression):

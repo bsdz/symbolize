@@ -3,7 +3,7 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expression import Expression
+from ..expressions import Expression
 
 x = Expression('x')
 y = Expression('y')

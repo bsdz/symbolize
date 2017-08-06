@@ -1,8 +1,8 @@
 
 import unittest
 
-from typetheory.expression import Expression, ExpressionException, ExpressionCombination
-from typetheory.expression.arity import ArityArrow, ArityCross, A0
+from typetheory.expressions import Expression, ExpressionException, ExpressionCombination
+from typetheory.expressions.arity import ArityArrow, ArityCross, A0
 
 plus = Expression('+', arity=ArityArrow(ArityCross(A0,A0),A0))
 

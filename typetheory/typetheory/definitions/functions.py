@@ -3,7 +3,7 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expression import Expression, ArityArrow, ArityCross, A0
+from ..expressions import Expression, ArityArrow, ArityCross, A0
 
 sin = Expression('sin', arity=ArityArrow(A0,A0))
 

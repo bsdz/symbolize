@@ -4,9 +4,10 @@ Created on 8 Jul 2017
 @author: bsdz
 """
 import unittest
-from typetheory.expression import Expression
-from typetheory.definitions import plus, integral
-from typetheory.render.graph import GraphRenderer
+from typetheory.expressions import Expression
+from typetheory.definitions.operators import plus
+from typetheory.definitions.integrals import integral
+from typetheory.expressions.render.graph import GraphRenderer
 
 
 class RendererTest(unittest.TestCase):

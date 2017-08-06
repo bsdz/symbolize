@@ -4,10 +4,9 @@ Created on 16 Jul 2017
 @author: bsdz
 '''
 
-from .expression import Expression
-from .definitions import InclusionExclusionExpression, BinaryInfixExpression, in_
+from .expression import Expression, InclusionExclusionExpression, BinaryInfixExpression, ArityArrow, ArityCross, A0
+from .definitions.operators import in_
 from .proof import Argument
-from .arity import ArityArrow, ArityCross, A0
 
 make_group = Expression('Group', arity=ArityArrow(ArityCross(A0,ArityArrow(ArityCross(A0,A0),A0)),A0))
 G_set = Expression('G') # genric group set

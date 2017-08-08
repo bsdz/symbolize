@@ -53,6 +53,41 @@ class ExpressionTest(unittest.TestCase):
         x, y, z = [Expression(i) for i in ['x','y','z']]
         self.assertEqual(ExpressionCombination(x,y,z).select(1), y)
         self.assertEqual(ExpressionCombination(x,y,z).select(1).arity, A0, "arity from selection")
+    
+    def test_walk(self):
+        u,v,w,x,y,z = [Expression(i) for i in 'uvwxyz']
+        self.assertIn(x,x, "same expr")
+        
+        u.arity = ArityArrow(ArityCross(A0,A0),A0)
+        w.arity = ArityArrow(ArityCross(A0,A0,A0),A0)
+        
+        collected = []
+        func1 = lambda *args: collected.append(args)
+        u(v, w(x,y,z)).walk(func1)
+        self.assertGreater(len(collected), 0, "collect data")
+        
+        collected2 = []
+        def func2(*args): 
+            collected2.append(args)
+            if type(args[0]) is Expression and args[0] == x:
+                raise Exception("Found")
+        
+        try:    
+            u(v, w(x,y,z)).walk(func2)
+        except:
+            pass
+        self.assertGreater(len(collected2), 0, "collect data")
+        
+        self.assertGreater(len(collected), len(collected2), "collect data")
+        
+        
+    def test_contains(self):
+        u,v,w,x,y,z = [Expression(i) for i in 'uvwxyz']
+        self.assertIn(x,x, "same expr")
+        
+        u.arity = ArityArrow(ArityCross(A0,A0),A0)
+        w.arity = ArityArrow(ArityCross(A0,A0,A0),A0)
+        self.assertIn(x, u(v, w(x,y,z)), "in nested expr")
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

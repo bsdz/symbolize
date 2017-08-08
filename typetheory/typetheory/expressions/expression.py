@@ -1,10 +1,11 @@
-from typing import List
+from typing import List  # @UnusedImport
 from copy import deepcopy
 
 from .arity import A0, ArityArrow, ArityCross
 from .render.typestring import TypeStringRenderer
 from .render.latex import LatexRenderer
 from .render.graph import GraphRenderer
+
 
 
 class ExpressionException(Exception):
@@ -17,6 +18,8 @@ class ExpressionException(Exception):
 class ExpressionBase(object):
     pass
 
+class FoundExpressionException(Exception):
+    pass
 
 class Expression(ExpressionBase):
     
@@ -55,12 +58,39 @@ class Expression(ExpressionBase):
             
         return True
     
+    def __contains__(self, expr):
+        if self == expr:
+            return True
+        else:
+            def search_func(*args): 
+                if type(args[0]) is Expression and args[0] == expr:
+                    raise FoundExpressionException()
+            try:
+                self.walk(search_func)
+            except FoundExpressionException:
+                return True
+            return False
+            
+    
     def __hash__(self):
         # hash using rendered type string
         return hash(self.render_type_string())
     
-    def __call__(self, *expressions):
+    def __call__(self, *expressions: List["Expression"]) -> "Expression":
         return self.apply(*expressions)
+    
+    def walk(self, func, **options):
+        """walks the expression, calling func on each sub part.
+        func can return False to terminate the walk.
+        """
+        func(self.baserepr, 'baserepr')
+        for expr in self.applications:
+            func(expr, 'application')
+            expr.walk(func, **options)
+        for expr in self.abstractions:
+            func(expr, 'abstraction')
+            expr.walk(func, **options)
+        return False
        
     def apply(self, *expressions: List["Expression"]) -> "Expression":
         if not isinstance(self.arity, ArityArrow):
@@ -80,8 +110,19 @@ class Expression(ExpressionBase):
         new_expr.arity = ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)  # (1) 3.8.5
         return new_expr
     
-    def walk(self):
-        pass
+    
+    def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
+        if self == from_expr:
+            # exact subsutitution
+            return deepcopy(to_expr) # (2) 2.4
+        
+        # todo: check from_expr is free in this expression
+        new_expr = deepcopy(self)
+        for i, appl in enumerate(new_expr.applications): # (2) 2.4
+            new_expr.applications[i] = appl.substitute(from_expr, to_expr)
+        for i, abst in enumerate(new_expr.abstractions):
+            new_expr.abstractions[i] = abst.substitute(from_expr, to_expr)
+        return new_expr
     
     def __repr__(self):
         return self.render_type_string()

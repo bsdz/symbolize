@@ -88,6 +88,17 @@ class ExpressionTest(unittest.TestCase):
         u.arity = ArityArrow(ArityCross(A0,A0),A0)
         w.arity = ArityArrow(ArityCross(A0,A0,A0),A0)
         self.assertIn(x, u(v, w(x,y,z)), "in nested expr")
+        
+    def test_contains_bind(self):
+        s,t,u,v,w,x,y,z = [Expression(i) for i in 'stuvwxyz']
+        u.arity = ArityArrow(ArityCross(A0,A0),A0)
+        s.arity = ArityArrow(ArityCross(ArityArrow(A0,A0),A0),A0)
+        expr = s(u(v,w).abstract(x),t).abstract(y,z)
+        for i in (x,y,z):
+            self.assertTrue(expr.contains_bind(i), "has bind")
+        for i in (s,t,u,v):
+            self.assertFalse(expr.contains_bind(i), "hasn't bind")
+        
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -58,7 +58,7 @@ class Expression(ExpressionBase):
             
         return True
     
-    def __contains__(self, expr):
+    def contains(self, expr):
         if self == expr:
             return True
         else:
@@ -70,7 +70,21 @@ class Expression(ExpressionBase):
             except FoundExpressionException:
                 return True
             return False
-            
+
+    def __contains__(self, expr):
+        return self.contains(expr)            
+
+    def contains_bind(self, expr):
+        """checks abstractions for expr"""
+        def search_func(*args): 
+            if type(args[0]) is Expression and args[0] == expr:
+                raise FoundExpressionException()
+        try:
+            self.walk(search_func, include_baserepr=False, include_applications=False)
+        except FoundExpressionException:
+            return True
+        return False
+
     
     def __hash__(self):
         # hash using rendered type string
@@ -82,15 +96,26 @@ class Expression(ExpressionBase):
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
         func can return False to terminate the walk.
+        
+        Args:
+            
         """
-        func(self.baserepr, 'baserepr')
+        include_baserepr = options.get("include_baserepr", True)
+        include_applications = options.get("include_applications", True)
+        include_abstractions = options.get("include_abstractions", True)
+        
+        if include_baserepr:
+            func(self.baserepr, 'baserepr')
+        
         for expr in self.applications:
-            func(expr, 'application')
+            if include_applications:
+                func(expr, 'application')
             expr.walk(func, **options)
+        
         for expr in self.abstractions:
-            func(expr, 'abstraction')
+            if include_abstractions:    
+                func(expr, 'abstraction')
             expr.walk(func, **options)
-        return False
        
     def apply(self, *expressions: List["Expression"]) -> "Expression":
         if not isinstance(self.arity, ArityArrow):

@@ -16,3 +16,5 @@ def extend_instance(obj, cls):
 def generate_random_string(n):
     import random,string
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
+
+class ToBeImplemented(Exception): pass

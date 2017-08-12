@@ -1,7 +1,7 @@
 
 import unittest
 
-from typetheory.expressions import Expression, ExpressionException, ExpressionCombination
+from typetheory.expressions import Expression, ExpressionException, ExpressionCombination, general_bind_expression_generator
 from typetheory.expressions.arity import ArityArrow, ArityCross, A0
 
 plus = Expression('+', arity=ArityArrow(ArityCross(A0,A0),A0))
@@ -67,9 +67,9 @@ class ExpressionTest(unittest.TestCase):
         self.assertGreater(len(collected), 0, "collect data")
         
         collected2 = []
-        def func2(*args): 
-            collected2.append(args)
-            if type(args[0]) is Expression and args[0] == x:
+        def func2(wr): 
+            collected2.append(wr)
+            if type(wr.expr) is Expression and wr.expr == x:
                 raise Exception("Found")
         
         try:    
@@ -99,7 +99,45 @@ class ExpressionTest(unittest.TestCase):
         for i in (s,t,u,v):
             self.assertFalse(expr.contains_bind(i), "hasn't bind")
         
-
+    def test_substitute(self):
+        s,t,u,v,w,x,y,z = [Expression(i) for i in 'stuvwxyz']
+        u.arity = ArityArrow(ArityCross(A0,A0),A0)
+        w.arity = ArityArrow(ArityCross(A0,A0,A0),A0)
+        
+        u1 = Expression('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
+        u2 = Expression('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
+        
+        tests = [
+            [x.substitute(x, x), x],
+            [u(v, w(x,y,z)).substitute(x, s), u(v, w(s,y,z))],
+            [u(v, w(x,y,z)).substitute(s, t), u(v, w(x,y,z))],
+            [u(v, w(x,y,z)).substitute(x, s).substitute(y, t), u(v, w(s,t,z))],
+            [u1(x,y).substitute(u1,u2), u2(x,y)],
+            [u1(x,y).abstract(z).substitute(x,s), u1(s,y).abstract(z)],
+        ]
+        
+        for e1,e2 in tests:
+            self.assertEqual(e1, e2, "check sub")
+            
+    def test_general_bind_form(self):
+        s,t,u,v,w,x,y,z = [Expression(i) for i in 'stuvwxyz']
+        u1 = Expression('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
+        u2 = Expression('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
+        
+        gbe_gen = general_bind_expression_generator()
+        gbe1 = next(gbe_gen)
+        gbe2 = next(gbe_gen)
+        
+        tests = [
+            [u1(x,y).abstract(z).general_bind_form(), u1(x,y).abstract(gbe1)],
+            [u1(x,z).abstract(z).general_bind_form(), u1(x,gbe1).abstract(gbe1)],
+            [u1(x,y).abstract(v,w).general_bind_form(), u1(x,y).abstract(gbe1, gbe2)],
+            [u1(v,w).abstract(v,w).general_bind_form(), u1(gbe1, gbe2).abstract(gbe1, gbe2)],
+        ]
+        
+        for e1,e2 in tests:
+            self.assertEqual(e1, e2, "check general bind form")
+        
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

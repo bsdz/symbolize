@@ -1,11 +1,13 @@
 from typing import List  # @UnusedImport
 from copy import deepcopy
+from warnings import warn
+from itertools import count
 
 from .arity import A0, ArityArrow, ArityCross
 from .render.typestring import TypeStringRenderer
 from .render.latex import LatexRenderer
 from .render.graph import GraphRenderer
-
+from ..utility import ToBeImplemented
 
 
 class ExpressionException(Exception):
@@ -18,8 +20,43 @@ class ExpressionException(Exception):
 class ExpressionBase(object):
     pass
 
+class ExpressionWalkResult(object):
+    __slots__ = ['expr', 'part', 'listObj', 'index']
+    def __init__(self, expr, part, listObj=None, index=None):
+        self.expr = expr
+        self.part = part
+        self.listObj = listObj
+        self.index = index
+
 class FoundExpressionException(Exception):
     pass
+
+class SimpleExpression(ExpressionBase):
+    def __init__(self, baserepr=None, arity=None, canonical=None, latexrepr=None):
+        """
+        Args:
+            baserepr (str): the string representation of the expression
+            arity (ArityExpression): the arity of the expression. defaults to single/saturated.
+            canonical (bool): expression is canonical or not. defaults to None (ie unknown).
+        """
+        self.baserepr = baserepr
+        self.arity = arity
+        self.canonical = canonical
+        self.latexrepr = latexrepr if latexrepr is not None else baserepr     
+        
+    def __eq__(self, other):
+        """Overload == and compare expressions.
+        Following (1) 3.9.
+        """
+        if self.baserepr != other.baserepr or self.arity != other.arity:
+            return False
+                    
+        return True
+
+def general_bind_expression_generator():
+    prefix = "__gbe_"
+    for i in count(start=0, step=1):
+        yield Expression('%s%s' % (prefix, i))
 
 class Expression(ExpressionBase):
     
@@ -33,14 +70,30 @@ class Expression(ExpressionBase):
             arity (ArityExpression): the arity of the expression. defaults to single/saturated.
             canonical (bool): expression is canonical or not. defaults to None (ie unknown).
         """
-        self.baserepr = baserepr
+        self._arity = arity if arity is not None else self.__class__.default_arity
+        self.base = SimpleExpression(baserepr, deepcopy(self.arity), canonical, latexrepr)
         self.applications = []
         self.abstractions = []
-        self.arity = arity if arity is not None else self.__class__.default_arity
         self.canonical = canonical
-        self.latexrepr = latexrepr if latexrepr is not None else baserepr
         self.parent = None # place holder for parent expression
-        
+    
+    @property
+    def baserepr(self):
+        return self.base.baserepr
+    
+    @property
+    def latexrepr(self):
+        return self.base.latexrepr
+    
+    @property
+    def arity(self):
+        return self._arity
+    
+    @arity.setter
+    def arity(self, value):
+        warn("Setting arity outside object initialisation does not pass through to base expression")
+        self._arity = value
+    
     def __eq__(self, other):
         """Overload == and compare expressions.
         Following (1) 3.9.
@@ -62,8 +115,8 @@ class Expression(ExpressionBase):
         if self == expr:
             return True
         else:
-            def search_func(*args): 
-                if type(args[0]) is Expression and args[0] == expr:
+            def search_func(wr): 
+                if type(wr.expr) is Expression and wr.expr == expr:
                     raise FoundExpressionException()
             try:
                 self.walk(search_func)
@@ -76,11 +129,11 @@ class Expression(ExpressionBase):
 
     def contains_bind(self, expr):
         """checks abstractions for expr"""
-        def search_func(*args): 
-            if type(args[0]) is Expression and args[0] == expr:
+        def search_func(wr): 
+            if type(wr.expr) is Expression and wr.expr == expr:
                 raise FoundExpressionException()
         try:
-            self.walk(search_func, include_baserepr=False, include_applications=False)
+            self.walk(search_func, include_base=False, include_applications=False)
         except FoundExpressionException:
             return True
         return False
@@ -100,21 +153,21 @@ class Expression(ExpressionBase):
         Args:
             
         """
-        include_baserepr = options.get("include_baserepr", True)
+        include_base = options.get("include_base", True)
         include_applications = options.get("include_applications", True)
         include_abstractions = options.get("include_abstractions", True)
         
-        if include_baserepr:
-            func(self.baserepr, 'baserepr')
+        if include_base:
+            func(ExpressionWalkResult(self.base, 'base'))
         
-        for expr in self.applications:
+        for i, expr in enumerate(self.applications):
             if include_applications:
-                func(expr, 'application')
+                func(ExpressionWalkResult(expr, 'application', listObj=self.applications, index=i))
             expr.walk(func, **options)
         
-        for expr in self.abstractions:
+        for i, expr in enumerate(self.abstractions):
             if include_abstractions:    
-                func(expr, 'abstraction')
+                func(ExpressionWalkResult(expr, 'abstraction', listObj=self.abstractions, index=i))
             expr.walk(func, **options)
        
     def apply(self, *expressions: List["Expression"]) -> "Expression":
@@ -123,30 +176,65 @@ class Expression(ExpressionBase):
         if (len(expressions) == 1 and expressions[0].arity != self.arity.lhs) or (len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)])):
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity")
         new_expr = deepcopy(self)
-        new_expr.applications = deepcopy(expressions)  # todo inplace replace
+        new_expr.applications = list(deepcopy(expressions))  # todo inplace replace
         for e in new_expr.applications: e.parent = self
         new_expr.arity = self.arity.rhs  # (1) 3.8.4
         return new_expr
     
     def abstract(self, *expressions: List["Expression"]) -> "Expression":
         new_expr = deepcopy(self)
-        new_expr.abstractions = deepcopy(expressions)  # todo inplace replace
+        new_expr.abstractions = list(deepcopy(expressions))  # todo inplace replace
         for e in new_expr.abstractions: e.parent = self
         new_expr.arity = ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)  # (1) 3.8.5
         return new_expr
     
     
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
-        if self == from_expr:
-            # exact subsutitution
+        # todo: raise if arity differs?
+        
+        if self == from_expr: # exact substitution
             return deepcopy(to_expr) # (2) 2.4
         
-        # todo: check from_expr is free in this expression
+        # check from_expr is free in this expression
+        if self.contains_bind(to_expr):
+            raise ToBeImplemented("Cannot yet substitute bound expression")
+        
         new_expr = deepcopy(self)
+        if not from_expr.applications and not from_expr.abstractions \
+            and new_expr.base == from_expr.base:
+            new_expr.base = to_expr # (2) 2.4
+        
         for i, appl in enumerate(new_expr.applications): # (2) 2.4
             new_expr.applications[i] = appl.substitute(from_expr, to_expr)
-        for i, abst in enumerate(new_expr.abstractions):
-            new_expr.abstractions[i] = abst.substitute(from_expr, to_expr)
+        
+        return new_expr
+    
+    def general_bind_form(self):
+        """replaces all bound variables with general ordinal expression.
+        """
+        new_expr = deepcopy(self)
+                
+        gbe_generator = general_bind_expression_generator()
+        
+        def search_func(wr1): 
+            # find abstraction and walk parent swaping abstracted expression
+            # with generic expression
+            
+            gb_expr = next(gbe_generator)
+            
+            def swap_func(wr2):
+                if wr2.expr == wr1.expr:
+                    if wr2.listObj is not None:
+                        wr2.listObj[wr2.index] = gb_expr
+                    else:
+                        pass
+                        #wr2.parent.base = gb_expr # todo: perhaps reference wr2.expr directly?
+                     
+            new_expr.walk(swap_func)
+          
+        # we walk and search abstractions
+        new_expr.walk(search_func, include_base=False, include_applications=False)
+
         return new_expr
     
     def __repr__(self):

@@ -67,4 +67,3 @@ def implication_elimation(a_, b_):
     cls = get_proposition_class(new_expr)
     proof_expr = a_.proof_expr.apply(b_.proof_expr)
     return cls(proof_expr)
-  

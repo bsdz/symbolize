@@ -66,4 +66,3 @@ class LogicQuantificationExpression(Expression, LatexRendererExpressionMixin):
     
     def render_latex_applications(self, renderer):
         return "%s(%s).%s" % (self.latexrepr, renderer.render(self.applications[0]), renderer.render(self.applications[1]))
- 

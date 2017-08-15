@@ -96,8 +96,14 @@ class Expression(ExpressionBase):
     
     def __eq__(self, other):
         """Overload == and compare expressions.
-        Following (1) 3.9.
         """
+        return self.equals(other)
+
+    def equals(self, other):
+        """Following (1) 3.9.
+        """
+        # convert to general bind form before comparison
+        
         if self.baserepr != other.baserepr or self.arity != other.arity:
             return False
         

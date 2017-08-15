@@ -14,10 +14,10 @@ class LatexRendererExpressionMixin(object):
         return self.latexrepr
     
     def render_latex_applications(self, renderer):
-        return ", ".join([renderer.render(e) for e in self.applications])
+        return ", ".join([renderer.render(e) for e in self.applications]) if hasattr(self,"applications") and self.applications else None
     
     def render_latex_abstractions(self, renderer):
-        return ", ".join([renderer.render(e) for e in self.abstractions])
+        return ", ".join([renderer.render(e) for e in self.abstractions]) if hasattr(self,"abstractions") and self.abstractions else None
     
     def render_latex_parenthesize_applications(self, renderer):  # @UnusedVariable
         return self.parent is not None or self.render_latex_baserepr(renderer) is not None
@@ -41,8 +41,8 @@ class LatexRenderer(Renderer):
             extend_instance(expression, LatexRendererExpressionMixin)
         
         baserepr_rendered = expression.render_latex_baserepr(self)
-        applications_rendered = expression.render_latex_applications(self) if expression.applications else None
-        abstractions_rendered = expression.render_latex_abstractions(self) if expression.abstractions else None
+        applications_rendered = expression.render_latex_applications(self)
+        abstractions_rendered = expression.render_latex_abstractions(self)
         parenthesize_applications = expression.render_latex_parenthesize_applications(self)
         
         # we genrate postfix only if we are top level expression, i.e no parent

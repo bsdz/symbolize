@@ -31,25 +31,26 @@ class GraphRenderer(Renderer):
         graph.gp["basevertex"] = graph.new_graph_property("int", base_vertex)
         graph.vp["label"][base_vertex] = expression.baserepr
         
-        for e in expression.applications:
-            subgraph = self.render(e)
-            intersection_map = subgraph.new_vertex_property("int")
-            
-            subgraph_placeholder_vertex = graph.add_vertex()
-            graph.add_edge(base_vertex, subgraph_placeholder_vertex)
+        if hasattr(expression, "applications"):
+            for e in expression.applications:
+                subgraph = self.render(e)
+                intersection_map = subgraph.new_vertex_property("int")
+                
+                subgraph_placeholder_vertex = graph.add_vertex()
+                graph.add_edge(base_vertex, subgraph_placeholder_vertex)
+    
+                for v in subgraph.vertices():
+                    intersection_map[v] = -1
+                intersection_map[subgraph.vertex(subgraph.gp["basevertex"])] = subgraph_placeholder_vertex
+                 
+                graph, combined_props = graph_union(graph, subgraph,
+                       props=[(graph.vp["label"], subgraph.vp["label"])],
+                       intersection=intersection_map)
+                graph.vp["label"] = combined_props[0]
+                graph.gp["basevertex"] = graph.new_graph_property("int", base_vertex)
 
-            for v in subgraph.vertices():
-                intersection_map[v] = -1
-            intersection_map[subgraph.vertex(subgraph.gp["basevertex"])] = subgraph_placeholder_vertex
-             
-            graph, combined_props = graph_union(graph, subgraph,
-                   props=[(graph.vp["label"], subgraph.vp["label"])],
-                   intersection=intersection_map)
-            graph.vp["label"] = combined_props[0]
-            graph.gp["basevertex"] = graph.new_graph_property("int", base_vertex)
 
-
-        if expression.abstractions:
+        if hasattr(expression, "abstractions") and expression.abstractions:
             lambda_vertex = graph.add_vertex()
             graph.gp["basevertex"] = graph.new_graph_property("int", lambda_vertex)
             graph.vp["label"][lambda_vertex] = "λ"

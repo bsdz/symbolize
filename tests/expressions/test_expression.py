@@ -1,5 +1,6 @@
 
 import unittest
+from copy import deepcopy
 
 from typetheory.expressions import Expression, ExpressionException, ExpressionCombination, general_bind_expression_generator
 from typetheory.expressions.arity import ArityArrow, ArityCross, A0
@@ -128,11 +129,15 @@ class ExpressionTest(unittest.TestCase):
         gbe1 = next(gbe_gen)
         gbe2 = next(gbe_gen)
         
+        gbe1_u1 = deepcopy(gbe1)
+        gbe1_u1.arity = u1.arity
+        
         tests = [
             [u1(x,y).abstract(z).general_bind_form(), u1(x,y).abstract(gbe1)],
             [u1(x,z).abstract(z).general_bind_form(), u1(x,gbe1).abstract(gbe1)],
             [u1(x,y).abstract(v,w).general_bind_form(), u1(x,y).abstract(gbe1, gbe2)],
             [u1(v,w).abstract(v,w).general_bind_form(), u1(gbe1, gbe2).abstract(gbe1, gbe2)],
+            [u1(x,y).abstract(u1).general_bind_form(), gbe1_u1(x,y).abstract(gbe1_u1)]
         ]
         
         for e1,e2 in tests:

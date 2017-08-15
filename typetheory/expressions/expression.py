@@ -1,3 +1,6 @@
+""" todo: should we have different classes for CombinationExpression, AbstractExpression etc?
+       perhaps at least for a combination expression?
+"""
 from typing import List  # @UnusedImport
 from copy import deepcopy
 from warnings import warn
@@ -9,27 +12,39 @@ from .render.latex import LatexRenderer
 from .render.graph import GraphRenderer
 from ..utility import ToBeImplemented
 
+class ExpressionWalkResult(object):
+    __slots__ = ['expr', 'part', 'obj', 'index']
+    def __init__(self, expr, part, obj=None, index=None):
+        self.expr = expr
+        self.part = part
+        self.obj = obj
+        self.index = index
+        
+    def __repr__(self):
+        return "%s %s %s[%s]" % (repr(self.expr), self.part, self.obj, self.index)
+
+class FoundExpressionException(Exception):
+    pass
 
 class ExpressionException(Exception):
     pass
 
-# todo: should we have different classes for CombinationExpression, AbstractExpression etc?
-#       perhaps at least for a combination expression?
-
-
 class ExpressionBase(object):
-    pass
+    def __repr__(self):
+        return self.render_type_string()
+    
+    def render_type_string(self):
+        return TypeStringRenderer().render(self)
+    
+    def render_latex(self):
+        return LatexRenderer().render(self)
 
-class ExpressionWalkResult(object):
-    __slots__ = ['expr', 'part', 'listObj', 'index']
-    def __init__(self, expr, part, listObj=None, index=None):
-        self.expr = expr
-        self.part = part
-        self.listObj = listObj
-        self.index = index
-
-class FoundExpressionException(Exception):
-    pass
+    def render_graph(self):
+        return GraphRenderer().render(self)
+    
+    def _repr_latex_(self):
+        """For Jupyter/IPython"""
+        return "$$%s$$" % self.render_latex()
 
 class SimpleExpression(ExpressionBase):
     def __init__(self, baserepr=None, arity=None, canonical=None, latexrepr=None):
@@ -76,7 +91,22 @@ class Expression(ExpressionBase):
         self.abstractions = []
         self.canonical = canonical
         self.parent = None # place holder for parent expression
+        
+    def __eq__(self, other):
+        """Overload == and compare expressions.
+        """
+        return self.equals(other)
+
+    def __contains__(self, expr):
+        return self.contains(expr)            
     
+    def __hash__(self):
+        # hash using rendered type string
+        return hash(self.render_type_string())
+    
+    def __call__(self, *expressions: List["Expression"]) -> "Expression":
+        return self.apply(*expressions)
+        
     @property
     def baserepr(self):
         return self.base.baserepr
@@ -93,11 +123,19 @@ class Expression(ExpressionBase):
     def arity(self, value):
         warn("Setting arity outside object initialisation does not pass through to base expression")
         self._arity = value
+
+    def render_type_string(self):
+        return TypeStringRenderer().render(self)
     
-    def __eq__(self, other):
-        """Overload == and compare expressions.
-        """
-        return self.equals(other)
+    def render_latex(self):
+        return LatexRenderer().render(self)
+
+    def render_graph(self):
+        return GraphRenderer().render(self)
+    
+    def _repr_latex_(self):
+        """For Jupyter/IPython"""
+        return "$$%s$$" % self.render_latex()
 
     def equals(self, other):
         """Following (1) 3.9.
@@ -130,9 +168,6 @@ class Expression(ExpressionBase):
                 return True
             return False
 
-    def __contains__(self, expr):
-        return self.contains(expr)            
-
     def contains_bind(self, expr):
         """checks abstractions for expr"""
         def search_func(wr): 
@@ -143,15 +178,7 @@ class Expression(ExpressionBase):
         except FoundExpressionException:
             return True
         return False
-
-    
-    def __hash__(self):
-        # hash using rendered type string
-        return hash(self.render_type_string())
-    
-    def __call__(self, *expressions: List["Expression"]) -> "Expression":
-        return self.apply(*expressions)
-    
+        
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
         func can return False to terminate the walk.
@@ -164,16 +191,16 @@ class Expression(ExpressionBase):
         include_abstractions = options.get("include_abstractions", True)
         
         if include_base:
-            func(ExpressionWalkResult(self.base, 'base'))
+            func(ExpressionWalkResult(self.base, 'base', obj=self))
         
         for i, expr in enumerate(self.applications):
             if include_applications:
-                func(ExpressionWalkResult(expr, 'application', listObj=self.applications, index=i))
+                func(ExpressionWalkResult(expr, 'application', obj=self.applications, index=i))
             expr.walk(func, **options)
         
         for i, expr in enumerate(self.abstractions):
             if include_abstractions:    
-                func(ExpressionWalkResult(expr, 'abstraction', listObj=self.abstractions, index=i))
+                func(ExpressionWalkResult(expr, 'abstraction', obj=self.abstractions, index=i))
             expr.walk(func, **options)
        
     def apply(self, *expressions: List["Expression"]) -> "Expression":
@@ -184,14 +211,14 @@ class Expression(ExpressionBase):
         new_expr = deepcopy(self)
         new_expr.applications = list(deepcopy(expressions))  # todo inplace replace
         for e in new_expr.applications: e.parent = self
-        new_expr.arity = self.arity.rhs  # (1) 3.8.4
+        new_expr._arity = self.arity.rhs  # (1) 3.8.4
         return new_expr
     
     def abstract(self, *expressions: List["Expression"]) -> "Expression":
         new_expr = deepcopy(self)
         new_expr.abstractions = list(deepcopy(expressions))  # todo inplace replace
         for e in new_expr.abstractions: e.parent = self
-        new_expr.arity = ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)  # (1) 3.8.5
+        new_expr._arity = ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)  # (1) 3.8.5
         return new_expr
     
     
@@ -230,11 +257,12 @@ class Expression(ExpressionBase):
             
             def swap_func(wr2):
                 if wr2.expr == wr1.expr:
-                    if wr2.listObj is not None:
-                        wr2.listObj[wr2.index] = gb_expr
+                    # should we adjust arity to match?
+                    gb_expr._arity = wr2.expr.arity
+                    if wr2.index is not None:
+                        wr2.obj[wr2.index] = gb_expr
                     else:
-                        pass
-                        #wr2.parent.base = gb_expr # todo: perhaps reference wr2.expr directly?
+                        wr2.obj.base = gb_expr
                      
             new_expr.walk(swap_func)
           
@@ -242,23 +270,7 @@ class Expression(ExpressionBase):
         new_expr.walk(search_func, include_base=False, include_applications=False)
 
         return new_expr
-    
-    def __repr__(self):
-        return self.render_type_string()
-    
-    def render_type_string(self):
-        return TypeStringRenderer().render(self)
-    
-    def render_latex(self):
-        return LatexRenderer().render(self)
-
-    def render_graph(self):
-        return GraphRenderer().render(self)
-    
-    def _repr_latex_(self):
-        """For Jupyter/IPython"""
-        return "$$%s$$" % self.render_latex()
-    
+        
     def list_copies(self):
         print([k for k, v in globals().items() if v is self])
 
@@ -270,7 +282,7 @@ class ExpressionCombination(ExpressionBase):
             expressions (List[Expression]): list of expressions
         """
         self.expressions = expressions
-        self.arity = ArityCross(*[e.arity for e in expressions]) # (1) 3.8.6
+        self._arity = ArityCross(*[e.arity for e in expressions]) # (1) 3.8.6
         
     def __eq__(self, other):
         """Overload == and compare expressions.
@@ -287,7 +299,7 @@ class ExpressionCombination(ExpressionBase):
         """
         if self.expressions is not None:
             new_expr = deepcopy(self.expressions[i])
-            new_expr.arity = self.arity.args[i] # (1) 3.8.7
+            new_expr._arity = self.arity.args[i] # (1) 3.8.7
             return new_expr
         
     def __repr__(self):
@@ -303,6 +315,3 @@ class ExpressionCombination(ExpressionBase):
             rr = LatexRenderer()
             return ", ".join([rr.render(e) for e in self.expressions])
     
-    def _repr_latex_(self):
-        """For Jupyter/IPython"""
-        return "$$%s$$" % self.render_latex()

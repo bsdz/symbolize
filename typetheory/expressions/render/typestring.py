@@ -11,8 +11,8 @@ class TypeStringRenderer(Renderer):
         rendered = ""
         if expression.baserepr is not None:
             rendered = expression.baserepr
-        if expression.applications:
+        if hasattr(expression, "applications") and expression.applications:
             rendered += "(%s)" % (", ".join([self.render(e) for e in expression.applications]))
-        if expression.abstractions:
+        if hasattr(expression, "abstractions") and expression.abstractions:
             rendered = "(%s)%s" % (", ".join([self.render(e) for e in expression.abstractions]), rendered)
         return rendered

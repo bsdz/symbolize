@@ -37,9 +37,6 @@ class LatexRenderer(Renderer):
 
     def render(self, expression: "Expression") -> str:
         
-        if not isinstance(expression, LatexRendererExpressionMixin):
-            extend_instance(expression, LatexRendererExpressionMixin)
-        
         baserepr_rendered = expression.render_latex_baserepr(self)
         applications_rendered = expression.render_latex_applications(self)
         abstractions_rendered = expression.render_latex_abstractions(self)

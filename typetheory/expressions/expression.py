@@ -7,21 +7,33 @@ from warnings import warn
 from itertools import count
 
 from .arity import A0, ArityArrow, ArityCross
-from .render.typestring import TypeStringRenderer
-from .render.latex import LatexRenderer
+from .render.typestring import TypeStringRenderer, TypeStringRendererMixin
+from .render.latex import LatexRenderer, LatexRendererExpressionMixin
 from .render.graph import GraphRenderer
 from ..utility import ToBeImplemented
 
 class ExpressionWalkResult(object):
-    __slots__ = ['expr', 'part', 'obj', 'index']
-    def __init__(self, expr, part, obj=None, index=None):
+    __slots__ = ['expr', 'obj', 'index']
+    def __init__(self, expr, obj=None, index=None):
         self.expr = expr
-        self.part = part
         self.obj = obj
         self.index = index
         
     def __repr__(self):
-        return "%s %s %s[%s]" % (repr(self.expr), self.part, self.obj, self.index)
+        res = "expr: %s; part: %s" % (repr(self.expr),self.part)
+        if self.obj is not None:
+            res += "; obj: %s" % self.obj
+            if self.index is not None:
+                res += "[%s]" % self.index
+        res += "; type: %s" % self.expr.__class__.__name__
+        if self.expr.parent is not None:
+            res += "; parent_type: %s" % self.expr.parent.__class__.__name__
+        return "ExpressionWalkResult(%s)" % res
+
+def general_bind_expression_generator():
+    prefix = "__gbe_"
+    for i in count(start=0, step=1): # we have an infinite collection of variables
+        yield Expression('%s%s' % (prefix, i))
 
 class FoundExpressionException(Exception):
     pass
@@ -29,101 +41,32 @@ class FoundExpressionException(Exception):
 class ExpressionException(Exception):
     pass
 
-class ExpressionBase(object):
+class Expression(TypeStringRendererMixin):
+    def __init__(self):
+        self.parent = None
+        
     def __repr__(self):
         return self.render_type_string()
     
-    def render_type_string(self):
-        return TypeStringRenderer().render(self)
+    def __call__(self, *expressions: List["Expression"]) -> "Expression":
+        return self.apply(*expressions)
     
-    def render_latex(self):
-        return LatexRenderer().render(self)
-
-    def render_graph(self):
-        return GraphRenderer().render(self)
-    
-    def _repr_latex_(self):
-        """For Jupyter/IPython"""
-        return "$$%s$$" % self.render_latex()
-
-class SimpleExpression(ExpressionBase):
-    def __init__(self, baserepr=None, arity=None, canonical=None, latexrepr=None):
-        """
-        Args:
-            baserepr (str): the string representation of the expression
-            arity (ArityExpression): the arity of the expression. defaults to single/saturated.
-            canonical (bool): expression is canonical or not. defaults to None (ie unknown).
-        """
-        self.baserepr = baserepr
-        self.arity = arity
-        self.canonical = canonical
-        self.latexrepr = latexrepr if latexrepr is not None else baserepr     
-        
-    def __eq__(self, other):
-        """Overload == and compare expressions.
-        Following (1) 3.9.
-        """
-        if self.baserepr != other.baserepr or self.arity != other.arity:
-            return False
-                    
-        return True
-
-def general_bind_expression_generator():
-    prefix = "__gbe_"
-    for i in count(start=0, step=1):
-        yield Expression('%s%s' % (prefix, i))
-
-class Expression(ExpressionBase):
-    
-    # this is applied if arity not provided.
-    default_arity = A0
-    
-    def __init__(self, baserepr=None, arity=None, canonical=None, latexrepr=None):
-        """
-        Args:
-            baserepr (str): the string representation of the expression
-            arity (ArityExpression): the arity of the expression. defaults to single/saturated.
-            canonical (bool): expression is canonical or not. defaults to None (ie unknown).
-        """
-        self._arity = arity if arity is not None else self.__class__.default_arity
-        self.base = SimpleExpression(baserepr, deepcopy(self.arity), canonical, latexrepr)
-        self.applications = []
-        self.abstractions = []
-        self.canonical = canonical
-        self.parent = None # place holder for parent expression
-        
     def __eq__(self, other):
         """Overload == and compare expressions.
         """
         return self.equals(other)
-
-    def __contains__(self, expr):
-        return self.contains(expr)            
     
     def __hash__(self):
         # hash using rendered type string
         return hash(self.render_type_string())
     
-    def __call__(self, *expressions: List["Expression"]) -> "Expression":
-        return self.apply(*expressions)
-        
-    @property
-    def baserepr(self):
-        return self.base.baserepr
+    def __contains__(self, expr):
+        return self.contains(expr)
     
-    @property
-    def latexrepr(self):
-        return self.base.latexrepr
+    def _repr_latex_(self):
+        """For Jupyter/IPython"""
+        return "$$%s$$" % self.render_latex()
     
-    @property
-    def arity(self):
-        return self._arity
-    
-    @arity.setter
-    def arity(self, value):
-        warn("Setting arity outside object initialisation does not pass through to base expression")
-        self._arity = value
-
     def render_type_string(self):
         return TypeStringRenderer().render(self)
     
@@ -133,114 +76,55 @@ class Expression(ExpressionBase):
     def render_graph(self):
         return GraphRenderer().render(self)
     
-    def _repr_latex_(self):
-        """For Jupyter/IPython"""
-        return "$$%s$$" % self.render_latex()
-
-    def equals(self, other):
-        """Following (1) 3.9.
+    def list_copies(self):
+        # todo: is this useful?
+        print([k for k, v in globals().items() if v is self])
+        
+    def apply(self, *expressions: List["Expression"]) -> "Expression":
+        if not isinstance(self.arity, ArityArrow):
+            raise ExpressionException("Cannot apply when arity has no arrow")
+        if (len(expressions) == 1 and expressions[0].arity != self.arity.lhs) or (len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)])):
+            raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity")
+        return ApplicationExpression(self, expressions, self.arity.rhs) # arity - (1) 3.8.4
+    
+    def abstract(self, *expressions: List["Expression"]) -> "Expression":
+        return AbstractionExpression(self, expressions, ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)) # arity - (1) 3.8.5
+    
+    def walk(self, func, **options):
+        """walks the expression, calling func on each sub part.
+        func can return False to terminate the walk.
+        
+        abstract method.
         """
-        # convert to general bind form before comparison
-        
-        if self.baserepr != other.baserepr or self.arity != other.arity:
-            return False
-        
-        if self.applications and other.applications:
-            if not all([t == o and t.arity == o.arity for t, o in zip(self.applications, other.applications)]):
-                return False
-            
-        if self.abstractions and other.abstractions:
-            if not all([t == o and t.arity == o.arity for t, o in zip(self.abstractions, other.abstractions)]):
-                return False
-            
-        return True
+        raise NotImplementedError()
     
     def contains(self, expr):
         if self == expr:
             return True
         else:
             def search_func(wr): 
-                if type(wr.expr) is Expression and wr.expr == expr:
+                if wr.expr == expr:
                     raise FoundExpressionException()
             try:
                 self.walk(search_func)
             except FoundExpressionException:
                 return True
             return False
-
+        
     def contains_bind(self, expr):
         """checks abstractions for expr"""
         def search_func(wr): 
-            if type(wr.expr) is Expression and wr.expr == expr:
+            if type(wr.expr.parent) is AbstractionExpression and wr.expr == expr:
                 raise FoundExpressionException()
         try:
-            self.walk(search_func, include_base=False, include_applications=False)
+            self.walk(search_func)
         except FoundExpressionException:
             return True
         return False
-        
-    def walk(self, func, **options):
-        """walks the expression, calling func on each sub part.
-        func can return False to terminate the walk.
-        
-        Args:
-            
-        """
-        include_base = options.get("include_base", True)
-        include_applications = options.get("include_applications", True)
-        include_abstractions = options.get("include_abstractions", True)
-        
-        if include_base:
-            func(ExpressionWalkResult(self.base, 'base', obj=self))
-        
-        for i, expr in enumerate(self.applications):
-            if include_applications:
-                func(ExpressionWalkResult(expr, 'application', obj=self.applications, index=i))
-            expr.walk(func, **options)
-        
-        for i, expr in enumerate(self.abstractions):
-            if include_abstractions:    
-                func(ExpressionWalkResult(expr, 'abstraction', obj=self.abstractions, index=i))
-            expr.walk(func, **options)
-       
-    def apply(self, *expressions: List["Expression"]) -> "Expression":
-        if not isinstance(self.arity, ArityArrow):
-            raise ExpressionException("Cannot apply when arity has no arrow")
-        if (len(expressions) == 1 and expressions[0].arity != self.arity.lhs) or (len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)])):
-            raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity")
-        new_expr = deepcopy(self)
-        new_expr.applications = list(deepcopy(expressions))  # todo inplace replace
-        for e in new_expr.applications: e.parent = self
-        new_expr._arity = self.arity.rhs  # (1) 3.8.4
-        return new_expr
-    
-    def abstract(self, *expressions: List["Expression"]) -> "Expression":
-        new_expr = deepcopy(self)
-        new_expr.abstractions = list(deepcopy(expressions))  # todo inplace replace
-        for e in new_expr.abstractions: e.parent = self
-        new_expr._arity = ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)  # (1) 3.8.5
-        return new_expr
-    
     
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
-        # todo: raise if arity differs?
-        
-        if self == from_expr: # exact substitution
-            return deepcopy(to_expr) # (2) 2.4
-        
-        # check from_expr is free in this expression
-        if self.contains_bind(to_expr):
-            raise ToBeImplemented("Cannot yet substitute bound expression")
-        
-        new_expr = deepcopy(self)
-        if not from_expr.applications and not from_expr.abstractions \
-            and new_expr.base == from_expr.base:
-            new_expr.base = to_expr # (2) 2.4
-        
-        for i, appl in enumerate(new_expr.applications): # (2) 2.4
-            new_expr.applications[i] = appl.substitute(from_expr, to_expr)
-        
-        return new_expr
+        """abstract method"""
+        raise NotImplementedError()
     
     def general_bind_form(self):
         """replaces all bound variables with general ordinal expression.
@@ -271,47 +155,157 @@ class Expression(ExpressionBase):
 
         return new_expr
         
-    def list_copies(self):
-        print([k for k, v in globals().items() if v is self])
-
-
-class ExpressionCombination(ExpressionBase):    
-    def __init__(self, *expressions: List[Expression]):
-        """Combines list into comma-concatenated expression.
-        Args:
-            expressions (List[Expression]): list of expressions
+    def beta_reduction(self):
+        """beta-reduce expression, ie apply to abstraction
         """
-        self.expressions = expressions
-        self._arity = ArityCross(*[e.arity for e in expressions]) # (1) 3.8.6
-        
-    def __eq__(self, other):
+        foo = self.arity
+        pass
+
+
+class Symbol(Expression):
+    def __init__(self, str_repr=None, arity=A0, canonical=None, latex_repr=None):
+        """
+        Args:
+            baserepr (str): the string representation of the expression
+            arity (ArityExpression): the arity of the expression. defaults to single/saturated.
+            canonical (bool): expression is canonical or not. defaults to None (ie unknown).
+        """
+        super().__init__()
+        self.str_repr = str_repr
+        self.latex_repr = latex_repr if latex_repr is not None else str_repr
+        self.arity = arity
+        self.canonical = canonical
+
+    def render_typestring(self, renderer):  # @UnusedVariable
+        return self.str_repr
+    
+    def equals(self, other):
         """Overload == and compare expressions.
         Following (1) 3.9.
         """
-        # combinations are dealt with separately
-        if self.expressions and other.expressions:
-            return all([t == o and t.arity == o.arity for t,o in zip(self.expressions, other.expressions)])
-        
-    def select(self, i: int) -> Expression:
-        """Selects indexed subexpression from expression.
-        Args:
-            i (int): integer subexpression
+        return isinstance(other, self.__class__) and self.str_repr == other.str_repr and self.arity == other.arity
+    
+    def walk(self, func, **options):  # @UnusedVariable
+        pass
+    
+    def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
+        return deepcopy(to_expr)  if self == from_expr else deepcopy(self) #  exact substitution - (2) 2.4
+
+class BaseWithChildrenExpression(Expression):
+    def __init__(self, base: "ExpressionBase", expressions: List["ExpressionBase"], arity):
+        super().__init__()
+        self.base = deepcopy(base)
+        self.children = list(deepcopy(expressions))
+        for e in self.children: e.parent = self
+        self.arity = deepcopy(arity)
+    
+    def equals(self, other):
+        """Following (1) 3.9.
         """
-        if self.expressions is not None:
-            new_expr = deepcopy(self.expressions[i])
-            new_expr._arity = self.arity.args[i] # (1) 3.8.7
-            return new_expr
+        # todo: convert to general bind form before comparison (make optional?)
+        if not isinstance(other, self.__class__):
+            return False
         
-    def __repr__(self):
-        return self.render_type_string()
+        if self.base != other.base:
+            return False
         
-    def render_type_string(self):
-        if self.expressions:
-            rr = TypeStringRenderer()
-            return ", ".join([rr.render(e) for e in self.expressions])
+        if self.children and other.children: # todo: do we need to check arity here?
+            if not all([t == o and t.arity == o.arity for t, o in zip(self.children, other.children)]):
+                return False
+        return True
+    
+    def walk(self, func, **options):  # @UnusedVariable
+        func(ExpressionWalkResult(self.base, obj=self))
+        self.base.walk(func, **options)
+        for i, expr in enumerate(self.children):
+            func(ExpressionWalkResult(expr, obj=self.children, index=i))
+            expr.walk(func, **options)
+            
+    def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
         
-    def render_latex(self):
-        if self.expressions:
-            rr = LatexRenderer()
-            return ", ".join([rr.render(e) for e in self.expressions])
+        if self == from_expr: # exact substitution
+            return deepcopy(to_expr) # (2) 2.4
+        
+        # check from_expr is free in this expression
+        if self.contains_bind(to_expr):
+            raise ToBeImplemented("Cannot yet substitute bound expression")
+        
+        new_expr = deepcopy(self)
+        new_expr.base = new_expr.base.substitute(from_expr, to_expr) # (2) 2.4
+        
+        for i, child in enumerate(new_expr.children): # (2) 2.4
+            new_expr.children[i] = child.substitute(from_expr, to_expr)
+        
+        return new_expr
+
+class ApplicationExpression(BaseWithChildrenExpression):
+    def render_typestring(self, renderer):
+        return "%s(%s)" % (renderer.render(self.base), ", ".join([renderer.render(e) for e in self.children]))
+
+class AbstractionExpression(BaseWithChildrenExpression):
+    def render_typestring(self, renderer):
+        return "(%s)%s" % (", ".join([renderer.render(e) for e in self.children]), renderer.render(self.base))
+
+
+class Expression2(Expression):
+    
+    # this is applied if arity not provided.
+    default_arity = A0
+
+
+    @property
+    def arity(self):
+        return self._arity
+    
+    @arity.setter
+    def arity(self, value):
+        warn("Setting arity outside object initialisation does not pass through to base expression")
+        self._arity = value
+
+    
+
+
+# class ExpressionCombination(ExpressionBase):    
+#     def __init__(self, *expressions: List[Expression]):
+#         """Combines list into comma-concatenated expression.
+#         Args:
+#             expressions (List[Expression]): list of expressions
+#         """
+#         self.expressions = expressions
+#         self._arity = ArityCross(*[e.arity for e in expressions]) # (1) 3.8.6
+#         
+#     def __eq__(self, other):
+#         """Overload == and compare expressions.
+#         Following (1) 3.9.
+#         """
+#         # combinations are dealt with separately
+#         if self.expressions and other.expressions:
+#             return all([t == o and t.arity == o.arity for t,o in zip(self.expressions, other.expressions)])
+#         
+#     def select(self, i: int) -> Expression:
+#         """Selects indexed subexpression from expression.
+#         Args:
+#             i (int): integer subexpression
+#         """
+#         if self.expressions is not None:
+#             new_expr = deepcopy(self.expressions[i])
+#             new_expr._arity = self.arity.args[i] # (1) 3.8.7
+#             return new_expr
+#         
+#     def __repr__(self):
+#         return self.render_type_string()
+# 
+#     @property
+#     def arity(self):
+#         return self._arity
+#         
+#     def render_type_string(self):
+#         if self.expressions:
+#             rr = TypeStringRenderer()
+#             return ", ".join([rr.render(e) for e in self.expressions])
+#         
+#     def render_latex(self):
+#         if self.expressions:
+#             rr = LatexRenderer()
+#             return ", ".join([rr.render(e) for e in self.expressions])
     

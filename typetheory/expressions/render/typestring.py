@@ -5,14 +5,12 @@ Created on 10 Jul 2017
 '''
 from .base import Renderer
 
-
+class TypeStringRendererMixin(object):
+    def render_typestring(self, renderer):  # @UnusedVariable
+        raise NotImplementedError()
+    
 class TypeStringRenderer(Renderer):
     def render(self, expression: "Expression") -> str:
-        rendered = ""
-        if expression.baserepr is not None:
-            rendered = expression.baserepr
-        if hasattr(expression, "applications") and expression.applications:
-            rendered += "(%s)" % (", ".join([self.render(e) for e in expression.applications]))
-        if hasattr(expression, "abstractions") and expression.abstractions:
-            rendered = "(%s)%s" % (", ".join([self.render(e) for e in expression.abstractions]), rendered)
-        return rendered
+        return expression.render_typestring(self)
+
+        

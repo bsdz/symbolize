@@ -3,19 +3,19 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expressions import Expression
+from ..expressions import Symbol
 
-x = Expression('x')
-y = Expression('y')
-z = Expression('z')
+x = Symbol('x')
+y = Symbol('y')
+z = Symbol('z')
 
-a = Expression('a')
-b = Expression('b')
-c = Expression('c')
+a = Symbol('a')
+b = Symbol('b')
+c = Symbol('c')
 
-n = Expression('n')
-m = Expression('m')
+n = Symbol('n')
+m = Symbol('m')
 
-i = Expression('i')
-j = Expression('j')
-k = Expression('k')
+i = Symbol('i')
+j = Symbol('j')
+k = Symbol('k')

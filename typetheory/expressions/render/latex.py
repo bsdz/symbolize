@@ -7,7 +7,10 @@ from textwrap import dedent
 import jinja2
 
 from .base import Renderer
-from ...utility import extend_instance
+
+class LatexRendererMixin(object):
+    def render_latex(self, renderer):  # @UnusedVariable
+        raise NotImplementedError()
 
 class LatexRendererExpressionMixin(object):
     def render_latex_baserepr(self, renderer):  # @UnusedVariable
@@ -30,12 +33,23 @@ class LatexRenderer(Renderer):
     expression.render_latex_abstractions
     """
     def __init__(self):
-        super(LatexRenderer, self).__init__()
+        super().__init__()
         self.jinja2_env = jinja2.Environment(trim_blocks=True,autoescape=False)
         self.jinja2_env.globals["LatexRenderer"] = LatexRenderer
         self.postfix_hooks = [] # function that generate latex for postfix 
 
     def render(self, expression: "Expression") -> str:
+        
+        rendered = expression.render_latex(self)
+        
+        # we genrate postfix only if we are top level expression, i.e no parent
+        if self.postfix_hooks:
+            postfix = "".join([h(self) for h in self.postfix_hooks])
+            rendered = r"\quad" + postfix
+             
+        return rendered
+
+    def render2(self, expression: "Expression") -> str:
         
         baserepr_rendered = expression.render_latex_baserepr(self)
         applications_rendered = expression.render_latex_applications(self)

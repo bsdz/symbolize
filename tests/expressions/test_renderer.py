@@ -4,44 +4,46 @@ Created on 8 Jul 2017
 @author: bsdz
 """
 import unittest
-from typetheory.expressions import Expression
+from typetheory.expressions import Symbol
 from typetheory.definitions.operators import plus
 from typetheory.definitions.integrals import integral
-from typetheory.expressions.render.graph import GraphRenderer
+from typetheory.expressions.extensions import InclusionExclusionSymbol
 
 
 class RendererTest(unittest.TestCase):
 
     def test_render_latex(self):
-        y = Expression('y')
-        sin_y = Expression('sin(y)')
-        rendered = plus.apply(y, sin_y).abstract(y).render_latex()
+        y = Symbol('y')
+        sin_y = Symbol('sin(y)')
+        rendered = plus(y, sin_y).abstract(y).repr_latex()
         self.assertGreater(len(rendered), 0)
         
     def test_render_latex_integral(self):
-        a = Expression('a')
-        b = Expression('b')
-        y = Expression('y')
-        sin_y = Expression('sin(y)')
-        rendered = integral.apply(plus.apply(y, sin_y).abstract(y), a, b).render_latex()
+        a = Symbol('a')
+        b = Symbol('b')
+        y = Symbol('y')
+        sin_y = Symbol('sin(y)')
+        rendered = integral(plus(y, sin_y).abstract(y), a, b).repr_latex()
         self.assertGreater(len(rendered), 0)
         
     def test_render_latex_binary_infix(self):
-        a = Expression('a')
-        b = Expression('b')
-        rendered = plus.apply(a, b).render_latex()
+        a = Symbol('a')
+        b = Symbol('b')
+        rendered = plus(a, b).repr_latex()
         self.assertGreater(len(rendered), 0)
+        
+    def test_render_latex_inclusionexclusion(self):
+        x = Symbol('x')
+        y = Symbol('y')
+        expr = InclusionExclusionSymbol('e').apply(x,y)
+        rendered = expr.repr_latex()
+        self.assertEqual("foo", rendered)
 
     def test_render_graph(self):
-        a = Expression('a')
-        b = Expression('b')
-        x = Expression('x')
-        y = Expression('y')
-        sin_y = Expression('sin(y)')
-        #expr = integral.apply(plus.apply(y, sin_y).abstract(y), a, b)
-        #expr = plus.apply(y, sin_y)
-        expr = plus.apply(x,plus.apply(x, y))
-        graph = GraphRenderer().render(expr)
+        x = Symbol('x')
+        y = Symbol('y')
+        expr = plus(x,plus(x, y)).abstract(y)
+        graph = expr.repr_graphtool()
         self.assertIsNotNone(graph)
 
 if __name__ == "__main__":

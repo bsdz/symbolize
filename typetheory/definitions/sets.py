@@ -3,7 +3,7 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expressions import Expression
+from ..expressions import Symbol
 
-N = Expression('N', latexrepr=r'\mathbb{N}')
-R = Expression('R', latexrepr=r'\mathbb{R}')
+N = Symbol('N', latex_repr=r'\mathbb{N}')
+R = Symbol('R', latex_repr=r'\mathbb{R}')

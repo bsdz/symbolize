@@ -4,8 +4,8 @@ Created on 2 Aug 2017
 @author: bsdz
 '''
 
-from ..expressions import IntegralExpression
+from ..expressions import IntegralSymbol
    
-integral = IntegralExpression('Integral', latexrepr=r'\int')
-sum_ = IntegralExpression('Sum', latexrepr=r'\sum')
-product = IntegralExpression('Product', latexrepr=r'\prod')
+integral = IntegralSymbol('Integral', latex_repr=r'\int')
+sum_ = IntegralSymbol('Sum', latex_repr=r'\sum')
+product = IntegralSymbol('Product', latex_repr=r'\prod')

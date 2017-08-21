@@ -122,9 +122,9 @@ class ExpressionTest(unittest.TestCase):
     
     @unittest.skip("")  
     def test_general_bind_form(self):
-        s,t,u,v,w,x,y,z = [Expression(i) for i in 'stuvwxyz']
-        u1 = Expression('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
-        u2 = Expression('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
+        s,t,u,v,w,x,y,z = [Symbol(i) for i in 'stuvwxyz']
+        u1 = Symbol('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
+        u2 = Symbol('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
         
         gbe_gen = general_bind_expression_generator()
         gbe1 = next(gbe_gen)
@@ -146,9 +146,9 @@ class ExpressionTest(unittest.TestCase):
     
     @unittest.skip("")    
     def test_beta_reduction(self):
-        s,t,u,v,w,x,y,z = [Expression(i) for i in 'stuvwxyz']
-        u1 = Expression('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
-        u2 = Expression('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
+        s,t,u,v,w,x,y,z = [Symbol(i) for i in 'stuvwxyz']
+        u1 = Symbol('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
+        u2 = Symbol('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
         
         tests = [
             [u1(x,y).abstract(x).apply(z).beta_reduction(), u1(z,y)],

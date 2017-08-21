@@ -3,20 +3,20 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expressions import BinaryInfixExpression, InclusionExclusionExpression, Expression, ArityArrow, ArityCross, A0
+from ..expressions import BinaryInfixSymbol, InclusionExclusionSymbol
 
 
-plus = BinaryInfixExpression('+')
-mult = BinaryInfixExpression('*', latexrepr=r'\cdot')
-divide = BinaryInfixExpression('/')
+plus = BinaryInfixSymbol('+')
+mult = BinaryInfixSymbol('*', latex_repr=r'\cdot')
+divide = BinaryInfixSymbol('/')
 
-gt = BinaryInfixExpression('>', latexrepr=r'>')
-geq = BinaryInfixExpression('>=', latexrepr=r'\geq')
-lt = BinaryInfixExpression('<', latexrepr=r'<')
-leq = BinaryInfixExpression('<=', latexrepr=r'\leq')
+gt = BinaryInfixSymbol('>', latex_repr=r'>')
+geq = BinaryInfixSymbol('>=', latex_repr=r'\geq')
+lt = BinaryInfixSymbol('<', latex_repr=r'<')
+leq = BinaryInfixSymbol('<=', latex_repr=r'\leq')
 
 
-in_ = InclusionExclusionExpression('in', latexrepr=r'\in')
+in_ = InclusionExclusionSymbol('in', latex_repr=r'\in')
 
-pair = BinaryInfixExpression(',')
+pair = BinaryInfixSymbol(',')
 

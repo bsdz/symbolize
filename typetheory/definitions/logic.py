@@ -3,11 +3,11 @@ Created on 2 Aug 2017
 
 @author: bsdz
 '''
-from ..expressions import Expression, BinaryInfixExpression, LogicQuantificationExpression, ArityArrow, ArityCross, A0
+from ..expressions import Symbol, BinaryInfixSymbol, LogicQuantificationSymbol, ArityArrow, ArityCross, A0
 
-forall = LogicQuantificationExpression('forall', latexrepr=r'\forall')
-exists = LogicQuantificationExpression('exists', latexrepr=r'\exists')
-or_ = BinaryInfixExpression('or', latexrepr=r'\lor')
-and_ = BinaryInfixExpression('and', latexrepr=r'\land')
-not_ = Expression('not', arity=ArityArrow(A0,A0), latexrepr=r'\neg')
-implies = BinaryInfixExpression('implies', latexrepr=r'\Rightarrow')
+forall = LogicQuantificationSymbol('forall', latex_repr=r'\forall')
+exists = LogicQuantificationSymbol('exists', latex_repr=r'\exists')
+or_ = BinaryInfixSymbol('or', latex_repr=r'\lor')
+and_ = BinaryInfixSymbol('and', latex_repr=r'\land')
+not_ = Symbol('not', arity=ArityArrow(A0,A0), latex_repr=r'\neg')
+implies = BinaryInfixSymbol('implies', latex_repr=r'\Rightarrow')

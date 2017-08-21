@@ -8,8 +8,8 @@ from itertools import count
 
 from .arity import A0, ArityArrow, ArityCross
 from .render.typestring import TypeStringRenderer, TypeStringRendererMixin
-from .render.latex import LatexRenderer, LatexRendererExpressionMixin
-from .render.graph import GraphRenderer
+from .render.latex import LatexRenderer, LatexRendererMixin
+from .render.graph import GraphToolRenderer, GraphToolRendererMixin
 from ..utility import ToBeImplemented
 
 class ExpressionWalkResult(object):
@@ -41,12 +41,13 @@ class FoundExpressionException(Exception):
 class ExpressionException(Exception):
     pass
 
-class Expression(TypeStringRendererMixin):
+class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererMixin):
+    
     def __init__(self):
         self.parent = None
         
     def __repr__(self):
-        return self.render_type_string()
+        return self.repr_typestring()
     
     def __call__(self, *expressions: List["Expression"]) -> "Expression":
         return self.apply(*expressions)
@@ -58,37 +59,43 @@ class Expression(TypeStringRendererMixin):
     
     def __hash__(self):
         # hash using rendered type string
-        return hash(self.render_type_string())
+        return hash(self.repr_typestring())
     
     def __contains__(self, expr):
         return self.contains(expr)
     
     def _repr_latex_(self):
         """For Jupyter/IPython"""
-        return "$$%s$$" % self.render_latex()
+        return "$$%s$$" % self.repr_latex()
     
-    def render_type_string(self):
+    def repr_typestring(self):
         return TypeStringRenderer().render(self)
     
-    def render_latex(self):
+    def repr_latex(self):
         return LatexRenderer().render(self)
 
-    def render_graph(self):
-        return GraphRenderer().render(self)
+    def repr_graphtool(self):
+        return GraphToolRenderer().render(self)
     
     def list_copies(self):
         # todo: is this useful?
         print([k for k, v in globals().items() if v is self])
+     
+    def default_application_class(self):
+        return ApplicationExpression
+    
+    def default_abstraction_class(self):
+        return AbstractionExpression
         
     def apply(self, *expressions: List["Expression"]) -> "Expression":
         if not isinstance(self.arity, ArityArrow):
             raise ExpressionException("Cannot apply when arity has no arrow")
         if (len(expressions) == 1 and expressions[0].arity != self.arity.lhs) or (len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)])):
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity")
-        return ApplicationExpression(self, expressions, self.arity.rhs) # arity - (1) 3.8.4
+        return self.default_application_class()(self, expressions, self.arity.rhs) # arity - (1) 3.8.4
     
     def abstract(self, *expressions: List["Expression"]) -> "Expression":
-        return AbstractionExpression(self, expressions, ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)) # arity - (1) 3.8.5
+        return self.default_abstraction_class()(self, expressions, ArityArrow(ArityCross(*[e.arity for e in expressions]), self.arity)) # arity - (1) 3.8.5
     
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
@@ -163,7 +170,9 @@ class Expression(TypeStringRendererMixin):
 
 
 class Symbol(Expression):
-    def __init__(self, str_repr=None, arity=A0, canonical=None, latex_repr=None):
+    default_arity = A0
+    
+    def __init__(self, str_repr=None, arity=None, canonical=None, latex_repr=None):
         """
         Args:
             baserepr (str): the string representation of the expression
@@ -173,11 +182,21 @@ class Symbol(Expression):
         super().__init__()
         self.str_repr = str_repr
         self.latex_repr = latex_repr if latex_repr is not None else str_repr
-        self.arity = arity
+        self.arity = arity if arity is not None else self.__class__.default_arity
         self.canonical = canonical
 
     def render_typestring(self, renderer):  # @UnusedVariable
         return self.str_repr
+    
+    def render_latex(self, renderer):  # @UnusedVariable
+        return self.latex_repr
+    
+    def render_graphtool(self, renderer):
+        graph = renderer.new_graph()
+        base_vertex = graph.add_vertex()
+        graph.gp["basevertex"] = base_vertex
+        graph.vp["label"][base_vertex] = self.str_repr
+        return graph
     
     def equals(self, other):
         """Overload == and compare expressions.
@@ -192,12 +211,12 @@ class Symbol(Expression):
         return deepcopy(to_expr)  if self == from_expr else deepcopy(self) #  exact substitution - (2) 2.4
 
 class BaseWithChildrenExpression(Expression):
-    def __init__(self, base: "ExpressionBase", expressions: List["ExpressionBase"], arity):
+    def __init__(self, base: "ExpressionBase", expressions: List["ExpressionBase"], arity=None):
         super().__init__()
         self.base = deepcopy(base)
         self.children = list(deepcopy(expressions))
-        for e in self.children: e.parent = self
-        self.arity = deepcopy(arity)
+        for e in self.children: e.parent = self 
+        self.arity = deepcopy(arity) if arity is not None else self.__class__.default_arity
     
     def equals(self, other):
         """Following (1) 3.9.
@@ -241,18 +260,74 @@ class BaseWithChildrenExpression(Expression):
 class ApplicationExpression(BaseWithChildrenExpression):
     def render_typestring(self, renderer):
         return "%s(%s)" % (renderer.render(self.base), ", ".join([renderer.render(e) for e in self.children]))
+    
+    def render_latex(self, renderer):
+        return "%s(%s)" % (renderer.render(self.base), ", ".join([renderer.render(e) for e in self.children]))
+    
+    def render_graphtool(self, renderer):
+        from graph_tool.generation import graph_union
+        
+        graph = renderer.render(self.base)
+        base_vertex = graph.gp["basevertex"]
+        
+        for e in self.children:
+            subgraph = renderer.render(e)
+            
+            subgraph_placeholder_vertex = graph.add_vertex()
+            graph.add_edge(base_vertex, subgraph_placeholder_vertex)
 
+            intersection_map = subgraph.new_vertex_property("int")
+            for v in subgraph.vertices():
+                intersection_map[v] = -1
+            intersection_map[subgraph.vertex(base_vertex)] = subgraph_placeholder_vertex
+             
+            graph, combined_props = graph_union(graph, subgraph,
+                   props=[(graph.vp["label"], subgraph.vp["label"])],
+                   intersection=intersection_map)
+            graph.vp["label"] = combined_props[0]
+            graph.gp["basevertex"] = graph.new_graph_property("int", base_vertex)
+
+        return graph
+    
 class AbstractionExpression(BaseWithChildrenExpression):
     def render_typestring(self, renderer):
         return "(%s)%s" % (", ".join([renderer.render(e) for e in self.children]), renderer.render(self.base))
+    
+    def render_latex(self, renderer):
+        return r"\lambda(%s)%s" % (", ".join([renderer.render(e) for e in self.children]), renderer.render(self.base))
 
+    def render_graphtool(self, renderer):
+        from graph_tool.generation import graph_union
+        
+        graph = renderer.render(self.base)
+        base_vertex = graph.gp["basevertex"]
+        
+        lambda_vertex = graph.add_vertex()
+        graph.gp["basevertex"] = lambda_vertex
+        graph.vp["label"][lambda_vertex] = "λ"
+        graph.add_edge(base_vertex, lambda_vertex)
+        
+        for e in self.children:
+            subgraph = renderer.render(e)
+             
+            subgraph_placeholder_vertex = graph.add_vertex()
+            graph.add_edge(lambda_vertex, subgraph_placeholder_vertex)
+            
+            intersection_map = subgraph.new_vertex_property("int") 
+            for v in subgraph.vertices():
+                intersection_map[v] = -1
+            intersection_map[subgraph.vertex(subgraph.gp["basevertex"])] = subgraph_placeholder_vertex
+             
+            graph, combined_props = graph_union(graph, subgraph,
+                   props=[(graph.vp["label"], subgraph.vp["label"])],
+                   intersection=intersection_map)
+            graph.vp["label"] = combined_props[0]
+            graph.gp["basevertex"] = graph.new_graph_property("int", lambda_vertex)
+            
+        return graph
 
 class Expression2(Expression):
     
-    # this is applied if arity not provided.
-    default_arity = A0
-
-
     @property
     def arity(self):
         return self._arity

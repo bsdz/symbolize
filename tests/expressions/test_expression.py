@@ -4,7 +4,6 @@ from copy import deepcopy
 
 from typetheory.expressions import Symbol, ExpressionException, general_bind_expression_generator
 from typetheory.expressions.arity import ArityArrow, ArityCross, A0
-from scipy.constants.codata import unit
 
 plus = Symbol('+', arity=ArityArrow(ArityCross(A0,A0),A0))
 

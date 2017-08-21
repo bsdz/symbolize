@@ -14,7 +14,7 @@ class DefinitionsTest(unittest.TestCase):
         
     def test_natnum(self):
         n = NaturalNumber('n')
-        lt = n.render_latex()
+        lt = n.repr_latex()
         
 
 if __name__ == "__main__":

@@ -4,8 +4,14 @@ from .expression import Symbol, ApplicationExpression
 from .arity import ArityArrow, ArityCross, A0
 
 class BinaryInfixExpression(ApplicationExpression):
-    def render_latex(self, renderer):
-        return "%s %s %s" % (renderer.render(self.children[0]), renderer.render(self.base), renderer.render(self.children[1]))
+    def render_latex(self, renderer):  # @UnusedVariable
+        lhs = self.children[0].render_latex(renderer)
+        if isinstance(self.children[0], ApplicationExpression):
+            lhs = "(%s)" % lhs
+        rhs = self.children[1].render_latex(renderer)
+        if isinstance(self.children[1], ApplicationExpression):
+            rhs = "(%s)" % rhs
+        return "%s %s %s" % (lhs, self.base.render_latex(renderer), rhs)
 
 class BinaryInfixSymbol(Symbol):
     default_arity = ArityArrow(ArityCross(A0,A0),A0)
@@ -15,10 +21,10 @@ class BinaryInfixSymbol(Symbol):
 
 
 class IntegralExpression(ApplicationExpression):
-    def render_latex(self, renderer):
+    def render_latex(self, renderer):  # @UnusedVariable
         integrand, limit_min, limit_max = self.children
         dummy_var = integrand.children[0]
-        return "%s_{%s=%s}^{%s}{%s}" % tuple([renderer.render(e) for e in (self.base, dummy_var, limit_min, limit_max, integrand.base)])
+        return "%s_{%s=%s}^{%s}{%s}" % tuple([e.render_latex(renderer) for e in (self.base, dummy_var, limit_min, limit_max, integrand.base)])
  
 class IntegralSymbol(Symbol):
     default_arity = ArityArrow(ArityCross(ArityArrow(A0,A0),A0,A0),A0)
@@ -34,14 +40,14 @@ class InclusionExclusionExpression(ApplicationExpression):
             
             def _render_latex_postfix(renderer):
                 if renderer._inclusion_exclusion_groups:
-                    return "[%s]" % ", ".join(["%s %s %s" % (", ".join([renderer.render(e) for e in mem_expr_set]), 
-                                      oper_collect[0], renderer.render(oper_collect[1]))
+                    return "[%s]" % ", ".join(["%s %s %s" % (", ".join([e.render_latex(renderer) for e in mem_expr_set]), 
+                                      oper_collect[0].render_latex(renderer), oper_collect[1].render_latex(renderer))
                      for oper_collect, mem_expr_set in renderer._inclusion_exclusion_groups.items()])
             
             renderer.postfix_hooks.append(_render_latex_postfix)
         
         renderer._inclusion_exclusion_groups[(self.base, self.children[1])].add(self.children[0])
-        return renderer.render(self.children[0])
+        return self.children[0].render_latex(renderer)
     
     def render_latex_parenthesize_applications(self, renderer):  # @UnusedVariable
         return False
@@ -59,8 +65,8 @@ class InclusionExclusionSymbol(Symbol):
 
 
 class LogicQuantificationExpression(ApplicationExpression):
-    def render_latex_applications(self, renderer):
-        return "%s(%s).%s" % (self.latexrepr, renderer.render(self.children[0]), renderer.render(self.children[1]))
+    def render_latex_applications(self, renderer):  # @UnusedVariable
+        return "%s(%s).%s" % (self.latexrepr, self.children[0].render_latex(renderer), self.children[1].render_latex(renderer))
     
 class LogicQuantificationSymbol(Symbol):
     default_arity = ArityArrow(ArityCross(A0,A0),A0)

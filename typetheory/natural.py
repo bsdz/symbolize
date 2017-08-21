@@ -3,11 +3,13 @@ Created on 31 Jul 2017
 
 @author: bsdz
 '''
-from .expressions import Symbol, InclusionExclusionSymbol
+from .expressions import Symbol, A0
+from .expressions.extensions import InclusionExclusionExpression
+from .definitions.operators import in_
 from .definitions.sets import N
 
-class NaturalNumber(InclusionExclusionSymbol):
+
+class NaturalNumber(InclusionExclusionExpression):
     def __init__(self, member_label):
-        super().__init__('in', latex_repr=r'\in')
-        new_obj = self.apply(Symbol(member_label), N)
-        self.__dict__.update(new_obj.__dict__)
+        super().__init__(in_, [Symbol(member_label), N], A0)
+        

@@ -258,20 +258,20 @@ class BaseWithChildrenExpression(Expression):
         return new_expr
 
 class ApplicationExpression(BaseWithChildrenExpression):
-    def render_typestring(self, renderer):
-        return "%s(%s)" % (renderer.render(self.base), ", ".join([renderer.render(e) for e in self.children]))
+    def render_typestring(self, renderer):  # @UnusedVariable
+        return "%s(%s)" % (self.base.render_typestring(renderer), ", ".join([e.render_typestring(renderer) for e in self.children]))
     
-    def render_latex(self, renderer):
-        return "%s(%s)" % (renderer.render(self.base), ", ".join([renderer.render(e) for e in self.children]))
+    def render_latex(self, renderer):  # @UnusedVariable
+        return "%s(%s)" % (self.base.render_latex(renderer), ", ".join([e.render_latex(renderer) for e in self.children]))
     
-    def render_graphtool(self, renderer):
+    def render_graphtool(self, renderer):  # @UnusedVariable
         from graph_tool.generation import graph_union
         
-        graph = renderer.render(self.base)
+        graph = self.base.render_graphtool(renderer)
         base_vertex = graph.gp["basevertex"]
         
         for e in self.children:
-            subgraph = renderer.render(e)
+            subgraph = e.render_graphtool(renderer)
             
             subgraph_placeholder_vertex = graph.add_vertex()
             graph.add_edge(base_vertex, subgraph_placeholder_vertex)
@@ -290,16 +290,16 @@ class ApplicationExpression(BaseWithChildrenExpression):
         return graph
     
 class AbstractionExpression(BaseWithChildrenExpression):
-    def render_typestring(self, renderer):
-        return "(%s)%s" % (", ".join([renderer.render(e) for e in self.children]), renderer.render(self.base))
+    def render_typestring(self, renderer):  # @UnusedVariable
+        return "(%s)%s" % (", ".join([e.render_typestring(renderer) for e in self.children]), self.base.render_typestring(renderer))
     
-    def render_latex(self, renderer):
-        return r"\lambda(%s)%s" % (", ".join([renderer.render(e) for e in self.children]), renderer.render(self.base))
+    def render_latex(self, renderer):  # @UnusedVariable
+        return r"\lambda(%s)%s" % (", ".join([e.render_latex(renderer) for e in self.children]), self.base.render_latex(renderer))
 
-    def render_graphtool(self, renderer):
+    def render_graphtool(self, renderer):  # @UnusedVariable
         from graph_tool.generation import graph_union
         
-        graph = renderer.render(self.base)
+        graph = self.base.render_graphtool(renderer)
         base_vertex = graph.gp["basevertex"]
         
         lambda_vertex = graph.add_vertex()
@@ -308,7 +308,7 @@ class AbstractionExpression(BaseWithChildrenExpression):
         graph.add_edge(base_vertex, lambda_vertex)
         
         for e in self.children:
-            subgraph = renderer.render(e)
+            subgraph = e.render_graphtool(renderer)
              
             subgraph_placeholder_vertex = graph.add_vertex()
             graph.add_edge(lambda_vertex, subgraph_placeholder_vertex)

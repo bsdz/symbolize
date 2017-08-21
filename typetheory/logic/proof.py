@@ -36,19 +36,19 @@ class Argument(object):
         """List[Proposition]: list of discharge statements."""
         return self.discharges
     
-    def render_latex(self):
-        top_tex = r" \quad ".join([p.render_latex() for p in self._premises])
+    def repr_latex(self):
+        top_tex = r" \quad ".join([p.repr_latex() for p in self._premises])
         if self._discharges:
             top_tex = r"""\begin{matrix}
             [%s]\\
             \vdots\\
             %s\\
-            \end{matrix}""" % (r" \quad ".join([p.render_latex() for p in self._discharges]), top_tex)
+            \end{matrix}""" % (r" \quad ".join([p.repr_latex() for p in self._discharges]), top_tex)
         
-        return r"\frac{%s}{%s}%s" % (top_tex, self._conclusion.render_latex(),
+        return r"\frac{%s}{%s}%s" % (top_tex, self._conclusion.repr_latex(),
                                      "(%s)" % self._label if self._label else "")
     
     def _repr_latex_(self):
         """For Jupyter/IPython"""
-        return "$$%s$$" % self.render_latex()
+        return "$$%s$$" % self.repr_latex()
     

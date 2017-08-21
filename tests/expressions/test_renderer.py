@@ -5,7 +5,7 @@ Created on 8 Jul 2017
 """
 import unittest
 from typetheory.expressions import Symbol
-from typetheory.definitions.operators import plus
+from typetheory.definitions.operators import plus, mult
 from typetheory.definitions.integrals import integral
 from typetheory.expressions.extensions import InclusionExclusionSymbol
 
@@ -35,9 +35,15 @@ class RendererTest(unittest.TestCase):
     def test_render_latex_inclusionexclusion(self):
         x = Symbol('x')
         y = Symbol('y')
-        expr = InclusionExclusionSymbol('e').apply(x,y)
+        expr = InclusionExclusionSymbol('in', latex_repr=r'\in').apply(x,y)
         rendered = expr.repr_latex()
-        self.assertEqual("foo", rendered)
+        self.assertEqual(r'x\quad[x \in y]', rendered)
+        
+    def test_parenthesis(self):
+        x,y,z = [Symbol(i) for i in 'xyz']
+        expr = mult(z,plus(x, y))
+        rendered = expr.repr_latex()
+        self.assertEqual(r"z \cdot (x + y)", rendered)
 
     def test_render_graph(self):
         x = Symbol('x')

@@ -33,7 +33,7 @@ class ExpressionWalkResult(object):
 def general_bind_expression_generator():
     prefix = "__gbe_"
     for i in count(start=0, step=1): # we have an infinite collection of variables
-        yield Expression('%s%s' % (prefix, i))
+        yield Symbol('%s%s' % (prefix, i))
 
 class FoundExpressionException(Exception):
     pass
@@ -144,30 +144,35 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
             # find abstraction and walk parent swaping abstracted expression
             # with generic expression
             
-            gb_expr = next(gbe_generator)
-            
-            def swap_func(wr2):
-                if wr2.expr == wr1.expr:
-                    # should we adjust arity to match?
-                    gb_expr._arity = wr2.expr.arity
-                    if wr2.index is not None:
-                        wr2.obj[wr2.index] = gb_expr
-                    else:
-                        wr2.obj.base = gb_expr
-                     
-            new_expr.walk(swap_func)
+            if type(wr1.expr.parent) is AbstractionExpression:
+                gb_expr = next(gbe_generator)
+                
+                def swap_func(wr2):
+                    if wr2.expr == wr1.expr:
+                        # should we adjust arity to match?
+                        gb_expr.arity = wr2.expr.arity
+                        if wr2.index is not None:
+                            wr2.obj[wr2.index] = gb_expr
+                        else:
+                            wr2.obj.base = gb_expr
+                            
+                new_expr.walk(swap_func)
           
         # we walk and search abstractions
-        new_expr.walk(search_func, include_base=False, include_applications=False)
+        new_expr.walk(search_func)
 
         return new_expr
         
     def beta_reduction(self):
         """beta-reduce expression, ie apply to abstraction
         """
-        foo = self.arity
-        pass
-
+        # todo: test arity
+        new_expr = deepcopy(self)
+        if isinstance(new_expr, ApplicationExpression) and isinstance(new_expr.base, AbstractionExpression):
+            new_expr = new_expr.base.base
+            for i, expr in enumerate(self.base.children): # abstractions
+                new_expr = new_expr.substitute(expr, self.children[i])
+        return new_expr
 
 class Symbol(Expression):
     default_arity = A0

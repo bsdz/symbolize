@@ -118,8 +118,7 @@ class ExpressionTest(unittest.TestCase):
         
         for i, (e1,e2) in enumerate(tests):
             self.assertEqual(e1, e2, "check sub %s" % i)
-    
-    @unittest.skip("")  
+     
     def test_general_bind_form(self):
         s,t,u,v,w,x,y,z = [Symbol(i) for i in 'stuvwxyz']
         u1 = Symbol('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
@@ -140,10 +139,9 @@ class ExpressionTest(unittest.TestCase):
             [u1(x,y).abstract(u1).general_bind_form(), gbe1_u1(x,y).abstract(gbe1_u1)]
         ]
         
-        for e1,e2 in tests:
-            self.assertEqual(e1, e2, "check general bind form")
+        for i, (e1,e2) in enumerate(tests):
+            self.assertEqual(e1, e2, "check general bind form %s" % i)
     
-    @unittest.skip("")    
     def test_beta_reduction(self):
         s,t,u,v,w,x,y,z = [Symbol(i) for i in 'stuvwxyz']
         u1 = Symbol('u1', arity=ArityArrow(ArityCross(A0,A0),A0))
@@ -151,10 +149,13 @@ class ExpressionTest(unittest.TestCase):
         
         tests = [
             [u1(x,y).abstract(x).apply(z).beta_reduction(), u1(z,y)],
+            [u1(x,y).abstract(x,y).apply(z,z).beta_reduction(), u1(z,z)],
+            [u1(x,y).abstract(x,y).apply(v,w).beta_reduction(), u1(v,w)],
+            [u1(x,y).abstract(x,y).beta_reduction(), u1(x,y).abstract(x,y)]
         ]
         
-#         for e1,e2 in tests:
-#             self.assertEqual(e1, e2, "check beta reduction")
+        for i, (e1,e2) in enumerate(tests):
+            self.assertEqual(e1, e2, "check beta reduction %s" % i)
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

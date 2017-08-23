@@ -9,3 +9,5 @@ sin = Symbol('sin', arity=ArityArrow(A0,A0))
 
 fst = Symbol('fst', ArityArrow(A0,A0))
 snd = Symbol('snd', ArityArrow(A0,A0))
+inl = Symbol('inl', ArityArrow(A0,A0))
+inr = Symbol('inr', ArityArrow(A0,A0))

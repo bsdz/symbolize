@@ -13,3 +13,6 @@ class NaturalNumber(InclusionExclusionExpression):
     def __init__(self, member_label):
         super().__init__(in_, [Symbol(member_label), N], A0)
         
+    def render_latex_enable_wrap_parenthesis(self):
+        return False
+        

@@ -9,6 +9,17 @@ from .base import Renderer
 class LatexRendererMixin(object):
     def render_latex(self, renderer):  # @UnusedVariable
         raise NotImplementedError()
+    
+    def render_latex_enable_wrap_parenthesis(self):
+        return True
+    
+    def render_latex_wrap_parenthesis(self, renderer):
+        """wraps expression in parenthesis if application"""
+        from ..expression import ApplicationExpression
+        if isinstance(self, ApplicationExpression) and self.render_latex_enable_wrap_parenthesis():
+            return "(%s)" % self.render_latex(renderer)
+        else:
+            return "%s" % self.render_latex(renderer)
 
 class LatexRenderer(Renderer):
     def __init__(self):

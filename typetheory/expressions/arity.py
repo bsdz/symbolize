@@ -2,8 +2,8 @@ from typing import List
 
 class ArityExpression(object):
     def repr_brackets(self):
-        if repr(self) == "0":
-            return "0"
+        if repr(self) == "∅":
+            return "∅"
         else:
             return '(' + repr(self) + ')'
         
@@ -16,7 +16,7 @@ class ArityExpression(object):
         
 class ArityPlaceHolder(ArityExpression):
     def __repr__(self):
-        return "0"
+        return "∅"
 
 A0 = ArityPlaceHolder() # convenience instance
 
@@ -25,7 +25,7 @@ class ArityCross(ArityExpression):
         self.args = args
         
     def __repr__(self):
-        return " x ".join([i.repr_brackets() for i in self.args])
+        return " ⨯ ".join([i.repr_brackets() for i in self.args])
 
 class ArityArrow(ArityExpression):
     def __init__(self, lhs: ArityExpression, rhs: ArityExpression):
@@ -33,5 +33,5 @@ class ArityArrow(ArityExpression):
         self.rhs = rhs
         
     def __repr__(self):
-        return "%s -> %s" % (self.lhs.repr_brackets(), self.rhs.repr_brackets())
+        return "%s ⟶ %s" % (self.lhs.repr_brackets(), self.rhs.repr_brackets())
     

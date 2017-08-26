@@ -7,14 +7,16 @@ import unittest
 
 from typetheory.expressions import A0, ArityArrow
 
-from typetheory.definitions.logic import and_, implies
+from typetheory.definitions.logic import and_, implies, or_
 from typetheory.definitions.operators import pair
-from typetheory.definitions.functions import fst, snd
+from typetheory.definitions.functions import fst, snd, inl, inr, cases
 
 from typetheory.logic.proposition import Proposition, get_proposition_class
-from typetheory.logic.deduction_rules import conjunction_introduction, conjunction_elimination_1, conjunction_elimination_2, \
-    implication_introduction, implication_elimation
-from typetheory.logic.variables import A, B
+from typetheory.logic.deduction_rules import \
+    conjunction_introduction, conjunction_elimination_1, conjunction_elimination_2, \
+    implication_introduction, implication_elimation, \
+    disjunction_introduction_1, disjunction_introduction_2, disjunction_elimination
+from typetheory.logic.variables import A, B, C
 
 
 class TestDeductionRules(unittest.TestCase):
@@ -96,6 +98,55 @@ class TestDeductionRules(unittest.TestCase):
         self.assertEqual(s2.proposition_expr, B.proposition_expr, "correct prop")
         self.assertEqual(s2.proof_expr, r2.proof_expr.apply(a.proof_expr), "proof has correct expr")
 
+    def test_disjunction_introduction(self):
+        q = A('q')
+        r = B('r')
+
+        s1 = disjunction_introduction_1(q, B)
+
+        self.assertIsInstance(s1, Proposition, "result is a proposition")
+        self.assertEqual(s1.proposition_expr, or_(A.proposition_expr, B.proposition_expr), "proof has correct expr")
+        self.assertEqual(s1.proof_expr, inl(q.proof_expr), "proof has correct expr")
+
+        s2 = disjunction_introduction_2(r, A)
+
+        self.assertIsInstance(s2, Proposition, "result is a proposition")
+        self.assertEqual(s2.proposition_expr, or_(A.proposition_expr, B.proposition_expr), "proof has correct expr")
+        self.assertEqual(s2.proof_expr, inr(r.proof_expr), "proof has correct expr")
+
+    def test_disjunction_elimination(self):
+        
+        A_implies_C = get_proposition_class(implies(A.proposition_expr, C.proposition_expr))
+        B_implies_C = get_proposition_class(implies(B.proposition_expr, C.proposition_expr))
+
+        f = A_implies_C('f')
+        g = B_implies_C('g')
+
+        # test constructed disjunction
+        q = A('q')
+        r = B('r')
+
+        p1 = disjunction_introduction_1(q, B)
+        p2 = disjunction_introduction_2(r, A)
+
+        s1 = disjunction_elimination(p1, f, g)
+        self.assertIsInstance(s1, Proposition, "result is a proposition")
+        self.assertEqual(s1.proposition_expr, C.proposition_expr, "proof has correct expr")
+        self.assertEqual(s1.proof_expr, cases(p1.proof_expr, f.proof_expr, g.proof_expr), "proof has correct expr")
+
+        s2 = disjunction_elimination(p2, f, g)
+        self.assertIsInstance(s2, Proposition, "result is a proposition")
+        self.assertEqual(s2.proposition_expr, C.proposition_expr, "proof has correct expr")
+        self.assertEqual(s2.proof_expr, cases(p2.proof_expr, f.proof_expr, g.proof_expr), "proof has correct expr")
+
+        # test given disjunction
+        A_or_B = get_proposition_class(or_(A.proposition_expr, B.proposition_expr))
+        p3 = A_or_B('p3')
+        
+        s3 = disjunction_elimination(p3, f, g)
+        self.assertIsInstance(s3, Proposition, "result is a proposition")
+        self.assertEqual(s3.proposition_expr, C.proposition_expr, "proof has correct expr")
+        self.assertEqual(s3.proof_expr, cases(p3.proof_expr, f.proof_expr, g.proof_expr), "proof has correct expr")
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

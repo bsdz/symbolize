@@ -4,20 +4,21 @@ Created on 16 Jul 2017
 @author: bsdz
 '''
 
-from .expression import Expression, InclusionExclusionExpression, BinaryInfixExpression, ArityArrow, ArityCross, A0
+from .expressions import Symbol, InclusionExclusionExpression, BinaryInfixSymbol, ArityArrow, ArityCross, A0
 from .definitions.operators import in_
-from .proof import Argument
+from .logic.proof import Argument
 
-make_group = Expression('Group', arity=ArityArrow(ArityCross(A0,ArityArrow(ArityCross(A0,A0),A0)),A0))
-G_set = Expression('G') # genric group set
-op = BinaryInfixExpression('.', latexrepr=r'\cdot') # generic group operation
-G = make_group.apply(G_set, op)
+make_group = Symbol('Group', arity=ArityArrow(ArityCross(A0,ArityArrow(ArityCross(A0,A0),A0)),A0))
+G_set = Symbol('G') # generic group set
+op = BinaryInfixSymbol('.', latex_repr=r'\cdot') # generic group operation
+G = make_group(G_set, op)
 
 class GroupMember(InclusionExclusionExpression):
     def __init__(self, member_label):
-        super(GroupMember, self).__init__('in', latexrepr=r'\in')
-        new_obj = self.apply(Expression(member_label), G)
-        self.__dict__.update(new_obj.__dict__)
+        super().__init__(in_, [Symbol(member_label), G], A0)
+        
+    def render_latex_enable_wrap_parenthesis(self):
+        return False
 
 # generic members
 a = GroupMember('a')
@@ -26,7 +27,7 @@ b = GroupMember('b')
 axiom_closure = Argument(
     name = "group_closure", 
     premises = [a, b],
-    conclusion = [in_.apply(op.apply(a,b),G)]
+    conclusion = [in_(op.apply(a,b),G)]
 )
 
 

@@ -11,7 +11,7 @@ class GroupTest(unittest.TestCase):
 
 
     def test_render(self):
-        tex = op.render_latex()
+        tex = op.repr_latex()
         self.assertGreater(len(tex), 0)
 
 

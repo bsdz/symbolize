@@ -28,6 +28,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\expressions\__init__.py" />
+    <Compile Include="tests\logic\test_deduction_rules.py" />
     <Compile Include="tests\logic\test_proposition.py" />
     <Compile Include="tests\logic\__init__.py" />
     <Compile Include="tests\test_groups.py" />
@@ -50,6 +51,7 @@
     <Compile Include="typetheory\expressions\render\__init__.py" />
     <Compile Include="typetheory\expressions\__init__.py" />
     <Compile Include="typetheory\groups.py" />
+    <Compile Include="typetheory\logic\deduction_rules.py" />
     <Compile Include="typetheory\logic\proof.py" />
     <Compile Include="typetheory\logic\proposition.py" />
     <Compile Include="typetheory\logic\variables.py" />
@@ -61,6 +63,7 @@
   <ItemGroup>
     <Content Include="examples\notebooks\BCWXS3E1CE7C2C1OQK5QCVVXNTUL54CS.png" />
     <Content Include="examples\notebooks\test.png" />
+    <Content Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="examples\" />

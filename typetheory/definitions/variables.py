@@ -5,17 +5,5 @@ Created on 2 Aug 2017
 '''
 from ..expressions import Symbol
 
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
+x,y,z, a,b,c, n,m, i,j,k = [Symbol(c) for c in 'xyzabcnmijk']
 
-a = Symbol('a')
-b = Symbol('b')
-c = Symbol('c')
-
-n = Symbol('n')
-m = Symbol('m')
-
-i = Symbol('i')
-j = Symbol('j')
-k = Symbol('k')

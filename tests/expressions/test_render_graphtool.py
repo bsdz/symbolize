@@ -1,5 +1,8 @@
 import unittest
 
+from typetheory.expressions import Symbol
+from typetheory.definitions.operators import plus
+
 package_graphtool_installed = False
 try:
     from graph_tool import Graph

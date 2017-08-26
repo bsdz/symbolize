@@ -5,6 +5,7 @@ from tests.expressions.test_arity import ArityTest
 from tests.expressions.test_renderer import RendererTest
 from tests.definitions.test_definitions import DefinitionsTest
 from tests.logic.test_proposition import PropositionTest
+from tests.expressions.test_render_graphtool import GraphToolRenderTest
 
 
 def main():

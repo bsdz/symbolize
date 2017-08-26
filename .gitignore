@@ -96,3 +96,12 @@ ENV/
 
 # mkdocs documentation
 /site
+
+# Visual Studio 2015 cache/options directory
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# cache/options directory
+.vs/

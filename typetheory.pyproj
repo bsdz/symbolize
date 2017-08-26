@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{cf3a60cc-d896-4219-bfed-45fd08832f90}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile />
+    <SearchPath>..\typetheory</SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>Global|VisualStudio|env-20160824</InterpreterId>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="tests\definitions\test_definitions.py" />
+    <Compile Include="tests\definitions\__init__.py" />
+    <Compile Include="tests\expressions\test_arity.py" />
+    <Compile Include="tests\expressions\test_expression.py" />
+    <Compile Include="tests\expressions\test_renderer.py" />
+    <Compile Include="tests\expressions\test_render_graphtool.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\expressions\__init__.py" />
+    <Compile Include="tests\logic\test_proposition.py" />
+    <Compile Include="tests\logic\__init__.py" />
+    <Compile Include="tests\test_groups.py" />
+    <Compile Include="tests\__init__.py" />
+    <Compile Include="typetheory\definitions\functions.py" />
+    <Compile Include="typetheory\definitions\integrals.py" />
+    <Compile Include="typetheory\definitions\logic.py" />
+    <Compile Include="typetheory\definitions\misc.py" />
+    <Compile Include="typetheory\definitions\operators.py" />
+    <Compile Include="typetheory\definitions\sets.py" />
+    <Compile Include="typetheory\definitions\variables.py" />
+    <Compile Include="typetheory\definitions\__init__.py" />
+    <Compile Include="typetheory\expressions\arity.py" />
+    <Compile Include="typetheory\expressions\expression.py" />
+    <Compile Include="typetheory\expressions\extensions.py" />
+    <Compile Include="typetheory\expressions\render\base.py" />
+    <Compile Include="typetheory\expressions\render\graph.py" />
+    <Compile Include="typetheory\expressions\render\latex.py" />
+    <Compile Include="typetheory\expressions\render\typestring.py" />
+    <Compile Include="typetheory\expressions\render\__init__.py" />
+    <Compile Include="typetheory\expressions\__init__.py" />
+    <Compile Include="typetheory\groups.py" />
+    <Compile Include="typetheory\logic\proof.py" />
+    <Compile Include="typetheory\logic\proposition.py" />
+    <Compile Include="typetheory\logic\variables.py" />
+    <Compile Include="typetheory\logic\__init__.py" />
+    <Compile Include="typetheory\natural.py" />
+    <Compile Include="typetheory\utility.py" />
+    <Compile Include="typetheory\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="examples\notebooks\BCWXS3E1CE7C2C1OQK5QCVVXNTUL54CS.png" />
+    <Content Include="examples\notebooks\test.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="examples\" />
+    <Folder Include="examples\notebooks" />
+    <Folder Include="tests" />
+    <Folder Include="tests\definitions" />
+    <Folder Include="tests\expressions" />
+    <Folder Include="tests\logic" />
+    <Folder Include="typetheory" />
+    <Folder Include="typetheory\definitions" />
+    <Folder Include="typetheory\expressions" />
+    <Folder Include="typetheory\expressions\render" />
+    <Folder Include="typetheory\logic" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|VisualStudio|env-20160824" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

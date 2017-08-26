@@ -45,13 +45,6 @@ class RendererTest(unittest.TestCase):
         rendered = expr.repr_latex()
         self.assertEqual(r"z \cdot (x + y)", rendered)
 
-    def test_render_graph(self):
-        x = Symbol('x')
-        y = Symbol('y')
-        expr = plus(x,plus(x, y)).abstract(y)
-        graph = expr.repr_graphtool()
-        self.assertIsNotNone(graph)
-
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

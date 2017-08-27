@@ -20,7 +20,7 @@ class ExpressionWalkResult(object):
         self.index = index
         
     def __repr__(self):
-        res = "expr: %s; part: %s" % (repr(self.expr),self.part)
+        res = "expr: %s" % (repr(self.expr))
         if self.obj is not None:
             res += "; obj: %s" % self.obj
             if self.index is not None:

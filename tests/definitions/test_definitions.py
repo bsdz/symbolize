@@ -3,6 +3,8 @@ import unittest
 
 from typetheory.definitions.misc import natrec, listrec
 from typetheory.natural import NaturalNumber
+from typetheory.definitions.functions import lambda_
+from typetheory.definitions.variables import *
 
 
 class DefinitionsTest(unittest.TestCase):
@@ -11,11 +13,16 @@ class DefinitionsTest(unittest.TestCase):
     
     def test_listrec(self):
         self.assertEqual(repr(listrec.arity), '(∅ ⨯ ∅ ⨯ ((∅ ⨯ ∅ ⨯ ∅) ⟶ ∅)) ⟶ ∅')
-        
+
     def test_natnum(self):
         n = NaturalNumber('n')
-        lt = n.repr_latex()
-        
+        tex = n.repr_latex()
+        self.assertGreater(len(tex), 0, "returns some tex")
+
+    def test_lambda(self):
+        inner = y.abstract(x)
+        tex = lambda_(inner).repr_latex()
+        self.assertGreater(len(tex), 0, "returns some tex")
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -63,6 +63,10 @@
   <ItemGroup>
     <Content Include="examples\notebooks\BCWXS3E1CE7C2C1OQK5QCVVXNTUL54CS.png" />
     <Content Include="examples\notebooks\test.png" />
+    <Content Include="examples\notebooks\Type Theory - Groups - Scratch.ipynb" />
+    <Content Include="examples\notebooks\Type Theory - Logic - Scratch.ipynb" />
+    <Content Include="examples\notebooks\Type Theory Syntax - Graphs.ipynb" />
+    <Content Include="examples\notebooks\Type Theory Syntax.ipynb" />
     <Content Include="README.md" />
   </ItemGroup>
   <ItemGroup>

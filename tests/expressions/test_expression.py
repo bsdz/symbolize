@@ -2,8 +2,16 @@
 import unittest
 from copy import deepcopy
 
-from typetheory.expressions import Symbol, ExpressionException, general_bind_expression_generator
+from typetheory.expressions import Symbol, ExpressionException, general_bind_expression_generator, ExpressionCombination
+from typetheory.expressions import APPLY_LEFT_BRACKET, APPLY_RIGHT_BRACKET, ABSTRACT_LEFT_BRACKET, ABSTRACT_RIGHT_BRACKET
 from typetheory.expressions.arity import ArityArrow, ArityCross, A0
+
+bracket_map = {
+    "APL": APPLY_LEFT_BRACKET, 
+    "APR": APPLY_RIGHT_BRACKET, 
+    "ABL": ABSTRACT_LEFT_BRACKET, 
+    "ABR": ABSTRACT_RIGHT_BRACKET
+}
 
 plus = Symbol('+', arity=ArityArrow(ArityCross(A0,A0),A0))
 
@@ -15,7 +23,7 @@ class ExpressionTest(unittest.TestCase):
     def test_apply(self):
         y = Symbol('y')
         sin_y = Symbol('sin(y)')
-        self.assertEqual(repr(plus.apply(y, sin_y)), '+(y, sin(y))')
+        self.assertEqual(repr(plus.apply(y, sin_y)), '+{APL}y, sin(y){APR}'.format(**bracket_map))
         
         x = Symbol('x')
         z = Symbol('z', ArityArrow(ArityCross(A0,A0),A0))
@@ -41,20 +49,10 @@ class ExpressionTest(unittest.TestCase):
     def test_abstract(self):
         y = Symbol('y')
         sin_y = Symbol('sin(y)')
-        self.assertEqual(repr(plus.apply(y, sin_y).abstract(y)), '(y)+(y, sin(y))')
+        self.assertEqual(repr(plus.apply(y, sin_y).abstract(y)), '{ABL}y{ABR}+{APL}y, sin(y){APR}'.format(**bracket_map))
         
         self.assertEqual(plus.apply(y, sin_y).abstract(y).arity, ArityArrow(A0,A0), "arity from abstration")
-        
-#     def test_combination(self):
-#         x, y, z = [Symbol(i) for i in ['x','y','z']]
-#         self.assertEqual(repr(ExpressionCombination(x,y,z)), 'x, y, z')
-#         self.assertEqual(ExpressionCombination(x,y,z).arity, ArityCross(A0,A0,A0), "arity from combination")
-        
-#     def test_selection(self):
-#         x, y, z = [Symbol(i) for i in ['x','y','z']]
-#         self.assertEqual(ExpressionCombination(x,y,z).select(1), y)
-#         self.assertEqual(ExpressionCombination(x,y,z).select(1).arity, A0, "arity from selection")
-    
+            
     def test_walk(self):
         u,v,w,x,y,z = [Symbol(i) for i in 'uvwxyz']
         
@@ -156,6 +154,20 @@ class ExpressionTest(unittest.TestCase):
         
         for i, (e1,e2) in enumerate(tests):
             self.assertEqual(e1, e2, "check beta reduction %s" % i)
+
+class ExpressionCombinationTest(unittest.TestCase):
+
+    def test_combination(self):
+        x, y, z = [Symbol(i) for i in 'xyz']
+        expr = ExpressionCombination(x,y,z)
+        self.assertEqual(repr(expr), 'x, y, z')
+        self.assertEqual(expr.arity, ArityCross(A0,A0,A0), "arity from combination")
+        
+    def test_selection(self):
+        x, y, z = [Symbol(i) for i in 'xyz']
+        expr = ExpressionCombination(x,y,z)
+        self.assertEqual(expr[1], y)
+        self.assertEqual(expr[1].arity, A0, "arity from selection")
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

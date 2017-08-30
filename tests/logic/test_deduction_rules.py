@@ -5,7 +5,7 @@ Created on 26 Aug 2017
 '''
 import unittest
 
-from typetheory.expressions import A0, ArityArrow
+from typetheory.expressions import A0, ArityArrow, ArityCross, ExpressionCombination
 
 from typetheory.definitions.logic import and_, implies, or_
 from typetheory.definitions.operators import pair
@@ -47,12 +47,12 @@ class TestDeductionRules(unittest.TestCase):
         self.assertEqual(s11.proposition_expr, A.proposition_expr, "fst prop")
         self.assertEqual(s12.proposition_expr, B.proposition_expr, "snd prop")
         
-        self.assertEqual(s11.proof_expr, fst(pair(p.proof_expr,q.proof_expr)), "proof has correct expr")
-        self.assertEqual(s12.proof_expr, snd(pair(p.proof_expr,q.proof_expr)), "proof has correct expr")
+        self.assertEqual(s11.proof_expr, fst(ExpressionCombination(p.proof_expr,q.proof_expr)), "proof has correct expr")
+        self.assertEqual(s12.proof_expr, snd(ExpressionCombination(p.proof_expr,q.proof_expr)), "proof has correct expr")
 
         # test given conjunction
         A_and_B = get_proposition_class(and_(A.proposition_expr, B.proposition_expr))
-        r2 = A_and_B('s2')
+        r2 = A_and_B('s2', arity=ArityCross(A0,A0))
         s21 = conjunction_elimination_1(r2)
         s22 = conjunction_elimination_2(r2)
         

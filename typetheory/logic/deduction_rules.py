@@ -1,3 +1,5 @@
+from ..expressions import ExpressionCombination
+
 from ..definitions.operators import pair
 from ..definitions.functions import fst, snd, inl, inr, cases
 from ..definitions.logic import and_, implies, or_
@@ -15,7 +17,8 @@ def conjunction_introduction(a,b): # (2) p79 4.4
     """
     new_expr = and_(a.proposition_expr, b.proposition_expr)
     cls = get_proposition_class(new_expr)
-    proof_expr = pair(a.proof_expr, b.proof_expr)
+    #proof_expr = pair(a.proof_expr, b.proof_expr)
+    proof_expr = ExpressionCombination(a.proof_expr, b.proof_expr)
     return cls(proof_expr)
 
 def conjunction_elimination_1(a): # (2) p79 4.4

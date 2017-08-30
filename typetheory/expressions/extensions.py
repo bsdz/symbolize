@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from .expression import Symbol, ApplicationExpression
+from .expression import Symbol, ApplicationExpression, AbstractionExpression
 from .arity import ArityArrow, ArityCross, A0
 
 class BinaryInfixSymbol(Symbol):
@@ -15,6 +15,15 @@ class BinaryInfixExpression(ApplicationExpression):
                              self.base.render_latex(renderer), 
                              self.children[1].render_latex_wrap_parenthesis(renderer))
 
+class LambdaSymbol(Symbol):
+    default_arity = ArityArrow(ArityArrow(A0,A0),A0)
+    
+    def default_application_class(self):
+        return LambdaExpression
+
+class LambdaExpression(ApplicationExpression):
+    def render_latex(self, renderer):  # @UnusedVariable
+        return "%s(%s)(%s)" % tuple([e.render_latex(renderer) for e in [self.base] + self.children[0].children + [self.children[0].base]])
 
 class IntegralSymbol(Symbol):
     default_arity = ArityArrow(ArityCross(ArityArrow(A0,A0),A0,A0),A0)

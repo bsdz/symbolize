@@ -4,11 +4,17 @@ Created on 2 Aug 2017
 @author: bsdz
 '''
 from ..expressions import Symbol, ArityArrow, ArityCross, A0
+from ..expressions.extensions import LambdaSymbol
 
 sin = Symbol('sin', arity=ArityArrow(A0,A0))
 
-fst = Symbol('fst', ArityArrow(A0,A0))
-snd = Symbol('snd', ArityArrow(A0,A0))
+fst = Symbol('fst', ArityArrow(ArityCross(A0,A0),A0)) # takes a pair and returns a singleton
+snd = Symbol('snd', ArityArrow(ArityCross(A0,A0),A0)) # takes a pair and returns a singleton
 inl = Symbol('inl', ArityArrow(A0,A0))
 inr = Symbol('inr', ArityArrow(A0,A0))
 cases = Symbol('cases', ArityArrow(ArityCross(A0,A0,A0), A0))
+
+# A -> B, Product(A, B)
+lambda_ = LambdaSymbol('𝜆', ArityArrow(ArityArrow(A0,A0),A0), True)
+apply = Symbol('apply', ArityArrow(ArityCross(A0,A0),A0), False)
+funsplit = Symbol('funsplit', ArityArrow(ArityCross(A0,ArityArrow(A0,A0)),A0), False)

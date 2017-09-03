@@ -52,6 +52,9 @@
     <Compile Include="typetheory\expressions\__init__.py" />
     <Compile Include="typetheory\groups.py" />
     <Compile Include="typetheory\logic\deduction_rules.py" />
+    <Compile Include="typetheory\logic\proposition2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="typetheory\logic\proof.py" />
     <Compile Include="typetheory\logic\proposition.py" />
     <Compile Include="typetheory\logic\variables.py" />

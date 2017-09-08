@@ -3,7 +3,7 @@ Created on 3 Aug 2017
 
 @author: bsdz
 '''
-from ..expressions import Symbol, Expression
+from ....expressions import Symbol, Expression
 
 class Proposition(object):
     # instances are proofs

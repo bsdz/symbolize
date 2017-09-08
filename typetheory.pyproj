@@ -19,6 +19,13 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="symbolize\logic\typetheory\experimental\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="symbolize\logic\typetheory\variables.py" />
+    <Compile Include="symbolize\logic\typetheory\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\definitions\test_definitions.py" />
     <Compile Include="tests\definitions\__init__.py" />
     <Compile Include="tests\expressions\test_arity.py" />
@@ -28,40 +35,49 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\expressions\__init__.py" />
-    <Compile Include="tests\logic\test_deduction_rules.py" />
-    <Compile Include="tests\logic\test_proposition.py" />
+    <Compile Include="tests\logic\typetheory\experimental\test_deduction_rules.py" />
+    <Compile Include="tests\logic\typetheory\experimental\test_proposition.py" />
+    <Compile Include="tests\logic\typetheory\experimental\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\logic\typetheory\test_deduction_rules.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\logic\typetheory\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\logic\__init__.py" />
     <Compile Include="tests\test_groups.py" />
     <Compile Include="tests\__init__.py" />
-    <Compile Include="typetheory\definitions\functions.py" />
-    <Compile Include="typetheory\definitions\integrals.py" />
-    <Compile Include="typetheory\definitions\logic.py" />
-    <Compile Include="typetheory\definitions\misc.py" />
-    <Compile Include="typetheory\definitions\operators.py" />
-    <Compile Include="typetheory\definitions\sets.py" />
-    <Compile Include="typetheory\definitions\variables.py" />
-    <Compile Include="typetheory\definitions\__init__.py" />
-    <Compile Include="typetheory\expressions\arity.py" />
-    <Compile Include="typetheory\expressions\expression.py" />
-    <Compile Include="typetheory\expressions\extensions.py" />
-    <Compile Include="typetheory\expressions\render\base.py" />
-    <Compile Include="typetheory\expressions\render\graph.py" />
-    <Compile Include="typetheory\expressions\render\latex.py" />
-    <Compile Include="typetheory\expressions\render\typestring.py" />
-    <Compile Include="typetheory\expressions\render\__init__.py" />
-    <Compile Include="typetheory\expressions\__init__.py" />
-    <Compile Include="typetheory\groups.py" />
-    <Compile Include="typetheory\logic\deduction_rules.py" />
-    <Compile Include="typetheory\logic\proposition2.py">
+    <Compile Include="symbolize\definitions\functions.py" />
+    <Compile Include="symbolize\definitions\integrals.py" />
+    <Compile Include="symbolize\definitions\logic.py" />
+    <Compile Include="symbolize\definitions\misc.py" />
+    <Compile Include="symbolize\definitions\operators.py" />
+    <Compile Include="symbolize\definitions\sets.py" />
+    <Compile Include="symbolize\definitions\variables.py" />
+    <Compile Include="symbolize\definitions\__init__.py" />
+    <Compile Include="symbolize\expressions\arity.py" />
+    <Compile Include="symbolize\expressions\expression.py" />
+    <Compile Include="symbolize\expressions\extensions.py" />
+    <Compile Include="symbolize\expressions\render\base.py" />
+    <Compile Include="symbolize\expressions\render\graph.py" />
+    <Compile Include="symbolize\expressions\render\latex.py" />
+    <Compile Include="symbolize\expressions\render\typestring.py" />
+    <Compile Include="symbolize\expressions\render\__init__.py" />
+    <Compile Include="symbolize\expressions\__init__.py" />
+    <Compile Include="symbolize\groups.py" />
+    <Compile Include="symbolize\logic\typetheory\experimental\deduction_rules.py" />
+    <Compile Include="symbolize\logic\typetheory\proposition.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="typetheory\logic\proof.py" />
-    <Compile Include="typetheory\logic\proposition.py" />
-    <Compile Include="typetheory\logic\variables.py" />
-    <Compile Include="typetheory\logic\__init__.py" />
-    <Compile Include="typetheory\natural.py" />
-    <Compile Include="typetheory\utility.py" />
-    <Compile Include="typetheory\__init__.py" />
+    <Compile Include="symbolize\logic\proof.py" />
+    <Compile Include="symbolize\logic\typetheory\experimental\proposition.py" />
+    <Compile Include="symbolize\logic\typetheory\experimental\variables.py" />
+    <Compile Include="symbolize\logic\__init__.py" />
+    <Compile Include="symbolize\natural.py" />
+    <Compile Include="symbolize\utility.py" />
+    <Compile Include="symbolize\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="examples\notebooks\BCWXS3E1CE7C2C1OQK5QCVVXNTUL54CS.png" />
@@ -75,15 +91,19 @@
   <ItemGroup>
     <Folder Include="examples\" />
     <Folder Include="examples\notebooks" />
+    <Folder Include="symbolize\" />
+    <Folder Include="symbolize\logic\typetheory\" />
+    <Folder Include="symbolize\logic\typetheory\experimental\" />
     <Folder Include="tests" />
     <Folder Include="tests\definitions" />
     <Folder Include="tests\expressions" />
     <Folder Include="tests\logic" />
-    <Folder Include="typetheory" />
-    <Folder Include="typetheory\definitions" />
-    <Folder Include="typetheory\expressions" />
-    <Folder Include="typetheory\expressions\render" />
-    <Folder Include="typetheory\logic" />
+    <Folder Include="symbolize\definitions" />
+    <Folder Include="symbolize\expressions" />
+    <Folder Include="symbolize\expressions\render" />
+    <Folder Include="symbolize\logic" />
+    <Folder Include="tests\logic\typetheory\" />
+    <Folder Include="tests\logic\typetheory\experimental\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|VisualStudio|env-20160824" />

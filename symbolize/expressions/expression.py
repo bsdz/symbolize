@@ -55,8 +55,8 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
     def __repr__(self):
         return self.repr_typestring()
     
-    def __call__(self, *expressions: List["Expression"]) -> "Expression":
-        return self.apply(*expressions)
+    def __call__(self, *args, **kwargs):
+        return self.apply(*args, **kwargs)
     
     def __eq__(self, other):
         """Overload == and compare expressions.
@@ -106,14 +106,14 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
     def default_abstraction_class(self):
         return AbstractionExpression
         
-    def apply(self, *expressions: List["Expression"]) -> "Expression":
+    def apply(self, *expressions: List["Expression"], application_kwargs={}) -> "Expression":
         if not isinstance(self.arity, ArityArrow):
             raise ExpressionException("Cannot apply when arity has no arrow: %s" % self.arity)
         if len(expressions) == 1 and expressions[0].arity != self.arity.lhs:
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, expressions[0].arity))
         if len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)]):
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, ArityCross(*[e.arity for e in expressions])))
-        return self.default_application_class()(self, expressions, self.arity.rhs) # arity - (1) 3.8.4
+        return self.default_application_class()(self, expressions, self.arity.rhs, **application_kwargs) # arity - (1) 3.8.4
     
     def abstract(self, *expressions: List["Expression"]) -> "Expression":
         # abstraction arity - (1) 3.8.5

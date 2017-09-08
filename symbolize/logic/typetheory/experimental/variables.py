@@ -3,7 +3,7 @@ Created on 3 Aug 2017
 
 @author: bsdz
 '''
-from ..expressions import Symbol
+from ....expressions import Symbol
 from .proposition import Proposition
 
 class Falsum(Proposition):

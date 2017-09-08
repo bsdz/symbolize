@@ -4,10 +4,10 @@ Created on 8 Jul 2017
 @author: bsdz
 """
 import unittest
-from typetheory.expressions import Symbol
-from typetheory.definitions.operators import plus, mult
-from typetheory.definitions.integrals import integral
-from typetheory.expressions.extensions import InclusionExclusionSymbol
+from symbolize.expressions import Symbol
+from symbolize.definitions.operators import plus, mult
+from symbolize.definitions.integrals import integral
+from symbolize.expressions.extensions import InclusionExclusionSymbol
 
 
 class RendererTest(unittest.TestCase):

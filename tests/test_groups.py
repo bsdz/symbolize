@@ -4,7 +4,7 @@ Created on 17 Jul 2017
 @author: bsdz
 '''
 import unittest
-from typetheory.groups import op, G
+from symbolize.groups import op, G
 
 
 class GroupTest(unittest.TestCase):

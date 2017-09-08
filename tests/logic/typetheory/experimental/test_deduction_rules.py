@@ -5,18 +5,18 @@ Created on 26 Aug 2017
 '''
 import unittest
 
-from typetheory.expressions import A0, ArityArrow, ArityCross, ExpressionCombination
+from symbolize.expressions import A0, ArityArrow, ArityCross, ExpressionCombination
 
-from typetheory.definitions.logic import and_, implies, or_
-from typetheory.definitions.operators import pair
-from typetheory.definitions.functions import fst, snd, inl, inr, cases
+from symbolize.definitions.logic import and_, implies, or_
+from symbolize.definitions.operators import pair
+from symbolize.definitions.functions import fst, snd, inl, inr, cases
 
-from typetheory.logic.proposition import Proposition, get_proposition_class
-from typetheory.logic.deduction_rules import \
+from symbolize.logic.typetheory.experimental.proposition import Proposition, get_proposition_class
+from symbolize.logic.typetheory.experimental.deduction_rules import \
     conjunction_introduction, conjunction_elimination_1, conjunction_elimination_2, \
     implication_introduction, implication_elimation, \
     disjunction_introduction_1, disjunction_introduction_2, disjunction_elimination
-from typetheory.logic.variables import A, B, C
+from symbolize.logic.typetheory.experimental.variables import A, B, C
 
 
 class TestDeductionRules(unittest.TestCase):

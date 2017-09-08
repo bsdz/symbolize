@@ -2,9 +2,9 @@
 import unittest
 from copy import deepcopy
 
-from typetheory.expressions import Symbol, ExpressionException, general_bind_expression_generator, ExpressionCombination
-from typetheory.expressions import APPLY_LEFT_BRACKET, APPLY_RIGHT_BRACKET, ABSTRACT_LEFT_BRACKET, ABSTRACT_RIGHT_BRACKET
-from typetheory.expressions.arity import ArityArrow, ArityCross, A0
+from symbolize.expressions import Symbol, ExpressionException, general_bind_expression_generator, ExpressionCombination
+from symbolize.expressions import APPLY_LEFT_BRACKET, APPLY_RIGHT_BRACKET, ABSTRACT_LEFT_BRACKET, ABSTRACT_RIGHT_BRACKET
+from symbolize.expressions.arity import ArityArrow, ArityCross, A0
 
 bracket_map = {
     "APL": APPLY_LEFT_BRACKET, 

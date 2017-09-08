@@ -5,7 +5,7 @@ Created on 30 Mar 2017
 '''
 import unittest
 
-from typetheory.expressions.arity import A0, ArityPlaceHolder, ArityCross, ArityArrow
+from symbolize.expressions.arity import A0, ArityPlaceHolder, ArityCross, ArityArrow
 
 
 class ArityTest(unittest.TestCase):

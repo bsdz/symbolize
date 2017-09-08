@@ -1,10 +1,10 @@
 
 import unittest
 
-from typetheory.definitions.misc import natrec, listrec
-from typetheory.natural import NaturalNumber
-from typetheory.definitions.functions import lambda_
-from typetheory.definitions.variables import *
+from symbolize.definitions.misc import natrec, listrec
+from symbolize.natural import NaturalNumber
+from symbolize.definitions.functions import lambda_
+from symbolize.definitions.variables import *
 
 
 class DefinitionsTest(unittest.TestCase):

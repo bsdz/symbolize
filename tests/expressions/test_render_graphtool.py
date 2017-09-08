@@ -1,7 +1,7 @@
 import unittest
 
-from typetheory.expressions import Symbol
-from typetheory.definitions.operators import plus
+from symbolize.expressions import Symbol
+from symbolize.definitions.operators import plus
 
 package_graphtool_installed = False
 try:

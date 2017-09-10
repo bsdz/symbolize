@@ -83,18 +83,15 @@ class TestDeductionRules(unittest.TestCase):
         
         s1 = r1.apply(a)
         self.assertIsInstance(s1, ProofMixin, "result is a proof")
-    #    self.assertEqual(s1.proposition_expr, B.proposition_expr, "correct prop")
-    #    # todo: is this correct? r1 is already abstracted
-    #    self.assertEqual(s1.proof_expr, r1.proof_expr.apply(a.proof_expr), "proof has correct expr")
+        self.assertEqual(s1.proposition_type, B, "correct prop")
         
-    #    # test give implication
-    #    A_implies_B = get_proposition_class(implies(A.proposition_expr, B.proposition_expr))
-    #    r2 = A_implies_B('r2', arity=ArityArrow(A0,A0))
+        # test give implication
+        A_implies_B = implies(A, B)
+        r2 = A_implies_B.get_proof('r2') #, arity=ArityArrow(A0,A0))
         
-    #    s2 = implication_elimation(r2, a)
-    #    self.assertIsInstance(s2, Proposition, "result is a proposition")
-    #    self.assertEqual(s2.proposition_expr, B.proposition_expr, "correct prop")
-    #    self.assertEqual(s2.proof_expr, r2.proof_expr.apply(a.proof_expr), "proof has correct expr")
+        s2 = r2.apply(a)
+        self.assertIsInstance(s2, ProofMixin, "result is a proof")
+        self.assertEqual(s2.proposition_type, B, "correct prop")
 
     #def test_disjunction_introduction(self):
     #    q = A('q')

@@ -63,58 +63,15 @@ class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressio
         ApplicationExpression.__init__(self, *args, **kwargs)       
 
     def apply(self, *expressions):
-        new_prop_type = expressions[0].proposition_type
+        new_prop_type = self.proposition_type.children[1]
         return AbstractionExpression.apply(self, *expressions, application_kwargs={"proposition_type":new_prop_type})
 
 Proof = ProofSymbol    
 ProofCombination = ProofExpressionCombination
     
-# class ProofApplicationExpression(ProofMixin, ApplicationExpression):
-#     def __init__(self, *args, **kwargs):
-#         ProofMixin.__init__(self, proposition_type = kwargs.pop("proposition_type", None))
-#         ApplicationExpression.__init__(self, *args, **kwargs)
-#         
-# class ProofAbstractionExpression(ProofMixin, AbstractionExpression):
-#     def __init__(self, *args, **kwargs):
-#         ProofMixin.__init__(self, proposition_type = kwargs.pop("proposition_type", None))
-#         ApplicationExpression.__init__(self, *args, **kwargs)
 
-# class Proof(ProofMixin, Symbol):
-#     __default_application_class__ = ProofApplicationExpression
-#     __default_abstraction_class__ = ProofAbstractionExpression
-#     
-#     def __init__(self, *args, **kwargs):
-#         ProofMixin.__init__(self, proposition_type = kwargs.pop("proposition_type", None))
-#         Symbol.__init__(self, *args, **kwargs)
-#         
-#     def apply(self, *expressions):
-#         new_prop_type = expressions[0].proposition_type
-#         return Symbol.apply(self, *expressions, application_kwargs={"proposition_type":new_prop_type})
-# 
-#     def abstract(self, *expressions):
-#         from .proposition import implies
-#         # todo: check proof doesn't have binds otherwise forall-introduction
-#         new_prop_type = implies(expressions[0].proposition_type, self.proposition_type)
-#         return Symbol.abstract(self, *expressions, abstraction_kwargs={"proposition_type":new_prop_type})
-
-# class ProofCombination(ProofMixin, ExpressionCombination):
-#     def __init__(self, *args, **kwargs):
-#         from .proposition import and_
-#         # check only two proofs provided
-#         proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
-#         ProofMixin.__init__(self, proposition_type = proposition_type)
-#         ExpressionCombination.__init__(self, *args, **kwargs)
-
-
-class ProofFunctionExpression(ProofMixin, ApplicationExpression):
-    def __init__(self, *args, **kwargs):
-        ProofMixin.__init__(self, proposition_type = kwargs.pop("proposition_type", None))
-        ApplicationExpression.__init__(self, *args, **kwargs)
-
-
-class ProofFunction(Symbol):
-    __default_application_class__ = ProofFunctionExpression
-    
+# todo: integrate into ProofSymbol?
+class ProofFunctionSymbol(ProofMixin, Symbol, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):    
     def __init__(self, *args, **kwargs):
         self.proposition_function = kwargs.pop("proposition_function", None)
         Symbol.__init__(self, *args, **kwargs)
@@ -125,6 +82,6 @@ class ProofFunction(Symbol):
     
 # definitions
 #
-fst = ProofFunction('fst', ArityArrow(ArityCross(A0,A0),A0), proposition_function=lambda expr: expr[0].proposition_type.children[0])
-snd = ProofFunction('snd', ArityArrow(ArityCross(A0,A0),A0), proposition_function=lambda expr: expr[0].proposition_type.children[1])
+fst = ProofFunctionSymbol('fst', ArityArrow(ArityCross(A0,A0),A0), proposition_function=lambda expr: expr[0].proposition_type.children[0])
+snd = ProofFunctionSymbol('snd', ArityArrow(ArityCross(A0,A0),A0), proposition_function=lambda expr: expr[0].proposition_type.children[1])
 

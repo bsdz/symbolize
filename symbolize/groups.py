@@ -6,7 +6,7 @@ Created on 16 Jul 2017
 
 from .expressions import Symbol, InclusionExclusionExpression, BinaryInfixSymbol, ArityArrow, ArityCross, A0
 from .definitions.operators import in_
-from .logic.proof import Argument
+from symbolize.logic.argument import Argument
 
 make_group = Symbol('Group', arity=ArityArrow(ArityCross(A0,ArityArrow(ArityCross(A0,A0),A0)),A0))
 G_set = Symbol('G') # generic group set

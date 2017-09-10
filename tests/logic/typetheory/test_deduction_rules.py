@@ -18,7 +18,9 @@ import unittest
 
 from symbolize.expressions import A0, ArityArrow, ArityCross, ExpressionCombination
 
-from symbolize.logic.typetheory.proposition import Proposition, ProofCombination, ProofMixin, and_, fst, snd
+
+from symbolize.logic.typetheory.proposition import Proposition, and_, implies
+from symbolize.logic.typetheory.proof import ProofCombination, ProofMixin, fst, snd
 from symbolize.logic.typetheory.variables import A, B, C
 
 
@@ -32,7 +34,7 @@ class TestDeductionRules(unittest.TestCase):
         
         self.assertIsInstance(r, ProofMixin, "result is a proposition")
         self.assertEqual(r.proposition_type, and_(A, B), "proof has correct type")
-        
+    
     def test_conjunction_elimination(self):
         p = A.get_proof('p')
         q = B.get_proof('q')
@@ -52,38 +54,35 @@ class TestDeductionRules(unittest.TestCase):
         ## test given conjunction
         A_and_B = and_(A, B)
         r2 = A_and_B.get_proof('s2') #, arity=ArityCross(A0,A0))
-        #s21 = conjunction_elimination_1(r2)
-        #s22 = conjunction_elimination_2(r2)
+        s21 = fst(r2)
+        s22 = snd(r2)
         
-        #self.assertIsInstance(s21, Proposition, "result is a proposition")
-        #self.assertIsInstance(s22, Proposition, "result is a proposition")
+        self.assertIsInstance(s21, ProofMixin, "result is a proof")
+        self.assertIsInstance(s22, ProofMixin, "result is a proof")
         
-        #self.assertEqual(s21.proposition_expr, A.proposition_expr, "fst prop")
-        #self.assertEqual(s22.proposition_expr, B.proposition_expr, "snd prop")
+        self.assertEqual(s21.proposition_type, A, "fst prop")
+        self.assertEqual(s22.proposition_type, B, "snd prop")
         
-        #self.assertEqual(s21.proof_expr, fst(r2.proof_expr), "proof has correct expr")
-        #self.assertEqual(s22.proof_expr, snd(r2.proof_expr), "proof has correct expr")
+    def test_implication_introduction(self):
+        x = A.get_proof('x')
+        e = B.get_proof('e')
         
-    #def test_implication_introduction(self):
-    #    x = A('x')
-    #    e = B('e')
+        r = e.abstract(x)
         
-    #    r = implication_introduction(x,e)
+        self.assertIsInstance(r, ProofMixin, "result is a proof")
+        self.assertEqual(r.proposition_type, implies(A, B), "proof has correct expr")
         
-    #    self.assertIsInstance(r, Proposition, "result is a proposition")
-    #    self.assertEqual(r.proposition_expr, implies(A.proposition_expr, B.proposition_expr), "proof has correct expr")
-    #    self.assertEqual(r.proof_expr, e.proof_expr.abstract(x.proof_expr), "proof has correct expr")
+
+    def test_implication_elimination(self):
+        a = A.get_proof('a')
         
-    #def test_implication_elimination(self):
-    #    a = A('a')
+        # test contructed implication
+        x = A.get_proof('x')
+        e = B.get_proof('e')
+        r1 = e.abstract(x)
         
-    #    # test contructed implication
-    #    x = A('x')
-    #    e = B('e')
-    #    r1 = implication_introduction(x,e)
-        
-    #    s1 = implication_elimation(r1, a)
-    #    self.assertIsInstance(s1, Proposition, "result is a proposition")
+        s1 = r1.apply(a)
+        self.assertIsInstance(s1, ProofMixin, "result is a proof")
     #    self.assertEqual(s1.proposition_expr, B.proposition_expr, "correct prop")
     #    # todo: is this correct? r1 is already abstracted
     #    self.assertEqual(s1.proof_expr, r1.proof_expr.apply(a.proof_expr), "proof has correct expr")

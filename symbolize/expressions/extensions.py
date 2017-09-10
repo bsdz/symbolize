@@ -1,35 +1,27 @@
 from collections import defaultdict
 
-from .expression import Symbol, ApplicationExpression, AbstractionExpression
+from .expression import Symbol, ApplicationExpression
 from .arity import ArityArrow, ArityCross, A0
 
-class BinaryInfixSymbol(Symbol):
-    default_arity = ArityArrow(ArityCross(A0,A0),A0)
-    
-    def default_application_class(self):
-        return BinaryInfixExpression
-    
 class BinaryInfixExpression(ApplicationExpression):
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s %s %s" % (self.children[0].render_latex_wrap_parenthesis(renderer), 
                              self.base.render_latex(renderer), 
                              self.children[1].render_latex_wrap_parenthesis(renderer))
 
-class LambdaSymbol(Symbol):
-    default_arity = ArityArrow(ArityArrow(A0,A0),A0)
-    
-    def default_application_class(self):
-        return LambdaExpression
+class BinaryInfixSymbol(Symbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,A0),A0)
+    __default_application_class__ = BinaryInfixExpression    
+
 
 class LambdaExpression(ApplicationExpression):
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s(%s)(%s)" % tuple([e.render_latex(renderer) for e in [self.base] + self.children[0].children + [self.children[0].base]])
 
-class IntegralSymbol(Symbol):
-    default_arity = ArityArrow(ArityCross(ArityArrow(A0,A0),A0,A0),A0)
-    
-    def default_application_class(self):
-        return IntegralExpression
+class LambdaSymbol(Symbol):
+    __default_arity__ = ArityArrow(ArityArrow(A0,A0),A0)
+    __default_application_class__ = LambdaExpression
+
 
 class IntegralExpression(ApplicationExpression):
     def render_latex(self, renderer):  # @UnusedVariable
@@ -37,13 +29,11 @@ class IntegralExpression(ApplicationExpression):
         dummy_var = integrand.children[0]
         return "%s_{%s=%s}^{%s}{%s}" % tuple([e.render_latex(renderer) for e in (self.base, dummy_var, limit_min, limit_max, integrand.base)])
  
+class IntegralSymbol(Symbol):
+    __default_arity__ = ArityArrow(ArityCross(ArityArrow(A0,A0),A0,A0),A0)
+    __default_application_class__ = IntegralExpression
 
-class InclusionExclusionSymbol(Symbol):
-    default_arity = ArityArrow(ArityCross(A0,A0),A0)
-    
-    def default_application_class(self):
-        return InclusionExclusionExpression
-    
+
 class InclusionExclusionExpression(ApplicationExpression):
     """We store into the latex render a dict of tuples grouping the
     inclusions/exclusions so they may be rendered at end of final
@@ -63,17 +53,22 @@ class InclusionExclusionExpression(ApplicationExpression):
         
         renderer._inclusion_exclusion_groups[(self.base, self.children[1])].add(self.children[0])
         return self.children[0].render_latex(renderer)
-    
+ 
+class InclusionExclusionSymbol(Symbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,A0),A0)
+    __default_application_class__ = InclusionExclusionExpression
 
-class LogicQuantificationSymbol(Symbol):
-    default_arity = ArityArrow(ArityCross(A0,A0),A0)
-    
-    def default_application_class(self):
-        return LogicQuantificationExpression
 
 class LogicQuantificationExpression(ApplicationExpression):
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s{%s}.%s" % (self.base.render_latex(renderer), 
                               self.children[0].render_latex_wrap_parenthesis(renderer), 
-                              self.children[1].render_latex_wrap_parenthesis(renderer))
+                              self.children[1].render_latex_wrap_parenthesis(renderer))    
+   
+
+class LogicQuantificationSymbol(Symbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,A0),A0)
+    __default_application_class__ = LogicQuantificationExpression
+
+
     

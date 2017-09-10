@@ -46,8 +46,19 @@ APPLY_RIGHT_BRACKET = ')'
 ABSTRACT_LEFT_BRACKET = '('
 ABSTRACT_RIGHT_BRACKET = ')'
 
-class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererMixin):
-    
+class ExpressionMetaClass(type):
+    def __new__(cls, clsname, bases, dct, **kwargs):
+        expression_base_class = kwargs.pop("expression_base_class", None)
+        if expression_base_class is not None:
+            bases = bases + (expression_base_class,)
+        new_type = type.__new__(cls, clsname, bases, dct)
+        if kwargs.pop("default_abstraction_class", False):
+            cls.__default_abstraction_class__ = new_type
+        if kwargs.pop("default_application_class", False):
+            cls.__default_application_class__ = new_type
+        return new_type
+
+class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererMixin, metaclass=ExpressionMetaClass):
     def __init__(self):
         self.parent = None
         self._arity = None
@@ -101,10 +112,16 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
         return deepcopy(self)
      
     def default_application_class(self):
-        return ApplicationExpression
+        if hasattr(self.__class__, "__default_application_class__"):
+            return self.__class__.__default_application_class__
+        else:
+            return type(self.__class__).__default_application_class__
     
     def default_abstraction_class(self):
-        return AbstractionExpression
+        if hasattr(self.__class__, "__default_abstraction_class__"):
+            return self.__class__.__default_abstraction_class__
+        else:
+            return type(self.__class__).__default_abstraction_class__
         
     def apply(self, *expressions: List["Expression"], application_kwargs={}) -> "Expression":
         if not isinstance(self.arity, ArityArrow):
@@ -115,11 +132,11 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
             raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, ArityCross(*[e.arity for e in expressions])))
         return self.default_application_class()(self, expressions, self.arity.rhs, **application_kwargs) # arity - (1) 3.8.4
     
-    def abstract(self, *expressions: List["Expression"]) -> "Expression":
+    def abstract(self, *expressions: List["Expression"], abstraction_kwargs={}) -> "Expression":
         # abstraction arity - (1) 3.8.5
         # prevent arity cross of single expression
         new_arity = ArityArrow(ArityCross(*[e.arity for e in expressions]) if len(expressions) > 1 else expressions[0].arity, self.arity)
-        return self.default_abstraction_class()(self, expressions, new_arity) 
+        return self.default_abstraction_class()(self, expressions, new_arity, **abstraction_kwargs) 
     
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
@@ -198,8 +215,8 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
                 new_expr = new_expr.substitute(expr, self.children[i])
         return new_expr
 
-class Symbol(Expression):
-    default_arity = A0
+class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
+    __default_arity__ = A0
     
     def __init__(self, str_repr=None, arity=None, canonical=None, latex_repr=None):
         """
@@ -211,7 +228,7 @@ class Symbol(Expression):
         super().__init__()
         self.str_repr = str_repr
         self.latex_repr = latex_repr if latex_repr is not None else str_repr
-        self._arity = arity if arity is not None else self.__class__.default_arity
+        self._arity = arity if arity is not None else self.__class__.__default_arity__
         self.canonical = canonical
 
     def render_typestring(self, renderer):  # @UnusedVariable
@@ -239,7 +256,7 @@ class Symbol(Expression):
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
         return to_expr.copy()  if self == from_expr else self.copy() #  exact substitution - (2) 2.4
 
-class ExpressionCombination(Expression):    
+class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class=Expression):    
     def __init__(self, *expressions: List[Expression]):
         """Combines list into comma-concatenated expression.
         Args:
@@ -281,14 +298,14 @@ class ExpressionCombination(Expression):
     def render_latex(self, renderer):
         return ", ".join([renderer.render(e) for e in self.children])
 
-class BaseWithChildrenExpression(Expression):
+class BaseWithChildrenExpression(metaclass=ExpressionMetaClass, expression_base_class=Expression):
     # todo: perhaps utilize ExpressionCombination for children here?
     def __init__(self, base: "ExpressionBase", expressions: List["ExpressionBase"], arity=None):
         super().__init__()
         self.base = base.copy()
         self.children = list(deepcopy(expressions))
         for e in self.children: e.parent = self 
-        self._arity = arity.copy() if arity is not None else self.__class__.default_arity
+        self._arity = arity.copy() if arity is not None else self.__class__.__default_arity__
 
     def __getitem__(self, index):
         """Overload [] for selection"""
@@ -343,7 +360,7 @@ class BaseWithChildrenExpression(Expression):
         
         return new_expr
 
-class ApplicationExpression(BaseWithChildrenExpression):
+class ApplicationExpression(metaclass=ExpressionMetaClass, expression_base_class=BaseWithChildrenExpression, default_application_class=True):
     def render_typestring(self, renderer):  # @UnusedVariable
         return "%s%s%s%s" % (self.base.render_typestring(renderer), APPLY_LEFT_BRACKET, ", ".join([e.render_typestring(renderer) for e in self.children]), APPLY_RIGHT_BRACKET)
     
@@ -375,7 +392,7 @@ class ApplicationExpression(BaseWithChildrenExpression):
 
         return graph
     
-class AbstractionExpression(BaseWithChildrenExpression):
+class AbstractionExpression(metaclass=ExpressionMetaClass, expression_base_class=BaseWithChildrenExpression, default_abstraction_class=True):
     def render_typestring(self, renderer):  # @UnusedVariable
         return "%s%s%s%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_typestring(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_typestring(renderer))
     

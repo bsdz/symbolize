@@ -51,7 +51,7 @@ class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=Proposit
         
     def get_proof(self, name):
         if self.proof_function is not None:
-            new_proof = self.proof_function(self)
+            new_proof = self.proof_function(self).alias(name)
         else:
             new_proof = Proof(str_repr=name, proposition_type=self, arity=self.proof_default_arity)
         return new_proof

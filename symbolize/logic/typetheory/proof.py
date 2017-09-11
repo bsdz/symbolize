@@ -82,6 +82,6 @@ class ProofFunctionSymbol(ProofMixin, Symbol, metaclass=ProofExpressionMetaClass
     
 # definitions
 #
-fst = ProofFunctionSymbol('fst', ArityArrow(ArityCross(A0,A0),A0), proposition_function=lambda expr: expr[0].proposition_type.children[0])
-snd = ProofFunctionSymbol('snd', ArityArrow(ArityCross(A0,A0),A0), proposition_function=lambda expr: expr[0].proposition_type.children[1])
+fst = ProofFunctionSymbol('fst', ArityArrow(ArityCross(A0, A0), A0), proposition_function=lambda expr: expr[0].proposition_type.children[0])
+snd = ProofFunctionSymbol('snd', ArityArrow(ArityCross(A0, A0), A0), proposition_function=lambda expr: expr[0].proposition_type.children[1])
 

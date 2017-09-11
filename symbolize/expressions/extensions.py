@@ -1,9 +1,10 @@
 from collections import defaultdict
 
-from .expression import Symbol, ApplicationExpression
+from .expression import Symbol, ApplicationExpression, alias_render_latex
 from .arity import ArityArrow, ArityCross, A0
 
 class BinaryInfixExpression(ApplicationExpression):
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s %s %s" % (self.children[0].render_latex_wrap_parenthesis(renderer), 
                              self.base.render_latex(renderer), 
@@ -15,6 +16,7 @@ class BinaryInfixSymbol(Symbol):
 
 
 class LambdaExpression(ApplicationExpression):
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s(%s)(%s)" % tuple([e.render_latex(renderer) for e in [self.base] + self.children[0].children + [self.children[0].base]])
 
@@ -24,6 +26,7 @@ class LambdaSymbol(Symbol):
 
 
 class IntegralExpression(ApplicationExpression):
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         integrand, limit_min, limit_max = self.children
         dummy_var = integrand.children[0]
@@ -39,6 +42,7 @@ class InclusionExclusionExpression(ApplicationExpression):
     inclusions/exclusions so they may be rendered at end of final
     expression.
     """
+    @alias_render_latex
     def render_latex(self, renderer):
         if not hasattr(renderer, '_inclusion_exclusion_groups'):
             renderer._inclusion_exclusion_groups = defaultdict(set)
@@ -60,6 +64,7 @@ class InclusionExclusionSymbol(Symbol):
 
 
 class LogicQuantificationExpression(ApplicationExpression):
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s{%s}.%s" % (self.base.render_latex(renderer), 
                               self.children[0].render_latex_wrap_parenthesis(renderer), 

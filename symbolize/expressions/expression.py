@@ -5,12 +5,29 @@ from typing import List  # @UnusedImport
 from copy import deepcopy
 from warnings import warn
 from itertools import count
+from functools import wraps
 
 from .arity import A0, ArityArrow, ArityCross
 from .render.typestring import TypeStringRenderer, TypeStringRendererMixin
 from .render.latex import LatexRenderer, LatexRendererMixin
 from .render.graph import GraphToolRenderer, GraphToolRendererMixin
 from ..utility import ToBeImplemented
+
+def alias_render_typestring(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if self._str_repr_alias is not None:
+            return self._str_repr_alias
+        return f(self, *args, **kwargs)
+    return wrapper
+
+def alias_render_latex(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if self._latex_repr_alias is not None:
+            return self._latex_repr_alias
+        return f(self, *args, **kwargs)
+    return wrapper
 
 class ExpressionWalkResult(object):
     __slots__ = ['expr', 'obj', 'index']
@@ -62,6 +79,8 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
     def __init__(self):
         self.parent = None
         self._arity = None
+        self._str_repr_alias = None
+        self._latex_repr_alias = None
         
     def __repr__(self):
         return self.repr_typestring()
@@ -102,6 +121,12 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
     def arity(self, value):
         warn("Setting arity outside object initialisation does not pass through to base expression")
         self._arity = value
+        
+    def alias(self, str_repr, latex_repr=None):
+        new_alias = self.copy()
+        new_alias._str_repr_alias = str_repr
+        new_alias._latex_repr_alias = str_repr if latex_repr is None else latex_repr
+        return new_alias
     
     def list_copies(self):
         # todo: is this useful?
@@ -231,9 +256,11 @@ class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
         self._arity = arity if arity is not None else self.__class__.__default_arity__
         self.canonical = canonical
 
+    @alias_render_typestring
     def render_typestring(self, renderer):  # @UnusedVariable
         return self.str_repr
     
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return self.latex_repr
     
@@ -264,6 +291,8 @@ class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class
         """
         self.children = list(deepcopy(expressions))
         self._arity = ArityCross(*[e.arity for e in expressions]) # (1) 3.8.6
+        self._str_repr_alias = None
+        self._latex_repr_alias = None
          
     def equals(self, other):
         """Overload == and compare expressions.
@@ -291,10 +320,12 @@ class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class
 
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
         raise ToBeImplemented("Substitute not implemented for this class yet")
-         
+    
+    @alias_render_typestring     
     def render_typestring(self, renderer):
         return ", ".join([renderer.render(e) for e in self.children])
-         
+    
+    @alias_render_latex     
     def render_latex(self, renderer):
         return ", ".join([renderer.render(e) for e in self.children])
 
@@ -361,9 +392,11 @@ class BaseWithChildrenExpression(metaclass=ExpressionMetaClass, expression_base_
         return new_expr
 
 class ApplicationExpression(metaclass=ExpressionMetaClass, expression_base_class=BaseWithChildrenExpression, default_application_class=True):
+    @alias_render_typestring
     def render_typestring(self, renderer):  # @UnusedVariable
         return "%s%s%s%s" % (self.base.render_typestring(renderer), APPLY_LEFT_BRACKET, ", ".join([e.render_typestring(renderer) for e in self.children]), APPLY_RIGHT_BRACKET)
     
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s%s%s%s" % (self.base.render_latex(renderer), APPLY_LEFT_BRACKET, ", ".join([e.render_latex(renderer) for e in self.children]), APPLY_RIGHT_BRACKET)
     
@@ -393,9 +426,11 @@ class ApplicationExpression(metaclass=ExpressionMetaClass, expression_base_class
         return graph
     
 class AbstractionExpression(metaclass=ExpressionMetaClass, expression_base_class=BaseWithChildrenExpression, default_abstraction_class=True):
+    @alias_render_typestring
     def render_typestring(self, renderer):  # @UnusedVariable
         return "%s%s%s%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_typestring(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_typestring(renderer))
     
+    @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return r"λ%s%s%s.%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_latex(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_latex_wrap_parenthesis(renderer))
 

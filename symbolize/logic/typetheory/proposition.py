@@ -4,7 +4,7 @@ from ...expressions import ExpressionMetaClass, Expression, Symbol, BaseWithChil
         A0, ArityArrow, ArityCross,\
         BinaryInfixSymbol, BinaryInfixExpression
         
-from .proof import Proof, ProofCombination
+from .proof import ProofSymbol, ProofExpressionCombination
 
 def general_proof_label_generator():
     prefix = "p_"
@@ -29,7 +29,7 @@ class PropositionSymbol(PropositionMixin, Symbol, metaclass=PropositionExpressio
         Symbol.__init__(self, *args, **kwargs)
 
     def get_proof(self, name):
-        return Proof(str_repr=name, proposition_type=self, arity=self.proof_default_arity)        
+        return ProofSymbol(str_repr=name, proposition_type=self, arity=self.proof_default_arity)        
 
 class PropositionBaseWithChildrenExpression(PropositionMixin, BaseWithChildrenExpression):
     pass
@@ -53,7 +53,7 @@ class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=Proposit
         if self.proof_function is not None:
             new_proof = self.proof_function(self).alias(name)
         else:
-            new_proof = Proof(str_repr=name, proposition_type=self, arity=self.proof_default_arity)
+            new_proof = ProofSymbol(str_repr=name, proposition_type=self, arity=self.proof_default_arity)
         return new_proof
   
 class PropositionBinaryInfixSymbol(BinaryInfixSymbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
@@ -75,7 +75,7 @@ class PropositionBinaryInfixSymbol(BinaryInfixSymbol, metaclass=PropositionExpre
 def and_pf(prop_type):
     p1 = prop_type.children[0].get_proof(next(proof_label_generator))
     p2 = prop_type.children[1].get_proof(next(proof_label_generator))
-    return ProofCombination(p1, p2)
+    return ProofExpressionCombination(p1, p2)
 
 def implies_pf(prop_type):
     p1 = prop_type.children[0].get_proof(next(proof_label_generator))
@@ -88,8 +88,8 @@ and_ = PropositionBinaryInfixSymbol('∧', latex_repr=r'\land', proof_default_ar
 or_ = PropositionBinaryInfixSymbol('∨', latex_repr=r'\lor')
 implies = PropositionBinaryInfixSymbol('⟹', latex_repr=r'\Rightarrow', proof_default_arity=ArityArrow(A0,A0), proof_function=implies_pf)
 
-then = PropositionBinaryInfixSymbol('⟸', latex_repr=r'\Leftarrow')
-iff = PropositionBinaryInfixSymbol('⟺', latex_repr=r'\iff')
+#then = PropositionBinaryInfixSymbol('⟸', latex_repr=r'\Leftarrow')
+#iff = PropositionBinaryInfixSymbol('⟺', latex_repr=r'\iff')
 
 #not_ = Symbol('¬', arity=ArityArrow(A0,A0), latex_repr=r'\neg')
 #forall = LogicQuantificationSymbol('∀', latex_repr=r'\forall')

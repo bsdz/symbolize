@@ -1,6 +1,5 @@
 from ....expressions import ExpressionCombination
 
-from ....definitions.operators import pair
 from ....definitions.functions import fst, snd, inl, inr, cases
 from ....definitions.logic import and_, implies, or_
 

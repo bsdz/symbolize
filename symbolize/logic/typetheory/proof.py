@@ -24,9 +24,9 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
         else:
             return "%s : %s" % (LatexRenderer().render(self), LatexRenderer().render(self.proposition_type))
         
-    def apply(self, *expressions):
+    def apply(self, *expressions, **kwargs):
         new_prop_type = self.proposition_function(self, expressions)
-        return super().apply(*expressions, application_kwargs={"proposition_type":new_prop_type})
+        return super().apply(*expressions, application_kwargs={"proposition_type":new_prop_type}, **kwargs)
 
     def abstract(self, *expressions):
         from .proposition import implies
@@ -65,7 +65,10 @@ class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressio
 
 # definitions
 #
-fst = ProofSymbol('fst', ArityArrow(ArityCross(A0, A0), A0), proposition_function=lambda s,e: e[0].proposition_type.children[0])
+def fst_prop_function(self, expr):
+    return expr[0].proposition_type.children[0]
+
+fst = ProofSymbol('fst', ArityArrow(ArityCross(A0, A0), A0), proposition_function=fst_prop_function)
 snd = ProofSymbol('snd', ArityArrow(ArityCross(A0, A0), A0), proposition_function=lambda s,e: e[0].proposition_type.children[1])
 
 # we adjust inl/inr to accept 2nd argument of proposition type to inject. 
@@ -80,4 +83,8 @@ def inr_prop_function(self, expr):
 inl = ProofSymbol('inl', ArityArrow(ArityCross(A0, A0), A0), proposition_function=inl_prop_function)
 inr = ProofSymbol('inr', ArityArrow(ArityCross(A0, A0), A0), proposition_function=inr_prop_function)
 
-cases = ProofSymbol('cases', ArityArrow(ArityCross(A0,A0,A0), A0))
+def cases_prop_function(self, expr):
+    # todo: check inputs
+    return expr[1].proposition_type.children[1]
+
+cases = ProofSymbol('cases', ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0), proposition_function=cases_prop_function)

@@ -36,7 +36,7 @@ class PropositionBaseWithChildrenExpression(PropositionMixin, BaseWithChildrenEx
 
 class PropositionApplicationExpression(ApplicationExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression, default_application_class=True):
     def __init__(self, *args, **kwargs):
-        PropositionMixin.__init__(self, proposition_type = kwargs.pop("proof_default_arity", None))
+        PropositionMixin.__init__(self, proof_default_arity = kwargs.pop("proof_default_arity", None))
         ApplicationExpression.__init__(self, *args, **kwargs)
 
 
@@ -82,16 +82,23 @@ def implies_pf(prop_type):
     p2 = prop_type.children[1].get_proof(next(proof_label_generator))
     return p2.abstract(p1)
 
+def or_pf(prop_type):
+    from .proof import inl, inr
+    p1 = prop_type.children[0].get_proof(next(proof_label_generator))
+    p2 = prop_type.children[1].get_proof(next(proof_label_generator))
+    # todo - can be inl or inr with indicator of which proof has evidence
+    return inl(p1, p2.proposition_type)
+
 # definitions
 #
 and_ = PropositionBinaryInfixSymbol('∧', latex_repr=r'\land', proof_default_arity=ArityCross(A0,A0), proof_function=and_pf)
-or_ = PropositionBinaryInfixSymbol('∨', latex_repr=r'\lor')
+or_ = PropositionBinaryInfixSymbol('∨', latex_repr=r'\lor', proof_default_arity=ArityCross(A0,A0), proof_function=or_pf)
 implies = PropositionBinaryInfixSymbol('⟹', latex_repr=r'\Rightarrow', proof_default_arity=ArityArrow(A0,A0), proof_function=implies_pf)
 
 #then = PropositionBinaryInfixSymbol('⟸', latex_repr=r'\Leftarrow')
 #iff = PropositionBinaryInfixSymbol('⟺', latex_repr=r'\iff')
 
-#not_ = Symbol('¬', arity=ArityArrow(A0,A0), latex_repr=r'\neg')
+not_ = PropositionSymbol('¬', arity=ArityArrow(A0,A0), latex_repr=r'\neg')
 #forall = LogicQuantificationSymbol('∀', latex_repr=r'\forall')
 #exists = LogicQuantificationSymbol('∃', latex_repr=r'\exists')
 

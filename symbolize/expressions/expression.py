@@ -148,13 +148,16 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
         else:
             return type(self.__class__).__default_abstraction_class__
         
-    def apply(self, *expressions: List["Expression"], application_kwargs={}) -> "Expression":
-        if not isinstance(self.arity, ArityArrow):
-            raise ExpressionException("Cannot apply when arity has no arrow: %s" % self.arity)
-        if len(expressions) == 1 and expressions[0].arity != self.arity.lhs:
-            raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, expressions[0].arity))
-        if len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)]):
-            raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, ArityCross(*[e.arity for e in expressions])))
+    def apply(self, *expressions: List["Expression"], check_arity=True, application_kwargs={}) -> "Expression":
+        if check_arity: # todo: do we need this?
+            if not isinstance(self.arity, ArityArrow):
+                raise ExpressionException("Cannot apply when arity has no arrow: %s" % self.arity)
+            if len(expressions) == 1 and expressions[0].arity != self.arity.lhs:
+                raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, expressions[0].arity))
+            if len(expressions) > 1 and not all([e.arity == a for e,a in zip(expressions, self.arity.lhs.args)]):
+                raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, ArityCross(*[e.arity for e in expressions])))
+        else:
+            warn("Skipping arity check on apply")
         return self.default_application_class()(self, expressions, self.arity.rhs, **application_kwargs) # arity - (1) 3.8.4
     
     def abstract(self, *expressions: List["Expression"], abstraction_kwargs={}) -> "Expression":

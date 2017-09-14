@@ -108,24 +108,29 @@ class TestDeductionRules(unittest.TestCase):
         p2 = inr(r, A)
 
         s1 = cases(p1, f, g)
-    #    self.assertIsInstance(s1, Proposition, "result is a proposition")
-    #    self.assertEqual(s1.proposition_expr, C.proposition_expr, "proof has correct expr")
-    #    self.assertEqual(s1.proof_expr, cases(p1.proof_expr, f.proof_expr, g.proof_expr), "proof has correct expr")
-
-    #    s2 = disjunction_elimination(p2, f, g)
-    #    self.assertIsInstance(s2, Proposition, "result is a proposition")
-    #    self.assertEqual(s2.proposition_expr, C.proposition_expr, "proof has correct expr")
-    #    self.assertEqual(s2.proof_expr, cases(p2.proof_expr, f.proof_expr, g.proof_expr), "proof has correct expr")
-
-    #    # test given disjunction
-    #    A_or_B = get_proposition_class(or_(A.proposition_expr, B.proposition_expr))
-    #    p3 = A_or_B('p3')
+        self.assertIsInstance(s1, ProofExpression, "result is a proof")
+        self.assertEqual(s1.proposition_type, C, "proof has correct expr")
+    
+        s2 = cases(p2, f, g)
+        self.assertIsInstance(s2, ProofExpression, "result is a proof")
+        self.assertEqual(s2.proposition_type, C, "proof has correct expr")
         
-    #    s3 = disjunction_elimination(p3, f, g)
-    #    self.assertIsInstance(s3, Proposition, "result is a proposition")
-    #    self.assertEqual(s3.proposition_expr, C.proposition_expr, "proof has correct expr")
-    #    self.assertEqual(s3.proof_expr, cases(p3.proof_expr, f.proof_expr, g.proof_expr), "proof has correct expr")
-
+        # test given disjunction
+        A_or_B = or_(A, B)
+        p3 = A_or_B.get_proof('p3')
+        
+        s3 = cases(p3, f, g)
+        self.assertIsInstance(s3, ProofExpression, "result is a proof")
+        self.assertEqual(s3.proposition_type, C, "proof has correct expr")
+        
+    def test_foo(self):
+        A_or_B = or_(A, B)
+        A_implies_C_and_B_implies_C = and_(implies(A, C),implies(B, C))
+        #z = A_or_B.get_proof('z')
+        p = A_implies_C_and_B_implies_C.get_proof('p')
+        
+        
+        
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

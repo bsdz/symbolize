@@ -13,9 +13,6 @@ def general_proof_label_generator():
 
 proof_label_generator = general_proof_label_generator()
 
-class PropositionMixin(object):
-    def __init__(self, proof_default_arity):
-        self.proof_default_arity = proof_default_arity
 
 class PropositionExpressionMetaClass(ExpressionMetaClass):
     pass
@@ -23,29 +20,25 @@ class PropositionExpressionMetaClass(ExpressionMetaClass):
 class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
     pass
 
-class PropositionSymbol(PropositionMixin, Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+class PropositionSymbol(Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
     def __init__(self, *args, **kwargs):
-        PropositionMixin.__init__(self, proof_default_arity = kwargs.pop("proof_default_arity", None))
+        self.proof_default_arity = kwargs.pop("proof_default_arity", None)
         Symbol.__init__(self, *args, **kwargs)
 
     def get_proof(self, name):
         return ProofSymbol(str_repr=name, proposition_type=self, arity=self.proof_default_arity)        
 
-class PropositionBaseWithChildrenExpression(PropositionMixin, BaseWithChildrenExpression):
+class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression):
     pass
 
 class PropositionApplicationExpression(ApplicationExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression, default_application_class=True):
     def __init__(self, *args, **kwargs):
-        PropositionMixin.__init__(self, proof_default_arity = kwargs.pop("proof_default_arity", None))
+        self.proof_default_arity = kwargs.pop("proof_default_arity", None)
         ApplicationExpression.__init__(self, *args, **kwargs)
-
-
-Proposition = PropositionSymbol
-
 
 class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression):
     def __init__(self, *args, **kwargs):
-        PropositionMixin.__init__(self, proof_default_arity = kwargs.pop("proof_default_arity", None))
+        self.proof_default_arity = kwargs.pop("proof_default_arity", None)
         self.proof_function = kwargs.pop("proof_function", None)
         BinaryInfixExpression.__init__(self, *args, **kwargs)
         
@@ -66,9 +59,9 @@ class PropositionBinaryInfixSymbol(BinaryInfixSymbol, metaclass=PropositionExpre
         
     def apply(self, *expressions):
         return BinaryInfixSymbol.apply(self, *expressions, application_kwargs={
-            "proof_default_arity":self.proof_default_arity,
-            "proof_function":self.proof_function
-            })
+            "proof_default_arity": self.proof_default_arity,
+            "proof_function": self.proof_function
+        })
 
 
 

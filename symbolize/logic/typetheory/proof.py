@@ -64,12 +64,16 @@ class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressio
 
 
 # definitions
+# todo: check function inputs like .experimental.deduction_rules
 #
 def fst_prop_function(self, expr):
     return expr[0].proposition_type.children[0]
 
+def snd_prop_function(self, expr):
+    return expr[0].proposition_type.children[1]
+
 fst = ProofSymbol('fst', ArityArrow(ArityCross(A0, A0), A0), proposition_function=fst_prop_function)
-snd = ProofSymbol('snd', ArityArrow(ArityCross(A0, A0), A0), proposition_function=lambda s,e: e[0].proposition_type.children[1])
+snd = ProofSymbol('snd', ArityArrow(ArityCross(A0, A0), A0), proposition_function=snd_prop_function)
 
 # we adjust inl/inr to accept 2nd argument of proposition type to inject. 
 def inl_prop_function(self, expr):

@@ -246,14 +246,14 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
 class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
     __default_arity__ = A0
     
-    def __init__(self, str_repr=None, arity=None, canonical=None, latex_repr=None):
+    def __init__(self, str_repr=None, arity=None, canonical=None, latex_repr=None, *args, **kwargs):
         """
         Args:
             baserepr (str): the string representation of the expression
             arity (ArityExpression): the arity of the expression. defaults to single/saturated.
             canonical (bool): expression is canonical or not. defaults to None (ie unknown).
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.str_repr = str_repr
         self.latex_repr = latex_repr if latex_repr is not None else str_repr
         self._arity = arity if arity is not None else self.__class__.__default_arity__
@@ -334,8 +334,8 @@ class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class
 
 class BaseWithChildrenExpression(metaclass=ExpressionMetaClass, expression_base_class=Expression):
     # todo: perhaps utilize ExpressionCombination for children here?
-    def __init__(self, base: "ExpressionBase", expressions: List["ExpressionBase"], arity=None):
-        super().__init__()
+    def __init__(self, base: "Expression", expressions: List["Expression"], arity=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.base = base.copy()
         self.children = list(deepcopy(expressions))
         for e in self.children: e.parent = self 

@@ -1,8 +1,8 @@
-
 from itertools import count
 from ...expressions import ExpressionMetaClass, Expression, Symbol, BaseWithChildrenExpression, ApplicationExpression,\
         A0, ArityArrow, ArityCross,\
-        BinaryInfixSymbol, BinaryInfixExpression
+        BinaryInfixSymbol, BinaryInfixExpression,\
+        LogicQuantificationSymbol, LogicQuantificationExpression
         
 from .proof import ProofSymbol, ProofExpressionCombination
 
@@ -13,34 +13,14 @@ def general_proof_label_generator():
 
 proof_label_generator = general_proof_label_generator()
 
-
 class PropositionExpressionMetaClass(ExpressionMetaClass):
     pass
 
 class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
-    pass
-
-class PropositionSymbol(Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
-    def __init__(self, *args, **kwargs):
-        self.proof_default_arity = kwargs.pop("proof_default_arity", None)
-        Symbol.__init__(self, *args, **kwargs)
-
-    def get_proof(self, name):
-        return ProofSymbol(str_repr=name, proposition_type=self, arity=self.proof_default_arity)        
-
-class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression):
-    pass
-
-class PropositionApplicationExpression(ApplicationExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression, default_application_class=True):
-    def __init__(self, *args, **kwargs):
-        self.proof_default_arity = kwargs.pop("proof_default_arity", None)
-        ApplicationExpression.__init__(self, *args, **kwargs)
-
-class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression):
     def __init__(self, *args, **kwargs):
         self.proof_default_arity = kwargs.pop("proof_default_arity", None)
         self.proof_function = kwargs.pop("proof_function", None)
-        BinaryInfixExpression.__init__(self, *args, **kwargs)
+        super().__init__()
         
     def get_proof(self, name):
         if self.proof_function is not None:
@@ -48,17 +28,21 @@ class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=Proposit
         else:
             new_proof = ProofSymbol(str_repr=name, proposition_type=self, arity=self.proof_default_arity)
         return new_proof
-  
+        
+class PropositionSymbol(Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+    pass
+
+class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+    pass
+
+class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression):
+    pass
+        
 class PropositionBinaryInfixSymbol(BinaryInfixSymbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
     __default_application_class__ = PropositionBinaryInfixExpression
-    
-    def __init__(self, *args, **kwargs):
-        self.proof_default_arity = kwargs.pop("proof_default_arity", None)
-        self.proof_function = kwargs.pop("proof_function", None)
-        super().__init__(*args, **kwargs)
         
     def apply(self, *expressions):
-        return BinaryInfixSymbol.apply(self, *expressions, application_kwargs={
+        return super().apply(*expressions, application_kwargs={
             "proof_default_arity": self.proof_default_arity,
             "proof_function": self.proof_function
         })

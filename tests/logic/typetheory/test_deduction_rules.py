@@ -5,9 +5,10 @@ Created on 7 Sep 2017
 '''
 import unittest
 
-from symbolize.logic.typetheory.proposition import and_, implies, or_
+from symbolize.logic.typetheory.proposition import and_, implies, or_, forall
 from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases
 from symbolize.logic.typetheory.variables import A, B, C
+from symbolize.logic.typetheory.proposition import PropositionSymbol
 
 
 class TestDeductionRules(unittest.TestCase):
@@ -123,13 +124,18 @@ class TestDeductionRules(unittest.TestCase):
         self.assertIsInstance(s3, ProofExpression, "result is a proof")
         self.assertEqual(s3.proposition_type, C, "proof has correct expr")
         
-    def test_foo(self):
-        A_or_B = or_(A, B)
-        A_implies_C_and_B_implies_C = and_(implies(A, C),implies(B, C))
-        #z = A_or_B.get_proof('z')
-        p = A_implies_C_and_B_implies_C.get_proof('p')
+    def test_universal_quantifier_introduction(self):
+        x = A.get_proof('x')
+        P = PropositionSymbol('P', assumption_contains_free=[x])
+        p = P.get_proof('p')
         
+        r = p.abstract(x)
         
+        self.assertIsInstance(r, ProofExpression, "result is a proof")
+        self.assertEqual(r.proposition_type, forall(x, P), "proof has correct expr")
+        
+    def test_universal_quantifier_elimation(self):
+        pass
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

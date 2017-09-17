@@ -15,7 +15,6 @@ class ProofExpressionMetaClass(ExpressionMetaClass):
 class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
     def __init__(self, *args, **kwargs):
         self.proposition_type = kwargs.pop("proposition_type", None)
-        self.proposition_function = kwargs.pop("proposition_function", None)
         super().__init__()
         
     def repr_latex(self):
@@ -29,16 +28,16 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
         raise ToBeImplemented("Need to implement a proposition type method!")
         
     def apply(self, *expressions, **kwargs):
-        if self.proposition_function is not None:
-            new_prop_type = self.proposition_function(self, expressions)
-        else:
-            new_prop_type = self.apply_proposition_type(expressions)
+        new_prop_type = self.apply_proposition_type(expressions)
         return super().apply(*expressions, application_kwargs={"proposition_type":new_prop_type}, **kwargs)
 
     def abstract(self, *expressions):
-        from .proposition import implies
-        # todo: check proof doesn't have binds otherwise forall-introduction
-        new_prop_type = implies(expressions[0].proposition_type, self.proposition_type)
+        from .proposition import implies, forall
+        # check proof doesn't have expressions[0] free in self
+        if self.proposition_type.contains_free(expressions[0]):
+            new_prop_type = forall(expressions[0], self.proposition_type)
+        else:
+            new_prop_type = implies(expressions[0].proposition_type, self.proposition_type)
         return super().abstract(*expressions, abstraction_kwargs={"proposition_type":new_prop_type})
   
 class ProofSymbol(Symbol, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):        
@@ -64,29 +63,37 @@ class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressio
 # definitions
 # todo: check function inputs like .experimental.deduction_rules
 #
-def fst_prop_function(self, expr):
-    return expr[0].proposition_type.children[0]
+class FstProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    def apply_proposition_type(self, expr):
+        return expr[0].proposition_type.children[0]
 
-def snd_prop_function(self, expr):
-    return expr[0].proposition_type.children[1]
-
-fst = ProofSymbol('fst', ArityArrow(ArityCross(A0, A0), A0), proposition_function=fst_prop_function)
-snd = ProofSymbol('snd', ArityArrow(ArityCross(A0, A0), A0), proposition_function=snd_prop_function)
-
-# we adjust inl/inr to accept 2nd argument of proposition type to inject. 
-def inl_prop_function(self, expr):
-    from .proposition import or_
-    return or_(expr[0].proposition_type, expr[1])
-
-def inr_prop_function(self, expr):
-    from .proposition import or_
-    return or_(expr[1], expr[0].proposition_type)
+class SndProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    def apply_proposition_type(self, expr):
+        return expr[0].proposition_type.children[1]
     
-inl = ProofSymbol('inl', ArityArrow(ArityCross(A0, A0), A0), proposition_function=inl_prop_function)
-inr = ProofSymbol('inr', ArityArrow(ArityCross(A0, A0), A0), proposition_function=inr_prop_function)
+class InlProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    def apply_proposition_type(self, expr):
+        from .proposition import or_
+        return or_(expr[0].proposition_type, expr[1])
 
-def cases_prop_function(self, expr):
-    # todo: check inputs
-    return expr[1].proposition_type.children[1]
+class InrProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    def apply_proposition_type(self, expr):
+        from .proposition import or_
+        return or_(expr[1], expr[0].proposition_type)
+    
+class CasesProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0)
+    def apply_proposition_type(self, expr):
+        # todo: check inputs
+        return expr[1].proposition_type.children[1]
 
-cases = ProofSymbol('cases', ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0), proposition_function=cases_prop_function)
+fst = FstProofSymbol('fst')
+snd = SndProofSymbol('snd')
+inl = InlProofSymbol('inl')
+inr = InrProofSymbol('inr')
+cases = CasesProofSymbol('cases') 
+

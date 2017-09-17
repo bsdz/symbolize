@@ -1,5 +1,4 @@
-from itertools import count
-from ...expressions import ExpressionMetaClass, Expression, Symbol, BaseWithChildrenExpression, ApplicationExpression,\
+from ...expressions import ExpressionMetaClass, Expression, Symbol, BaseWithChildrenExpression,\
         A0, ArityArrow, ArityCross,\
         BinaryInfixSymbol, BinaryInfixExpression,\
         LogicQuantificationSymbol, LogicQuantificationExpression
@@ -7,6 +6,7 @@ from ...expressions import ExpressionMetaClass, Expression, Symbol, BaseWithChil
 from .proof import ProofSymbol, ProofExpressionCombination
 
 def general_proof_label_generator():
+    from itertools import count
     prefix = "p_"
     for i in count(start=0, step=1): # we have an infinite collection of variables
         yield '%s%s' % (prefix, i)
@@ -20,6 +20,7 @@ class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass
     def __init__(self, *args, **kwargs):
         self.proof_default_arity = kwargs.pop("proof_default_arity", None)
         self.proof_function = kwargs.pop("proof_function", None)
+        self.assumption_contains_free = kwargs.pop("assumption_contains_free", [])
         super().__init__()
         
     def get_proof(self, name):
@@ -28,8 +29,16 @@ class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass
         else:
             new_proof = ProofSymbol(str_repr=name, proposition_type=self, arity=self.proof_default_arity)
         return new_proof
+    
+    def contains_free(self, expr):
+        """Allow us to override base"""
+        if expr in self.assumption_contains_free:
+            return True
+        else:
+            return super().contains_free(expr)
         
 class PropositionSymbol(Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+    """*@DynamicAttrs*"""
     pass
 
 class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
@@ -46,7 +55,18 @@ class PropositionBinaryInfixSymbol(BinaryInfixSymbol, metaclass=PropositionExpre
             "proof_default_arity": self.proof_default_arity,
             "proof_function": self.proof_function
         })
-
+        
+class PropositionLogicQuantificationExpression(LogicQuantificationExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression):
+    pass
+        
+class PropositionLogicQuantificationSymbol(LogicQuantificationSymbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+    __default_application_class__ = PropositionLogicQuantificationExpression
+        
+    def apply(self, *expressions):
+        return super().apply(*expressions, application_kwargs={
+            "proof_default_arity": self.proof_default_arity,
+            "proof_function": self.proof_function
+        })
 
 
 def and_pf(prop_type):
@@ -72,10 +92,11 @@ and_ = PropositionBinaryInfixSymbol('∧', latex_repr=r'\land', proof_default_ar
 or_ = PropositionBinaryInfixSymbol('∨', latex_repr=r'\lor', proof_default_arity=ArityCross(A0,A0), proof_function=or_pf)
 implies = PropositionBinaryInfixSymbol('⟹', latex_repr=r'\Rightarrow', proof_default_arity=ArityArrow(A0,A0), proof_function=implies_pf)
 
+forall = PropositionLogicQuantificationSymbol('∀', latex_repr=r'\forall')
+
 #then = PropositionBinaryInfixSymbol('⟸', latex_repr=r'\Leftarrow')
 #iff = PropositionBinaryInfixSymbol('⟺', latex_repr=r'\iff')
 
 not_ = PropositionSymbol('¬', arity=ArityArrow(A0,A0), latex_repr=r'\neg')
-#forall = LogicQuantificationSymbol('∀', latex_repr=r'\forall')
 #exists = LogicQuantificationSymbol('∃', latex_repr=r'\exists')
 

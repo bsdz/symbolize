@@ -96,6 +96,20 @@ class ExpressionTest(unittest.TestCase):
             self.assertTrue(expr.contains_bind(i), "has bind")
         for i in (s,t,u,v):
             self.assertFalse(expr.contains_bind(i), "hasn't bind")
+            
+    def test_contains_free(self):
+        r,s,t,u,v,w,x,y,z = [Symbol(i) for i in 'rstuvwxyz']
+        u.arity = ArityArrow(ArityCross(A0,A0),A0)
+        s.arity = ArityArrow(ArityCross(ArityArrow(A0,A0),A0),A0)
+        expr = s(u(v,w).abstract(x),t).abstract(y,z)
+        for i in (x,y,z):
+            self.assertTrue(expr.contains_bind(i), "has bind")
+        for i in (r,s,t,u,v):
+            self.assertFalse(expr.contains_bind(i), "hasn't bind")
+        for i in (r,x,y,z):
+            self.assertFalse(expr.contains_free(i), "not free")
+        for i in (s,t,u,v):
+            self.assertTrue(expr.contains_free(i), "is free")
         
     def test_substitute(self):
         s,t,u,v,w,x,y,z = [Symbol(i) for i in 'stuvwxyz']

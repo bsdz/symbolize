@@ -198,6 +198,9 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
             return True
         return False
     
+    def contains_free(self, expr):
+        return self.contains(expr) and not self.contains_bind(expr)
+    
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
         """abstract method"""
         raise NotImplementedError()

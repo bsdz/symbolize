@@ -438,7 +438,7 @@ class AbstractionExpression(metaclass=ExpressionMetaClass, expression_base_class
     
     @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
-        return r"λ%s%s%s.%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_latex(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_latex_wrap_parenthesis(renderer))
+        return r"\lambda{}%s%s%s.%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_latex(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_latex_wrap_parenthesis(renderer))
 
     def render_graphtool(self, renderer):  # @UnusedVariable
         from graph_tool.generation import graph_union

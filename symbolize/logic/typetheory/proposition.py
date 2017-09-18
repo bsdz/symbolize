@@ -96,14 +96,23 @@ class ForallPropositionExpression(PropositionLogicQuantificationExpression):
 class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
     __default_application_class__ = ForallPropositionExpression
 
+class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
+    def get_proof(self, name):
+        p1 = self.children[0].get_proof(next(proof_label_generator))
+        p2 = self.children[1].get_proof(next(proof_label_generator))
+        return ProofExpressionCombination(p1, p2).alias(name)
+        
+class ExistsPropositionSymbol(PropositionLogicQuantificationSymbol):
+    __default_application_class__ = ExistsPropositionExpression
 
 and_ = AndPropositionSymbol('∧', latex_repr=r'\land')
 or_ = OrPropositionSymbol('∨', latex_repr=r'\lor')
 implies = ImpliesPropositionSymbol('⟹', latex_repr=r'\Rightarrow')
 forall = ForallPropositionSymbol('∀', latex_repr=r'\forall')
+exists = ExistsPropositionSymbol('∃', latex_repr=r'\exists')
 
 #then = PropositionBinaryInfixSymbol('⟸', latex_repr=r'\Leftarrow')
 #iff = PropositionBinaryInfixSymbol('⟺', latex_repr=r'\iff')
 
 not_ = PropositionSymbol('¬', arity=ArityArrow(A0,A0), latex_repr=r'\neg')
-#exists = LogicQuantificationSymbol('∃', latex_repr=r'\exists')
+

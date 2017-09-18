@@ -89,7 +89,7 @@ class ImpliesPropositionSymbol(PropositionBinaryInfixSymbol):
     
 class ForallPropositionExpression(PropositionLogicQuantificationExpression):
     def get_proof(self, name):
-        p1 = self.children[0].get_proof(next(proof_label_generator))
+        p1 = self.children[0]
         p2 = self.children[1].get_proof(next(proof_label_generator))
         return p2.abstract(p1).alias(name)
         

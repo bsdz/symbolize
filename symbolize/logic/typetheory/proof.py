@@ -16,6 +16,13 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
     def __init__(self, *args, **kwargs):
         self.proposition_type = kwargs.pop("proposition_type", None)
         super().__init__()
+    
+    def repr_typestring(self):
+        from symbolize.expressions.render.typestring import TypeStringRenderer
+        if self.proposition_type is None:
+            return TypeStringRenderer().render(self)
+        else:
+            return "%s : %s" % (TypeStringRenderer().render(self), TypeStringRenderer().render(self.proposition_type))        
         
     def repr_latex(self):
         from symbolize.expressions.render.latex import LatexRenderer

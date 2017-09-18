@@ -134,8 +134,31 @@ class TestDeductionRules(unittest.TestCase):
         self.assertIsInstance(r, ProofExpression, "result is a proof")
         self.assertEqual(r.proposition_type, forall(x, P), "proof has correct expr")
         
-    def test_universal_quantifier_elimation(self):
-        pass
+    def test_universal_quantifier_elimination(self):
+        a = A.get_proof('a')
+        x = A.get_proof('x')
+        P = PropositionSymbol('P', assumption_contains_free=[x])
+        p = P.get_proof('p')
+        
+        # test contructed quantification
+        r1 = p.abstract(x)
+        
+        s1 = r1.apply(a)
+
+        self.assertIsInstance(s1, ProofExpression, "result is a proof")
+        self.assertEqual(s1.proposition_type, P.substitute(x, a), "proof has correct expr")
+
+        # todo: test constructed quantification with P actually 
+        # containing x.
+         
+        # test given quantification
+        forall_x_P = forall(x, P)
+        r2 = forall_x_P.get_proof('f')
+        
+        s2 = r2.apply(a)
+        
+        self.assertIsInstance(s2, ProofExpression, "result is a proof")
+        self.assertEqual(s2.proposition_type, P.substitute(x, a), "correct prop")
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

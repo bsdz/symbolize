@@ -1,7 +1,8 @@
-'''
-Created on 16 Jul 2017
+'''utility: useful methods and classes
 
-@author: bsdz
+symbolize - Mathematical Symbol Engine
+Copyright (C) 2017  Blair Azzopardi
+Distributed under the terms of the GNU General Public License (GPL v3)
 '''
 
 # https://stackoverflow.com/questions/8544983/dynamically-mixin-a-base-class-to-an-instance-in-python

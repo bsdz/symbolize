@@ -1,3 +1,9 @@
+'''
+symbolize - Mathematical Symbol Engine
+Copyright (C) 2017  Blair Azzopardi
+Distributed under the terms of the GNU General Public License (GPL v3)
+'''
+
 from collections import defaultdict
 
 from .expression import Symbol, ApplicationExpression, alias_render_latex

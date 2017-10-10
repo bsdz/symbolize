@@ -1,7 +1,8 @@
-'''
-Created on 16 Jul 2017
+'''argument: logical argument representation
 
-@author: bsdz
+symbolize - Mathematical Symbol Engine
+Copyright (C) 2017  Blair Azzopardi
+Distributed under the terms of the GNU General Public License (GPL v3)
 '''
 
 from ..utility import generate_random_string

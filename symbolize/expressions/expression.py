@@ -1,6 +1,11 @@
-""" todo: should we have different classes for CombinationExpression, AbstractExpression etc?
-       perhaps at least for a combination expression?
-"""
+'''
+symbolize - Mathematical Symbol Engine
+Copyright (C) 2017  Blair Azzopardi
+Distributed under the terms of the GNU General Public License (GPL v3)
+'''
+# todo: should we have different classes for CombinationExpression, AbstractExpression etc?
+#  perhaps at least for a combination expression?
+
 from typing import List  # @UnusedImport
 from copy import deepcopy
 from warnings import warn

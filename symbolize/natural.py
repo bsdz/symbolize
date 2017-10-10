@@ -1,8 +1,10 @@
-'''
-Created on 31 Jul 2017
+'''natural: experimental natural number expression
 
-@author: bsdz
+symbolize - Mathematical Symbol Engine
+Copyright (C) 2017  Blair Azzopardi
+Distributed under the terms of the GNU General Public License (GPL v3)
 '''
+
 from .expressions import Symbol, A0
 from .expressions.extensions import InclusionExclusionExpression
 from .definitions.operators import in_

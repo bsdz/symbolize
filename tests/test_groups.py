@@ -1,8 +1,9 @@
 '''
-Created on 17 Jul 2017
-
-@author: bsdz
+symbolize - Mathematical Symbol Engine
+Copyright (C) 2017  Blair Azzopardi
+Distributed under the terms of the GNU General Public License (GPL v3)
 '''
+
 import unittest
 from symbolize.groups import op, G
 

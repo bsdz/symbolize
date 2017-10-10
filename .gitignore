@@ -88,6 +88,10 @@ celerybeat-schedule
 venv/
 ENV/
 
+# Eclipse project settings
+.project
+.pydevproject
+
 # Spyder project settings
 .spyderproject
 
@@ -99,6 +103,8 @@ ENV/
 
 # Visual Studio 2015 cache/options directory
 # User-specific files
+*.pyproj.user
+*.pyproj
 *.suo
 *.user
 *.userosscache

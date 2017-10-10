@@ -1,0 +1,6 @@
+include MANIFEST.in README.md
+include versioneer.py
+include symbolize/_version.py
+recursive-include symbolize *.py
+recursive-include tests *.py
+recursive-include examples *.py *.ipynb

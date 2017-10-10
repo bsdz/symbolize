@@ -98,9 +98,14 @@ class CasesProofSymbol(ProofSymbol):
         # todo: check inputs
         return expr[1].proposition_type.children[1]
 
+class IfThenElseProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0)
+    def apply_proposition_type(self, expr):
+        pass
+
 fst = FstProofSymbol('fst')
 snd = SndProofSymbol('snd')
 inl = InlProofSymbol('inl')
 inr = InrProofSymbol('inr')
 cases = CasesProofSymbol('cases') 
-
+ifthenelse = IfThenElseProofSymbol('ifthenelse')

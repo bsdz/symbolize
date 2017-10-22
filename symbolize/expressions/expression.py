@@ -16,6 +16,7 @@ from .arity import A0, ArityArrow, ArityCross
 from .render.typestring import TypeStringRenderer, TypeStringRendererMixin
 from .render.latex import LatexRenderer, LatexRendererMixin
 from .render.graph import GraphToolRenderer, GraphToolRendererMixin
+from .render.unicode import UnicodeRenderer, UnicodeRendererMixin
 from ..utility import ToBeImplemented
 
 def alias_render_typestring(f):
@@ -31,6 +32,14 @@ def alias_render_latex(f):
     def wrapper(self, *args, **kwargs):
         if self._latex_repr_alias is not None:
             return self._latex_repr_alias
+        return f(self, *args, **kwargs)
+    return wrapper
+
+def alias_render_unicode(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if self._unicode_repr_alias is not None:
+            return self._unicode_repr_alias
         return f(self, *args, **kwargs)
     return wrapper
 
@@ -80,15 +89,21 @@ class ExpressionMetaClass(type):
             cls.__default_application_class__ = new_type
         return new_type
 
-class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererMixin, metaclass=ExpressionMetaClass):
+class Expression(TypeStringRendererMixin, LatexRendererMixin, UnicodeRendererMixin, GraphToolRendererMixin, metaclass=ExpressionMetaClass):
+    
+    repr_function = lambda self: self.repr_typestring()
+    jupyter_repr_latex_function = lambda self: "$$%s$$" % self.repr_latex()
+    jupyter_repr_html_function = lambda self: None # lambda self: "<pre>%s</pre>" % self.repr_unicode()
+    
     def __init__(self):
         self.parent = None
         self._arity = None
         self._str_repr_alias = None
         self._latex_repr_alias = None
+        self._unicode_repr_alias = None
         
     def __repr__(self):
-        return self.repr_typestring()
+        return Expression.repr_function(self)
     
     def __call__(self, *args, **kwargs):
         return self.apply(*args, **kwargs)
@@ -107,13 +122,20 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
     
     def _repr_latex_(self):
         """For Jupyter/IPython"""
-        return "$$%s$$" % self.repr_latex()
+        return Expression.jupyter_repr_latex_function(self)
+    
+    def _repr_html_(self):
+        """For Jupyter/IPython"""
+        return Expression.jupyter_repr_html_function(self)
     
     def repr_typestring(self):
         return TypeStringRenderer().render(self)
     
     def repr_latex(self):
         return LatexRenderer().render(self)
+    
+    def repr_unicode(self):
+        return UnicodeRenderer().render(self)
 
     def repr_graphtool(self):
         return GraphToolRenderer().render(self)
@@ -130,6 +152,7 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, GraphToolRendererM
     def alias(self, str_repr, latex_repr=None):
         new_alias = self.copy()
         new_alias._str_repr_alias = str_repr
+        new_alias._unicode_repr_alias = str_repr
         new_alias._latex_repr_alias = str_repr if latex_repr is None else latex_repr
         return new_alias
     
@@ -275,6 +298,10 @@ class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
     def render_latex(self, renderer):  # @UnusedVariable
         return self.latex_repr
     
+    @alias_render_unicode
+    def render_unicode(self, renderer):  # @UnusedVariable
+        return self.str_repr
+    
     def render_graphtool(self, renderer):
         graph = renderer.new_graph()
         base_vertex = graph.add_vertex()
@@ -304,6 +331,7 @@ class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class
         self._arity = ArityCross(*[e.arity for e in expressions]) # (1) 3.8.6
         self._str_repr_alias = None
         self._latex_repr_alias = None
+        self._unicode_repr_alias = None
          
     def equals(self, other):
         """Overload == and compare expressions.
@@ -332,12 +360,16 @@ class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
         raise ToBeImplemented("Substitute not implemented for this class yet")
     
-    @alias_render_typestring     
+    @alias_render_typestring
     def render_typestring(self, renderer):
         return ", ".join([renderer.render(e) for e in self.children])
     
-    @alias_render_latex     
+    @alias_render_latex
     def render_latex(self, renderer):
+        return ", ".join([renderer.render(e) for e in self.children])
+    
+    @alias_render_unicode
+    def render_unicode(self, renderer):
         return ", ".join([renderer.render(e) for e in self.children])
 
 class BaseWithChildrenExpression(metaclass=ExpressionMetaClass, expression_base_class=Expression):
@@ -411,6 +443,10 @@ class ApplicationExpression(metaclass=ExpressionMetaClass, expression_base_class
     def render_latex(self, renderer):  # @UnusedVariable
         return "%s%s%s%s" % (self.base.render_latex(renderer), APPLY_LEFT_BRACKET, ", ".join([e.render_latex(renderer) for e in self.children]), APPLY_RIGHT_BRACKET)
     
+    @alias_render_unicode
+    def render_unicode(self, renderer):  # @UnusedVariable
+        return "%s%s%s%s" % (self.base.render_unicode(renderer), APPLY_LEFT_BRACKET, ", ".join([e.render_unicode(renderer) for e in self.children]), APPLY_RIGHT_BRACKET)
+    
     def render_graphtool(self, renderer):  # @UnusedVariable
         from graph_tool.generation import graph_union
         
@@ -444,6 +480,10 @@ class AbstractionExpression(metaclass=ExpressionMetaClass, expression_base_class
     @alias_render_latex
     def render_latex(self, renderer):  # @UnusedVariable
         return r"\lambda{}%s%s%s.%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_latex(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_latex_wrap_parenthesis(renderer))
+
+    @alias_render_unicode
+    def render_unicode(self, renderer):  # @UnusedVariable
+        return r"λ%s%s%s.%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_unicode(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_unicode_wrap_parenthesis(renderer))
 
     def render_graphtool(self, renderer):  # @UnusedVariable
         from graph_tool.generation import graph_union

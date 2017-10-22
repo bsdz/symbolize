@@ -30,6 +30,13 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
             return LatexRenderer().render(self)
         else:
             return "%s : %s" % (LatexRenderer().render(self), LatexRenderer().render(self.proposition_type))
+        
+    def repr_unicode(self):
+        from symbolize.expressions.render.unicode import UnicodeRenderer
+        if self.proposition_type is None:
+            return UnicodeRenderer().render(self)
+        else:
+            return "%s : %s" % (UnicodeRenderer().render(self), UnicodeRenderer().render(self.proposition_type))
     
     def apply_proposition_type(self, expressions):
         raise ToBeImplemented("Need to implement a proposition type method!")

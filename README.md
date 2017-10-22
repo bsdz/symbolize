@@ -2,16 +2,22 @@
 
 An attempt to implement symbolic math calculations and intuitionistic logic using Python.
 
-# install
+# Install
 
+```
 python setup.py install
+```
 
-# example
+# Example
 
 ```python
 from symbolize.logic.argument import Argument
 from symbolize.logic.typetheory.proposition import implies, ImpliesPropositionExpression, not_
 from symbolize.logic.typetheory.variables import A, B, C, Falsum
+
+# switch on HTML render mode so we can display in GitHub markdown
+from symbolize.expressions import Expression, Symbol
+Expression.jupyter_repr_html_function = lambda self: "%s" % self.repr_unicode()
 
 A_implies_B = implies(A, B)
 B_implies_C = implies(B, C)
@@ -21,17 +27,17 @@ x = A.get_proof('x')
 
 a
 ```
-$$a : A \Rightarrow B$$
+a : A ⟹ B
 
 ```python
 b
 ```
-$$b : B \Rightarrow C$$
+b : B ⟹ C
 
 ```python
 x
 ```
-$$x : A$$
+x : A
 
 ```python
 arg1 = Argument([x, a], a(x))
@@ -41,13 +47,28 @@ arg4 = Argument([arg2, x], arg3.conclusion.abstract(b))
 arg5 = Argument([arg2, x], arg4.conclusion.abstract(a))
 arg5
 ```
-$$\frac{\frac{\frac{x : A \quad a : A \Rightarrow B}{a(x) : B} \quad b : B \Rightarrow C}{b(a(x)) : C} \quad x : A}{\lambda{}(a).\lambda{}(b).\lambda{}(x).(b(a(x))) : (A \Rightarrow B) \Rightarrow ((B \Rightarrow C) \Rightarrow (A \Rightarrow C))}$$
+<table>
+        <tr><td style="border-bottom: 1px solid black !important;"><table>
+        <tr><td style="valign='bottom';"><table>
+        <tr><td style="border-bottom: 1px solid black !important;"><table>
+        <tr><td style="valign='bottom';"><table>
+        <tr><td style="border-bottom: 1px solid black !important;"><table>
+        <tr><td style="valign='bottom';">x : A</td><td style="vertical-align:bottom">a : A ⟹ B</td></tr>
+        </table></td></tr>
+        <tr><td style='text-align:center;background-color:white'>a(x) : B</td></tr>
+        </table></td><td style="vertical-align:bottom">b : B ⟹ C</td></tr>
+        </table></td></tr>
+        <tr><td style='text-align:center;background-color:white'>b(a(x)) : C</td></tr>
+        </table></td><td style="vertical-align:bottom">x : A</td></tr>
+        </table></td></tr>
+        <tr><td style='text-align:center;background-color:white'>λ(a).λ(b).λ(x).(b(a(x))) : (A ⟹ B) ⟹ ((B ⟹ C) ⟹ (A ⟹ C))</td></tr>
+        </table>
 
 ```python
 new_type = arg5.conclusion.proposition_type.substitute(C, Falsum).copy()
 new_type
 ```
-$$(A \Rightarrow B) \Rightarrow ((B \Rightarrow ⟘) \Rightarrow (A \Rightarrow ⟘))$$
+(A ⟹ B) ⟹ ((B ⟹ ⟘) ⟹ (A ⟹ ⟘))
 
 ```python
 new_type.walk(print)
@@ -76,17 +97,28 @@ def my_sub(wr):
 new_type.walk(my_sub)
 new_type
 ```
-$$(A \Rightarrow B) \Rightarrow ((\neg(B)) \Rightarrow (\neg(A)))$$
+(A ⟹ B) ⟹ ((¬(B)) ⟹ (¬(A)))
+
+```python
+# switch off HTML render and render using latex
+Expression.jupyter_repr_html_function = lambda self: None
+arg5
+```
+
+![Proposition Formula As Image](examples/images/example-formula-argument-1.png)
 
 For more examples see the Jupyter notebooks in the examples folder.
 
-# todo
+- [Syntax](examples/notebooks/Syntax.ipynb)
+- [Type Theory Logic](examples/notebooks/Type Theory - Logic V2.ipynb)
+
+# To Do
 
 There is still lots to do initially implementing finite types and natural numbers. Futher 
 into the project I would like to implement some simple symbolic manipulations and perhaps
 even implement Gruntz (http://www.cybertester.com/data/gruntz.pdf)
 
-References:
+# References
 
-(1) Programming in Martin-Lofs Type Theory - Bengt Nordstrom
-(2) Type Theory & Functional Programming - Simon Thompson
+1. Programming in Martin-Lofs Type Theory - Bengt Nordstrom
+2. Type Theory & Functional Programming - Simon Thompson

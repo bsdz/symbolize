@@ -110,7 +110,7 @@ arg5
 For more examples see the Jupyter notebooks in the examples folder.
 
 - [Syntax](examples/notebooks/Syntax.ipynb)
-- [Type Theory Logic](examples/notebooks/Type Theory - Logic V2.ipynb)
+- [Type Theory Logic](examples/notebooks/Type%20Theory%20-%20Logic%20V2.ipynb)
 
 # To Do
 

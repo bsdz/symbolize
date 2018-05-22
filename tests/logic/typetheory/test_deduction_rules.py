@@ -6,8 +6,9 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.logic.typetheory.proposition import and_, implies, or_, forall
-from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases
+from symbolize.expressions import Symbol
+from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
+from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
 from symbolize.logic.typetheory.variables import A, B, C
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
@@ -160,6 +161,52 @@ class TestDeductionRules(unittest.TestCase):
         
         self.assertIsInstance(s2, ProofExpression, "result is a proof")
         self.assertEqual(s2.proposition_type, P.substitute(x, a), "correct prop")
+        
+    def test_existential_quantifier_introduction(self):
+        a = A.get_proof('a')
+        x = A.get_proof('x')
+        P = PropositionSymbol('P', assumption_contains_free=[x])
+        p = P.get_proof('p')
+        
+        r = ProofExpressionCombination(a,p)
+        
+        self.assertIsInstance(r, ProofExpression, "result is a proof")
+        self.assertEqual(r.proposition_type, exists(x, P), "proof has correct expr")
+        
+    def test_existential_quantifier_elimination(self):
+        a = A.get_proof('a')
+        x = A.get_proof('x')
+        P = PropositionSymbol('P', assumption_contains_free=[x])
+        p = P.get_proof('p')
+        
+        # test contructed quantification
+        r1 = ProofExpressionCombination(a, p)
+        
+        s11 = Fst(r1)
+        s12 = Snd(r1)
+        
+        self.assertIsInstance(s11, ProofExpression, "result is a proof")
+        self.assertIsInstance(s12, ProofExpression, "result is a proof")
+        
+        self.assertEqual(s11.proposition_type, A, "Fst prop")
+        self.assertEqual(s12.proposition_type, P, "Snd prop")
+        
+        
+        # todo: test constructed quantification with P actually 
+        # containing x.
+         
+        # test given quantification
+        exists_x_P = exists(x, P)
+        r2 = exists_x_P.get_proof('f')
+        
+        s21 = Fst(r2)
+        s22 = Snd(r2)
+        
+        self.assertIsInstance(s21, ProofExpression, "result is a proof")
+        self.assertIsInstance(s22, ProofExpression, "result is a proof")
+        
+        self.assertEqual(s21.proposition_type, A, "Fst prop")
+        self.assertEqual(s22.proposition_type, P, "Snd prop")
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

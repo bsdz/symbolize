@@ -59,9 +59,12 @@ class ProofSymbol(Symbol, metaclass=ProofExpressionMetaClass, expression_base_cl
         
 class ProofExpressionCombination(ExpressionCombination, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):
     def __init__(self, *args, **kwargs):
-        from .proposition import and_
+        from .proposition import and_, exists
         # todo: check only two proofs provided
-        self.proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
+        if args[1].proposition_type.assumption_contains_free: # todo: what if other free expressions?
+            self.proposition_type = exists(args[1].proposition_type.assumption_contains_free[0], args[1].proposition_type)
+        else:
+            self.proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
         super().__init__(*args, **kwargs)
 
 class ProofBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):
@@ -77,12 +80,12 @@ class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressio
 # definitions
 # todo: check function inputs like .experimental.deduction_rules
 #
-class FstProofSymbol(ProofSymbol):
+class fstProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
     def apply_proposition_type(self, expr):
         return expr[0].proposition_type.children[0]
 
-class SndProofSymbol(ProofSymbol):
+class sndProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
     def apply_proposition_type(self, expr):
         return expr[0].proposition_type.children[1]
@@ -109,10 +112,22 @@ class IfThenElseProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0)
     def apply_proposition_type(self, expr):
         pass
+    
+class FstProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    def apply_proposition_type(self, expr):
+        return expr[0].proposition_type.children[0].proposition_type
 
-fst = FstProofSymbol('fst')
-snd = SndProofSymbol('snd')
+class SndProofSymbol(ProofSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    def apply_proposition_type(self, expr):
+        return expr[0].proposition_type.children[1]    
+
+fst = fstProofSymbol('fst')
+snd = sndProofSymbol('snd')
 inl = InlProofSymbol('inl')
 inr = InrProofSymbol('inr')
 cases = CasesProofSymbol('cases') 
 ifthenelse = IfThenElseProofSymbol('ifthenelse')
+Fst = FstProofSymbol('Fst')
+Snd = SndProofSymbol('Snd')

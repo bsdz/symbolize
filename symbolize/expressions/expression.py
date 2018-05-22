@@ -241,7 +241,7 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, UnicodeRendererMix
         gbe_generator = general_bind_expression_generator()
         
         def search_func(wr1): 
-            # find abstraction and walk parent swaping abstracted expression
+            # find abstraction and walk parent swapping abstracted expression
             # with generic expression
             
             if type(wr1.expr.parent) is AbstractionExpression:

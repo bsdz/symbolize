@@ -120,5 +120,5 @@ even implement Gruntz (http://www.cybertester.com/data/gruntz.pdf)
 
 # References
 
-1. Programming in Martin-Lofs Type Theory - Bengt Nordstrom
-2. Type Theory & Functional Programming - Simon Thompson
+[BN] Programming in Martin-Lofs Type Theory - Bengt Nordstrom
+[ST] Type Theory & Functional Programming - Simon Thompson

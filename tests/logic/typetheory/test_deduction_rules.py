@@ -168,7 +168,7 @@ class TestDeductionRules(unittest.TestCase):
         P = PropositionSymbol('P', assumption_contains_free=[x])
         p = P.get_proof('p')
         
-        r = ProofExpressionCombination(a,p)
+        r = ProofExpressionCombination(a,p, exists_expression=x)
         
         self.assertIsInstance(r, ProofExpression, "result is a proof")
         self.assertEqual(r.proposition_type, exists(x, P), "proof has correct expr")
@@ -180,7 +180,7 @@ class TestDeductionRules(unittest.TestCase):
         p = P.get_proof('p')
         
         # test contructed quantification
-        r1 = ProofExpressionCombination(a, p)
+        r1 = ProofExpressionCombination(a, p,  exists_expression=x)
         
         s11 = Fst(r1)
         s12 = Snd(r1)
@@ -197,7 +197,7 @@ class TestDeductionRules(unittest.TestCase):
          
         # test given quantification
         exists_x_P = exists(x, P)
-        r2 = exists_x_P.get_proof('f')
+        r2 = exists_x_P.get_proof('f', exists_expression=x)
         
         s21 = Fst(r2)
         s22 = Snd(r2)

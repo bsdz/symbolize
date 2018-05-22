@@ -8,6 +8,8 @@ from typing import List
 from copy import deepcopy
 
 class ArityExpression(object):
+    """Arity as described in [BN] p17.
+    """
     def repr_brackets(self):
         return '(' + repr(self) + ')'
 

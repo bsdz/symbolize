@@ -65,6 +65,8 @@ class PropositionLogicQuantificationSymbol(LogicQuantificationSymbol, metaclass=
 # definitions
 #
 class AndPropositionExpression(PropositionBinaryInfixExpression):
+    """ [ST] p78
+    """
     def get_proof(self, name):
         p1 = self.children[0].get_proof(next(proof_label_generator))
         p2 = self.children[1].get_proof(next(proof_label_generator))
@@ -74,6 +76,8 @@ class AndPropositionSymbol(PropositionBinaryInfixSymbol):
     __default_application_class__ = AndPropositionExpression
     
 class OrPropositionExpression(PropositionBinaryInfixExpression):
+    """ [ST] p81
+    """
     def get_proof(self, name):
         from .proof import inl, inr
         p1 = self.children[0].get_proof(next(proof_label_generator))
@@ -85,6 +89,8 @@ class OrPropositionSymbol(PropositionBinaryInfixSymbol):
     __default_application_class__ = OrPropositionExpression
     
 class ImpliesPropositionExpression(PropositionBinaryInfixExpression):
+    """ [ST] p79
+    """
     def get_proof(self, name):
         p1 = self.children[0].get_proof(next(proof_label_generator))
         p2 = self.children[1].get_proof(next(proof_label_generator))
@@ -94,6 +100,8 @@ class ImpliesPropositionSymbol(PropositionBinaryInfixSymbol):
     __default_application_class__ = ImpliesPropositionExpression
     
 class ForallPropositionExpression(PropositionLogicQuantificationExpression):
+    """ [ST] p89
+    """
     def get_proof(self, name):
         p1 = self.children[0]
         p2 = self.children[1].get_proof(next(proof_label_generator))
@@ -103,10 +111,12 @@ class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
     __default_application_class__ = ForallPropositionExpression
 
 class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
-    def get_proof(self, name):
+    """ [ST] p91
+    """
+    def get_proof(self, name, exists_expression=None):
         p1 = self.children[0]
         p2 = self.children[1].get_proof(next(proof_label_generator))
-        return ProofExpressionCombination(p1, p2).alias(name)
+        return ProofExpressionCombination(p1, p2, exists_expression=exists_expression).alias(name)
         
 class ExistsPropositionSymbol(PropositionLogicQuantificationSymbol):
     __default_application_class__ = ExistsPropositionExpression

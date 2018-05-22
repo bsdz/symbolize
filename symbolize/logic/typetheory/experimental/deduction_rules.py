@@ -13,7 +13,7 @@ from .proposition import get_proposition_class
 
 # conjunctions
 #
-def conjunction_introduction(a,b): # (2) p79 4.4
+def conjunction_introduction(a,b): # [ST] p79 4.4
     """Introduce conjunction.
     
     Args:
@@ -26,7 +26,7 @@ def conjunction_introduction(a,b): # (2) p79 4.4
     proof_expr = ExpressionCombination(a.proof_expr, b.proof_expr)
     return cls(proof_expr)
 
-def conjunction_elimination_1(a): # (2) p79 4.4
+def conjunction_elimination_1(a): # [ST] p79 4.4
     """Eliminate conjunction on right.
     
     Args:
@@ -39,7 +39,7 @@ def conjunction_elimination_1(a): # (2) p79 4.4
     proof_expr = fst(a.proof_expr)
     return cls(proof_expr)
 
-def conjunction_elimination_2(a): # (2) p79 4.4
+def conjunction_elimination_2(a): # [ST] p79 4.4
     """Eliminate conjunction on left.
     
     Args:
@@ -54,7 +54,7 @@ def conjunction_elimination_2(a): # (2) p79 4.4
 
 # implications
 #  
-def implication_introduction(a, b): # (2) p79 4.4
+def implication_introduction(a, b): # [ST] p79 4.4
     """Introduce implication.
     
     Args:
@@ -66,7 +66,7 @@ def implication_introduction(a, b): # (2) p79 4.4
     proof_expr = b.proof_expr.abstract(a.proof_expr)
     return cls(proof_expr)
 
-def implication_elimation(a, b):  # (2) p80 4.4
+def implication_elimation(a, b):  # [ST] p80 4.4
     """Eliminate implication.
     
     Args:
@@ -82,7 +82,7 @@ def implication_elimation(a, b):  # (2) p80 4.4
 
 # disjunctions
 #
-def disjunction_introduction_1(a, B): # (2) p81 4.4
+def disjunction_introduction_1(a, B): # [ST] p81 4.4
     """Introduce disjunction on left.
     
     Args:
@@ -96,7 +96,7 @@ def disjunction_introduction_1(a, B): # (2) p81 4.4
     proof_expr = inl(a.proof_expr)
     return cls(proof_expr)
 
-def disjunction_introduction_2(a, B): # (2) p80 4.4
+def disjunction_introduction_2(a, B): # [ST] p80 4.4
     """Introduce disjunction on right.
     
     Args:
@@ -110,7 +110,7 @@ def disjunction_introduction_2(a, B): # (2) p80 4.4
     proof_expr = inr(a.proof_expr)
     return cls(proof_expr)
 
-def disjunction_elimination(a, b, c):  # (2) p80 4.4
+def disjunction_elimination(a, b, c):  # [ST] p80 4.4
     """Eliminate implication.
     
     Args:

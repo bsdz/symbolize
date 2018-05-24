@@ -128,7 +128,7 @@ class TestDeductionRules(unittest.TestCase):
         
     def test_universal_quantifier_introduction(self):
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assumption_contains_free=[x])
+        P = PropositionSymbol('P', assume_contains=[x])
         p = P.get_proof('p')
         
         r = p.abstract(x)
@@ -139,7 +139,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_universal_quantifier_elimination(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assumption_contains_free=[x])
+        P = PropositionSymbol('P', assume_contains=[x])
         p = P.get_proof('p')
         
         # test contructed quantification
@@ -165,7 +165,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_existential_quantifier_introduction(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assumption_contains_free=[x])
+        P = PropositionSymbol('P', assume_contains=[x])
         p = P.get_proof('p')
         
         r = ProofExpressionCombination(a,p, exists_expression=x)
@@ -176,7 +176,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_existential_quantifier_elimination(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assumption_contains_free=[x])
+        P = PropositionSymbol('P', assume_contains=[x])
         p = P.get_proof('p')
         
         # test contructed quantification

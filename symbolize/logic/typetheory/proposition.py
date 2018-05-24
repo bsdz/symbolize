@@ -25,18 +25,14 @@ class PropositionExpressionMetaClass(ExpressionMetaClass):
 
 class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
     def __init__(self, *args, **kwargs):
-        self.assumption_contains_free = kwargs.pop("assumption_contains_free", [])
-        super().__init__()
+        super().__init__(*args, **kwargs)
         
     def get_proof(self, name):
         raise ToBeImplemented("Need to implement")
     
     def contains_free(self, expr):
         """Allow us to override base"""
-        if expr in self.assumption_contains_free:
-            return True
-        else:
-            return super().contains_free(expr)
+        return super().contains_free(expr)
         
     def apply(self, *expressions):
         return super().apply(*expressions, application_kwargs={})

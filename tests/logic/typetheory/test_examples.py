@@ -114,5 +114,29 @@ class TestDeductionRules(unittest.TestCase):
             self.assertEqual(_p.proposition_type, _t, "proof has correct expr")        
         
 
-            
+    def test_forall_x_B_implies_C_forall_x_B_both_imply_forall_x_C(self):
+        """ [ST] p92 """
+        
+        x = A.get_proof('x')
+        B = PropositionSymbol('B', assume_contains=[x])
+        C = PropositionSymbol('C', assume_contains=[x])
+        B_implies_C = implies(B, C)
+        
+        Forall_x_B_implies_C = forall(x, B_implies_C)
+        r = Forall_x_B_implies_C.get_proof('r')
+        Forall_x_B = forall(x, B)
+        p = Forall_x_B.get_proof('p')
+        
+        s = r(x)(p(x)).abstract(x)
+        
+        outputs = {
+            x: A,
+            r: forall(x, B_implies_C),
+            p: forall(x, B),
+            s: forall(x, C),
+        }
+        
+        for _p, _t in outputs.items():
+            self.assertIsInstance(_p, ProofExpression, "result is a proof")
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")            
     

@@ -95,12 +95,13 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, UnicodeRendererMix
     jupyter_repr_latex_function = lambda self: "$$%s$$" % self.repr_latex()
     jupyter_repr_html_function = lambda self: None # lambda self: "<pre>%s</pre>" % self.repr_unicode()
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.parent = None
         self._arity = None
         self._str_repr_alias = None
         self._latex_repr_alias = None
         self._unicode_repr_alias = None
+        self._assume_contains = kwargs.pop("assume_contains", [])
         
     def __repr__(self):
         return Expression.repr_function(self)
@@ -186,7 +187,12 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, UnicodeRendererMix
                 raise ExpressionException("Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s" % (self.arity.lhs, ArityCross(*[e.arity for e in expressions])))
         else:
             warn("Skipping arity check on apply")
-        return self.default_application_class()(self, expressions, self.arity.rhs, **application_kwargs) # arity - (1) 3.8.4
+        if self.arity.rhs == A0:
+            return self.default_application_class()(self, expressions, self.arity.rhs, **application_kwargs) # arity - (1) 3.8.4
+        elif self.arity.rhs == ArityArrow(A0, A0):
+            return self.default_abstraction_class()(self, expressions, self.arity.rhs, **application_kwargs) # arity - (1) 3.8.4
+        else:
+            raise ExpressionException(f"Do no support apply when rhs arity is {self.arity.rhs}")
     
     def abstract(self, *expressions: List["Expression"], abstraction_kwargs={}) -> "Expression":
         # abstraction arity - (1) 3.8.5
@@ -203,11 +209,11 @@ class Expression(TypeStringRendererMixin, LatexRendererMixin, UnicodeRendererMix
         raise NotImplementedError()
     
     def contains(self, expr):
-        if self == expr:
+        if self == expr or expr in self._assume_contains:
             return True
         else:
             def search_func(wr): 
-                if wr.expr == expr:
+                if wr.expr == expr or expr in wr.expr._assume_contains:
                     raise FoundExpressionException()
             try:
                 self.walk(search_func)

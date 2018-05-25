@@ -454,7 +454,7 @@ class ApplicationExpression(metaclass=ExpressionMetaClass, expression_base_class
         return "%s%s%s%s" % (self.base.render_unicode(renderer), APPLY_LEFT_BRACKET, ", ".join([e.render_unicode(renderer) for e in self.children]), APPLY_RIGHT_BRACKET)
     
     def render_graphtool(self, renderer):  # @UnusedVariable
-        from graph_tool.generation import graph_union
+        from graph_tool.generation import graph_union  # @UnresolvedImport
         
         graph = self.base.render_graphtool(renderer)
         base_vertex = graph.gp["basevertex"]
@@ -492,7 +492,7 @@ class AbstractionExpression(metaclass=ExpressionMetaClass, expression_base_class
         return r"λ%s%s%s.%s" % (ABSTRACT_LEFT_BRACKET, ", ".join([e.render_unicode(renderer) for e in self.children]), ABSTRACT_RIGHT_BRACKET, self.base.render_unicode_wrap_parenthesis(renderer))
 
     def render_graphtool(self, renderer):  # @UnusedVariable
-        from graph_tool.generation import graph_union
+        from graph_tool.generation import graph_union  # @UnresolvedImport
         
         graph = self.base.render_graphtool(renderer)
         base_vertex = graph.gp["basevertex"]

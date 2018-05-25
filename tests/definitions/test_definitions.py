@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi

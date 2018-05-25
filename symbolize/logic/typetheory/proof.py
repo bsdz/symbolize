@@ -126,9 +126,11 @@ class CasesProofSymbol(ProofSymbol):
         return expr[1].proposition_type.children[1]
 
 class IfThenElseProofSymbol(ProofSymbol):
-    __default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0)
+    """ [ST] p97
+    """
+    __default_arity__ = ArityArrow(ArityCross(A0,A0,A0), A0)
     def apply_proposition_type(self, expr):
-        pass
+        return expr[1].proposition_type # or expr[2]? 
     
 class FstProofSymbol(ProofSymbol):
     """ [ST] p91
@@ -142,7 +144,11 @@ class SndProofSymbol(ProofSymbol):
     """    
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
     def apply_proposition_type(self, expr):
-        return expr[0].proposition_type.children[1]    
+        return expr[0].proposition_type.children[1] 
+    
+class BooleanProofSymbol(ProofSymbol):
+    __default_arity__ = A0
+    pass   
 
 fst = fstProofSymbol('fst')
 snd = sndProofSymbol('snd')
@@ -152,3 +158,4 @@ cases = CasesProofSymbol('cases')
 ifthenelse = IfThenElseProofSymbol('ifthenelse')
 Fst = FstProofSymbol('Fst')
 Snd = SndProofSymbol('Snd')
+

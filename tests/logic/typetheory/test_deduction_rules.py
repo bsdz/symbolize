@@ -6,10 +6,9 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.expressions import Symbol
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
-from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
-from symbolize.logic.typetheory.variables import A, B, C
+from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd, ifthenelse
+from symbolize.logic.typetheory.variables import A, B, C, bool_, True_, False_
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
 
@@ -208,6 +207,35 @@ class TestDeductionRules(unittest.TestCase):
         self.assertEqual(s21.proposition_type, A, "Fst prop")
         self.assertEqual(s22.proposition_type, P, "Snd prop")
         
+    def test_boolean_introduction(self):
+        
+        outputs = {
+            True_: bool_,
+            False_: bool_,
+        }
+        
+        for _p, _t in outputs.items():
+            self.assertIsInstance(_p, ProofExpression, "result is a proof")
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")      
+    
+    def test_boolean_elimination(self):
+        
+        C = PropositionSymbol('C')
+        c = C.get_proof('c')
+        d = C.get_proof('d')
+        tr = bool_.get_proof('tr')
+    
+        r = ifthenelse(tr, c, d)
+        
+        outputs = {
+            tr: bool_,
+            r: C,
+        }
+        
+        for _p, _t in outputs.items():
+            self.assertIsInstance(_p, ProofExpression, "result is a proof")
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")  
+    
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

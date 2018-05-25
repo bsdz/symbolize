@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''
 symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi
@@ -10,7 +9,7 @@ import unittest
 from symbolize.definitions.misc import natrec, listrec
 from symbolize.natural import NaturalNumber
 from symbolize.definitions.functions import lambda_
-from symbolize.definitions.variables import *
+from symbolize.definitions.variables import x, y
 
 
 class DefinitionsTest(unittest.TestCase):

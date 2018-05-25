@@ -1,0 +1,23 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: circleci/python:3.6.5-stretch-node
+
+    steps:
+      - checkout
+
+      - run:
+          name: setup Python venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+
+      - run:
+          command: |
+            . venv/bin/activate
+            python manage.py test
+
+

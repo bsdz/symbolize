@@ -24,22 +24,16 @@ class PropositionExpressionMetaClass(ExpressionMetaClass):
     pass
 
 class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         
-    def get_proof(self, name):
+    def get_proof(self, name, **kwargs):
         raise ToBeImplemented("Need to implement")
     
-    def contains_free(self, expr):
-        """Allow us to override base"""
-        return super().contains_free(expr)
-        
     def apply(self, *expressions):
         return super().apply(*expressions, application_kwargs={})
         
 class PropositionSymbol(Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
     """*@DynamicAttrs*"""
-    def get_proof(self, name):
+    def get_proof(self, name, **kwargs):
         return ProofSymbol(str_repr=name, proposition_type=self)
 
 class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
@@ -63,9 +57,9 @@ class PropositionLogicQuantificationSymbol(LogicQuantificationSymbol, metaclass=
 class AndPropositionExpression(PropositionBinaryInfixExpression):
     """ [ST] p78
     """
-    def get_proof(self, name):
-        p1 = self.children[0].get_proof(next(proof_label_generator))
-        p2 = self.children[1].get_proof(next(proof_label_generator))
+    def get_proof(self, name, **kwargs):
+        p1 = self.children[0].get_proof(next(proof_label_generator), **kwargs)
+        p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
         return ProofExpressionCombination(p1, p2).alias(name)
         
 class AndPropositionSymbol(PropositionBinaryInfixSymbol):
@@ -74,10 +68,10 @@ class AndPropositionSymbol(PropositionBinaryInfixSymbol):
 class OrPropositionExpression(PropositionBinaryInfixExpression):
     """ [ST] p81
     """
-    def get_proof(self, name):
+    def get_proof(self, name, **kwargs):
         from .proof import inl, inr
-        p1 = self.children[0].get_proof(next(proof_label_generator))
-        p2 = self.children[1].get_proof(next(proof_label_generator))
+        p1 = self.children[0].get_proof(next(proof_label_generator), **kwargs)
+        p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
         # todo - can be inl or inr with indicator of which proof has evidence
         return inl(p1, p2.proposition_type).alias(name)
         
@@ -87,9 +81,9 @@ class OrPropositionSymbol(PropositionBinaryInfixSymbol):
 class ImpliesPropositionExpression(PropositionBinaryInfixExpression):
     """ [ST] p79
     """
-    def get_proof(self, name):
-        p1 = self.children[0].get_proof(next(proof_label_generator))
-        p2 = self.children[1].get_proof(next(proof_label_generator))
+    def get_proof(self, name, **kwargs):
+        p1 = self.children[0].get_proof(next(proof_label_generator), **kwargs)
+        p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
         return p2.abstract(p1).alias(name)
         
 class ImpliesPropositionSymbol(PropositionBinaryInfixSymbol):
@@ -98,9 +92,9 @@ class ImpliesPropositionSymbol(PropositionBinaryInfixSymbol):
 class ForallPropositionExpression(PropositionLogicQuantificationExpression):
     """ [ST] p89
     """
-    def get_proof(self, name):
+    def get_proof(self, name, **kwargs):
         p1 = self.children[0]
-        p2 = self.children[1].get_proof(next(proof_label_generator))
+        p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
         return p2.abstract(p1).alias(name)
         
 class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
@@ -109,10 +103,10 @@ class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
 class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
     """ [ST] p91
     """
-    def get_proof(self, name, exists_expression=None):
+    def get_proof(self, name, **kwargs):
         p1 = self.children[0]
-        p2 = self.children[1].get_proof(next(proof_label_generator))
-        return ProofExpressionCombination(p1, p2, exists_expression=exists_expression).alias(name)
+        p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
+        return ProofExpressionCombination(p1, p2, exists_expression=kwargs.get("exists_expression", None)).alias(name)
         
 class ExistsPropositionSymbol(PropositionLogicQuantificationSymbol):
     __default_application_class__ = ExistsPropositionExpression

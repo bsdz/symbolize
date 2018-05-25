@@ -128,15 +128,60 @@ class TestDeductionRules(unittest.TestCase):
         p = Forall_x_B.get_proof('p')
         
         s = r(x)(p(x)).abstract(x)
+        s1 = s.abstract(p).abstract(r)
         
         outputs = {
             x: A,
             r: forall(x, B_implies_C),
             p: forall(x, B),
             s: forall(x, C),
+            s1: implies(forall(x, B_implies_C), implies(forall(x, B), forall(x, C)))
         }
         
         for _p, _t in outputs.items():
             self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")            
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            
+    def test_exists_x_P_implies_Q_deduce_forall_x_P_implies_Q(self):
+        """ [ST] p93 """
+        
+        X = PropositionSymbol('X')
+        x = X.get_proof('x')
+        P = PropositionSymbol('P', assume_contains=[x])
+        p = P.get_proof('p')
+        Q = PropositionSymbol('Q')
+
+        # forwards iff
+        #
+        Exists_x_P_implies_Q = implies(exists(x, P), Q)
+        e = Exists_x_P_implies_Q.get_proof('e', exists_expression=x)
+        
+        r1 = e(ProofExpressionCombination(x,p)).abstract(p).abstract(x)
+        
+        outputs = {
+            e: implies(exists(x, P), Q),
+            r1: forall(x,implies(P,Q)),
+        }
+        
+        for _p, _t in outputs.items():
+            self.assertIsInstance(_p, ProofExpression, "result is a proof")
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")           
     
+        # backwards iff
+        #
+        Forall_x_P_implies_Q = forall(x,implies(P,Q))
+        e = Forall_x_P_implies_Q.get_proof('e')
+        Exists_x_P = exists(x, P)
+        p = Exists_x_P.get_proof('p', exists_expression=x)
+        
+        r2 = e(Fst(p))(Snd(p)).abstract(p)
+        
+        outputs = {
+            r2: implies(exists(x, P), Q),
+            e: forall(x,implies(P,Q)),
+        }
+        
+        for _p, _t in outputs.items():
+            self.assertIsInstance(_p, ProofExpression, "result is a proof")
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")              
+        

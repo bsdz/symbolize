@@ -18,6 +18,6 @@ jobs:
       - run:
           command: |
             . venv/bin/activate
-            python manage.py test
+            python setup.py test
 
 

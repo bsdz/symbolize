@@ -73,7 +73,7 @@ class OrPropositionExpression(PropositionBinaryInfixExpression):
         p1 = self.children[0].get_proof(next(proof_label_generator), **kwargs)
         p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
         # todo - can be inl or inr with indicator of which proof has evidence
-        return inl(p1, p2.proposition_type).alias(name)
+        return inl(p1, inject_proposition=p2.proposition_type).alias(name)
         
 class OrPropositionSymbol(PropositionBinaryInfixSymbol):
     __default_application_class__ = OrPropositionExpression

@@ -84,12 +84,12 @@ class TestDeductionRules(unittest.TestCase):
         q = A.get_proof('q')
         r = B.get_proof('r')
 
-        s1 = inl(q, B)
+        s1 = inl(q, inject_proposition=B)
 
         self.assertIsInstance(s1, ProofExpression, "result is a proof")
         self.assertEqual(s1.proposition_type, or_(A, B), "proof has correct expr")
 
-        s2 = inr(r, A)
+        s2 = inr(r, inject_proposition=A)
 
         self.assertIsInstance(s2, ProofExpression, "result is a proof")
         self.assertEqual(s2.proposition_type, or_(A, B), "proof has correct expr")
@@ -106,8 +106,8 @@ class TestDeductionRules(unittest.TestCase):
         q = A.get_proof('q')
         r = B.get_proof('r')
 
-        p1 = inl(q, B)
-        p2 = inr(r, A)
+        p1 = inl(q, inject_proposition=B)
+        p2 = inr(r, inject_proposition=A)
 
         s1 = cases(p1, f, g)
         self.assertIsInstance(s1, ProofExpression, "result is a proof")

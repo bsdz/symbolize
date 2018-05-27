@@ -6,7 +6,6 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.expressions import Symbol
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
 from symbolize.logic.typetheory.variables import A, B, C
@@ -78,8 +77,8 @@ class TestDeductionRules(unittest.TestCase):
         w = B.get_proof('w')
         
         r1 = ProofExpressionCombination(
-            y(inl(x, B)).abstract(x), 
-            y(inr(w, A)).abstract(w)
+            y(inl(x, inject_proposition=B)).abstract(x), 
+            y(inr(w, inject_proposition=A)).abstract(w)
         ).abstract(y)
         
         outputs = {

@@ -18,6 +18,7 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
         super().__init__()
     
     def repr_typestring(self):
+        """ Overrides base method to support displaying proposition types. """
         from symbolize.expressions.render.typestring import TypeStringRenderer
         if self.proposition_type is None:
             return TypeStringRenderer().render(self)
@@ -25,6 +26,7 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
             return "%s : %s" % (TypeStringRenderer().render(self), TypeStringRenderer().render(self.proposition_type))        
         
     def repr_latex(self):
+        """ Overrides base method to support displaying proposition types. """
         from symbolize.expressions.render.latex import LatexRenderer
         if self.proposition_type is None:
             return LatexRenderer().render(self)
@@ -32,19 +34,30 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
             return "%s : %s" % (LatexRenderer().render(self), LatexRenderer().render(self.proposition_type))
         
     def repr_unicode(self):
+        """ Overrides base method to support displaying proposition types. """
         from symbolize.expressions.render.unicode import UnicodeRenderer
         if self.proposition_type is None:
             return UnicodeRenderer().render(self)
         else:
             return "%s : %s" % (UnicodeRenderer().render(self), UnicodeRenderer().render(self.proposition_type))
     
-    def apply_proposition_type(self, expressions):
+    def run(self):
+        return self.compute()
+    
+    def compute(self):
+        return self
+    
+    def apply_proposition_type(self, expressions, **apply_proposition_type_kwargs):
+        """ Provides the new proposition type generated after application. """
         raise ToBeImplemented("Need to implement a proposition type method!")
         
     def apply(self, *expressions, **kwargs):
         """ [ST] p79 p89
         """
-        new_prop_type = self.apply_proposition_type(expressions)
+        apply_proposition_type_kwargs = {}
+        if "inject_proposition" in kwargs: # todo: tidy this up
+            apply_proposition_type_kwargs["inject_proposition"] = kwargs.pop("inject_proposition", None)
+        new_prop_type = self.apply_proposition_type(expressions, **apply_proposition_type_kwargs)
         return super().apply(*expressions, application_kwargs={"proposition_type":new_prop_type}, **kwargs)
 
     def abstract(self, *expressions):
@@ -74,15 +87,24 @@ class ProofExpressionCombination(ExpressionCombination, metaclass=ProofExpressio
             self.proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
         super().__init__(*args, **kwargs)
 
+    def compute(self):
+        return ProofExpressionCombination(*[c.compute() for c in self.children])
+
 class ProofBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):
     pass
 
 class ProofApplicationExpression(ApplicationExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofBaseWithChildrenExpression, default_application_class=True):
-    pass
+    def compute(self):
+        computed_children = [c.compute() for c in self.children]
+        return self.base.compute(computed_children)
         
 class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofBaseWithChildrenExpression, default_abstraction_class=True):
-    def apply_proposition_type(self, expressions):
+    def apply_proposition_type(self, expressions, **kwargs):
         return self.proposition_type.children[1]
+    
+    def compute(self, children):
+        """ [ST] p80 """
+        return self.base.substitute(self.children[0], children[0])
 
 # definitions
 # todo: check function inputs like .experimental.deduction_rules
@@ -91,65 +113,71 @@ class fstProofSymbol(ProofSymbol):
     """ [ST] p79
     """
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    def apply_proposition_type(self, expr):
+    def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[0]
 
+    def compute(self, children):
+        return children[0][0]
+    
 class sndProofSymbol(ProofSymbol):
     """ [ST] p79
     """    
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    def apply_proposition_type(self, expr):
+    def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[1]
+    
+    def compute(self, children):
+        return children[0][1]    
     
 class inlProofSymbol(ProofSymbol):
     """ [ST] p81
     """
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    def apply_proposition_type(self, expr):
+    __default_arity__ = ArityArrow(A0, A0)
+    def apply_proposition_type(self, expr, **kwargs):
         from .proposition import or_
-        return or_(expr[0].proposition_type, expr[1])
+        return or_(expr[0].proposition_type, kwargs["inject_proposition"])
 
 class inrProofSymbol(ProofSymbol):
     """ [ST] p81
     """    
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    def apply_proposition_type(self, expr):
+    __default_arity__ = ArityArrow(A0, A0)
+    def apply_proposition_type(self, expr, **kwargs):
         from .proposition import or_
-        return or_(expr[1], expr[0].proposition_type)
+        return or_(kwargs["inject_proposition"], expr[0].proposition_type)
     
 class CasesProofSymbol(ProofSymbol):
     """ [ST] p81
     """    
     __default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0),ArityArrow(A0,A0)), A0)
-    def apply_proposition_type(self, expr):
+    def apply_proposition_type(self, expr, **kwargs):
         # todo: check inputs
         return expr[1].proposition_type.children[1]
 
+    def compute(self):
+        pass
+    
 class IfThenElseProofSymbol(ProofSymbol):
     """ [ST] p97
     """
     __default_arity__ = ArityArrow(ArityCross(A0,A0,A0), A0)
-    def apply_proposition_type(self, expr):
+    def apply_proposition_type(self, expr, **kwargs):
         return expr[1].proposition_type # or expr[2]? 
     
 class FstProofSymbol(ProofSymbol):
     """ [ST] p91
     """
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    def apply_proposition_type(self, expr):
+    def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[0].proposition_type
 
 class SndProofSymbol(ProofSymbol):
     """ [ST] p91
     """    
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    def apply_proposition_type(self, expr):
+    def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[1] 
     
-class BooleanProofSymbol(ProofSymbol):
-    __default_arity__ = A0
-    pass   
-
+ 
 fst = fstProofSymbol('fst')
 snd = sndProofSymbol('snd')
 inl = inlProofSymbol('inl')

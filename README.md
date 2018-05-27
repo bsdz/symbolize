@@ -114,11 +114,11 @@ For more examples see the Jupyter notebooks in the examples folder.
 
 # To Do
 
-There is still lots to do initially implementing finite types and natural numbers. Futher 
+There is still lots to do initially implementing finite types and natural numbers. Further 
 into the project I would like to implement some simple symbolic manipulations and perhaps
 even implement Gruntz (http://www.cybertester.com/data/gruntz.pdf)
 
 # References
 
-[BN] Programming in Martin-Lofs Type Theory - Bengt Nordstrom
-[ST] Type Theory & Functional Programming - Simon Thompson
+* [BN] Programming in Martin-Lofs Type Theory - Bengt Nordstrom
+* [ST] Type Theory & Functional Programming - Simon Thompson

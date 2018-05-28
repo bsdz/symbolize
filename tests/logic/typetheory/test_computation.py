@@ -32,7 +32,6 @@ class TestComputationRules(unittest.TestCase):
         
         self.assertEqual(r.run(), e.substitute(x, a))
     
-    @unittest.skip("Needs work")
     def test_cases_inl_inr(self):
         A_implies_C = implies(A, C)
         B_implies_C = implies(B, C)
@@ -43,10 +42,10 @@ class TestComputationRules(unittest.TestCase):
         q = A.get_proof('q')
         r = B.get_proof('r')        
 
-        r1 = cases(inl(q, B), f, g)
+        r1 = cases(inl(q, inject_proposition=B), f, g)
         self.assertEqual(r1.run(), f(q))
 
-        r2 = cases(inr(r, A), f, g)
+        r2 = cases(inr(r, inject_proposition=A), f, g)
         self.assertEqual(r2.run(), g(r))
         
         

@@ -44,7 +44,7 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
     def run(self):
         return self.compute()
     
-    def compute(self):
+    def compute(self, children=[]):
         return self
     
     def apply_proposition_type(self, expressions, **apply_proposition_type_kwargs):
@@ -87,15 +87,15 @@ class ProofExpressionCombination(ExpressionCombination, metaclass=ProofExpressio
             self.proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
         super().__init__(*args, **kwargs)
 
-    def compute(self):
+    def compute(self, children=[]):
         return ProofExpressionCombination(*[c.compute() for c in self.children])
 
 class ProofBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):
     pass
 
 class ProofApplicationExpression(ApplicationExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofBaseWithChildrenExpression, default_application_class=True):
-    def compute(self):
-        computed_children = [c.compute() for c in self.children]
+    def compute(self, children=[]):
+        computed_children = [c.compute([]) for c in self.children]
         return self.base.compute(computed_children)
         
 class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofBaseWithChildrenExpression, default_abstraction_class=True):
@@ -104,7 +104,10 @@ class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressio
     
     def compute(self, children):
         """ [ST] p80 """
-        return self.base.substitute(self.children[0], children[0])
+        if children:
+            return self.base.substitute(self.children[0], children[0])
+        else:
+            return self # nothing to compute
 
 # definitions
 # todo: check function inputs like .experimental.deduction_rules
@@ -135,7 +138,12 @@ class inlProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(A0, A0)
     def apply_proposition_type(self, expr, **kwargs):
         from .proposition import or_
+        self._inject_proposition = kwargs["inject_proposition"] # todo: feels wrong?
         return or_(expr[0].proposition_type, kwargs["inject_proposition"])
+    
+    def compute(self, children):
+        # todo: should we have a computation rule here?
+        return self.apply(children[0], inject_proposition=self._inject_proposition)
 
 class inrProofSymbol(ProofSymbol):
     """ [ST] p81
@@ -143,7 +151,12 @@ class inrProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(A0, A0)
     def apply_proposition_type(self, expr, **kwargs):
         from .proposition import or_
+        self._inject_proposition = kwargs["inject_proposition"] # todo: feels wrong?
         return or_(kwargs["inject_proposition"], expr[0].proposition_type)
+    
+    def compute(self, children):
+        # todo: should we have a computation rule here?
+        return self.apply(children[0], inject_proposition=self._inject_proposition)
     
 class CasesProofSymbol(ProofSymbol):
     """ [ST] p81
@@ -153,8 +166,13 @@ class CasesProofSymbol(ProofSymbol):
         # todo: check inputs
         return expr[1].proposition_type.children[1]
 
-    def compute(self):
-        pass
+    def compute(self, children):
+        if children[0].base == inl:
+            return children[1].apply(children[0].children[0])
+        elif children[0].base == inr:
+            return children[2].apply(children[0].children[0])
+        else:
+            return self
     
 class IfThenElseProofSymbol(ProofSymbol):
     """ [ST] p97

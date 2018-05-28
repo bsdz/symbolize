@@ -361,7 +361,7 @@ class ExpressionCombination(metaclass=ExpressionMetaClass, expression_base_class
         return new_expr
 
     def walk(self, func, **options):  # @UnusedVariable
-        raise ToBeImplemented("Walk not implemented for this class yet")
+        raise ToBeImplemented(f"Walk not implemented for this class yet: {type(self)}")
 
     def substitute(self, from_expr, to_expr: "Expression") -> "Expression":
         raise ToBeImplemented("Substitute not implemented for this class yet")

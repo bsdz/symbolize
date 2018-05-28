@@ -187,6 +187,9 @@ class FstProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
     def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[0].proposition_type
+    
+    def compute(self, children):
+        return children[0][0]
 
 class SndProofSymbol(ProofSymbol):
     """ [ST] p91
@@ -194,6 +197,9 @@ class SndProofSymbol(ProofSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
     def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[1] 
+    
+    def compute(self, children):
+        return children[0][1]    
     
  
 fst = fstProofSymbol('fst')

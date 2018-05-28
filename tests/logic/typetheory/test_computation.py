@@ -8,8 +8,9 @@ import unittest
 
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd, ifthenelse
-from symbolize.logic.typetheory.variables import A, B, C, bool_, True_, False_
-#from symbolize.logic.typetheory.proposition import PropositionSymbol
+from symbolize.logic.typetheory.boolean import bool_, True_, False_
+from symbolize.logic.typetheory.variables import A, B, C
+from symbolize.logic.typetheory.proposition import PropositionSymbol
 
 
 class TestComputationRules(unittest.TestCase):
@@ -48,5 +49,18 @@ class TestComputationRules(unittest.TestCase):
         r2 = cases(inr(r, inject_proposition=A), f, g)
         self.assertEqual(r2.run(), g(r))
         
+        
+    def test_Fst_Snd(self):
+        
+        a = A.get_proof('a')
+        x = A.get_proof('x')
+        P = PropositionSymbol('P', assume_contains=[x])
+        p = P.get_proof('p')
+        
+        r1 = Fst(ProofExpressionCombination(a, p,  exists_expression=x))
+        self.assertEqual(r1.run(), a)
+        
+        r2 = Snd(ProofExpressionCombination(a, p,  exists_expression=x))   
+        self.assertEqual(r2.run(), p)        
         
         

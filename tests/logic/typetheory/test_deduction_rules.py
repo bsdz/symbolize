@@ -8,7 +8,8 @@ import unittest
 
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd, ifthenelse
-from symbolize.logic.typetheory.variables import A, B, C, bool_, True_, False_
+from symbolize.logic.typetheory.boolean import  bool_, True_, False_
+from symbolize.logic.typetheory.variables import A, B, C
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
 

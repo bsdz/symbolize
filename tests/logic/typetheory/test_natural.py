@@ -7,7 +7,6 @@ import unittest
 
 from symbolize.logic.typetheory.proposition import implies, forall
 from symbolize.logic.typetheory.proof import ProofExpression
-#from symbolize.logic.typetheory.variables import A, B, C, bool_, True_, False_
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 from symbolize.logic.typetheory.natural import N, zero, succ, prim
 

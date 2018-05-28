@@ -116,6 +116,7 @@ class LogicQuantificationExpression(ApplicationExpression):
 
 class LogicQuantificationSymbol(Symbol):
     __default_arity__ = ArityArrow(ArityCross(A0,A0),A0)
+    #__default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0)),A0)
     __default_application_class__ = LogicQuantificationExpression
 
 

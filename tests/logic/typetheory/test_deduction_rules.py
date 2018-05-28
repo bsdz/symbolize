@@ -6,9 +6,10 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
+from symbolize.expressions.arity import ArityArrow, A0
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
-from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd, ifthenelse
-from symbolize.logic.typetheory.boolean import  bool_, True_, False_
+from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
+from symbolize.logic.typetheory.boolean import  bool_, True_, False_, ifthenelse
 from symbolize.logic.typetheory.variables import A, B, C
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
@@ -128,7 +129,7 @@ class TestDeductionRules(unittest.TestCase):
         
     def test_universal_quantifier_introduction(self):
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])
+        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         r = p.abstract(x)
@@ -139,7 +140,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_universal_quantifier_elimination(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])
+        P = PropositionSymbol('P', assume_contains=[x]) #, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         # test contructed quantification
@@ -165,7 +166,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_existential_quantifier_introduction(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])
+        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         r = ProofExpressionCombination(a,p, exists_expression=x)
@@ -176,7 +177,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_existential_quantifier_elimination(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])
+        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         # test contructed quantification

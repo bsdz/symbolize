@@ -6,8 +6,10 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
+from symbolize.expressions.arity import A0, ArityArrow
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
+from symbolize.logic.typetheory.natural import N, prim, succ, zero
 from symbolize.logic.typetheory.variables import A, B, C
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
@@ -146,7 +148,7 @@ class TestDeductionRules(unittest.TestCase):
         
         X = PropositionSymbol('X')
         x = X.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])
+        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         Q = PropositionSymbol('Q')
 
@@ -182,5 +184,25 @@ class TestDeductionRules(unittest.TestCase):
         
         for _p, _t in outputs.items():
             self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")              
+            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+    
+    @unittest.skip("needs work")
+    def test_addone(self):
+        """ [ST] p102 """
+
+        x = N.get_proof('x')
+        y = N.get_proof('y')
+        n = N.get_proof('n')
+        
+        f = succ(y).abstract(y).abstract(n)
+        addone = prim(x, succ(zero), f).abstract(x)
+        
+        two = succ(succ(zero))
+        
+        r1 = addone(two)
+        r2 = r1.run()
+        self.assertEqual(r2, prim(succ(succ(zero)), succ(zero), f))
+        r3 = r2.run()
+        
+        pass
         

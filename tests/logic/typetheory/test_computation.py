@@ -6,9 +6,11 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
+#from symbolize.expressions.arity import A0, ArityArrow
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
-from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd, ifthenelse
-from symbolize.logic.typetheory.boolean import bool_, True_, False_
+from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
+from symbolize.logic.typetheory.boolean import bool_, True_, False_, ifthenelse
+from symbolize.logic.typetheory.natural import N, succ, prim, zero
 from symbolize.logic.typetheory.variables import A, B, C
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
@@ -54,13 +56,40 @@ class TestComputationRules(unittest.TestCase):
         
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])
+        P = PropositionSymbol('P', assume_contains=[x]) #, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         r1 = Fst(ProofExpressionCombination(a, p,  exists_expression=x))
         self.assertEqual(r1.run(), a)
         
         r2 = Snd(ProofExpressionCombination(a, p,  exists_expression=x))   
-        self.assertEqual(r2.run(), p)        
+        self.assertEqual(r2.run(), p)
         
+    def test_ifthenelse(self):
+        
+        C = PropositionSymbol('C')
+        c = C.get_proof('c')
+        d = C.get_proof('d')
+        
+        r1 = ifthenelse(True_, c, d)
+        r2 = ifthenelse(False_, c, d)
+        
+        self.assertEqual(r1.run(), c)
+        self.assertEqual(r2.run(), d)
+        
+    def test_prim_succ(self):
+        
+        n = N.get_proof('n')
+        C = PropositionSymbol('C', assume_contains=[n]) #, arity=ArityArrow(A0,A0))
+        c = C.get_proof('c')
+        
+        
+        Forall_n_C_implies_C = forall(n, implies(C, C))
+        f = Forall_n_C_implies_C.get_proof('f')
+        
+        r1 = prim(zero, c, f)
+        r2 = prim(succ(n), c, f)
+        
+        self.assertEqual(r1.run(), c)
+        self.assertEqual(r2.run(), f(n).apply(prim(n, c, f)))        
         

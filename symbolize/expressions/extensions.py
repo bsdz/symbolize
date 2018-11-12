@@ -11,13 +11,13 @@ from .arity import ArityArrow, ArityCross, A0
 
 class BinaryInfixExpression(ApplicationExpression):
     @alias_render_latex
-    def render_latex(self, renderer):  # @UnusedVariable
+    def render_latex(self, renderer):
         return "%s %s %s" % (self.children[0].render_latex_wrap_parenthesis(renderer), 
                              self.base.render_latex(renderer), 
                              self.children[1].render_latex_wrap_parenthesis(renderer))
         
     @alias_render_unicode
-    def render_unicode(self, renderer):  # @UnusedVariable
+    def render_unicode(self, renderer):
         return "%s %s %s" % (self.children[0].render_unicode_wrap_parenthesis(renderer), 
                              self.base.render_unicode(renderer), 
                              self.children[1].render_unicode_wrap_parenthesis(renderer))
@@ -29,11 +29,11 @@ class BinaryInfixSymbol(Symbol):
 
 class LambdaExpression(ApplicationExpression):
     @alias_render_latex
-    def render_latex(self, renderer):  # @UnusedVariable
+    def render_latex(self, renderer):
         return "%s(%s)(%s)" % tuple([e.render_latex(renderer) for e in [self.base] + self.children[0].children + [self.children[0].base]])
     
     @alias_render_unicode
-    def render_unicode(self, renderer):  # @UnusedVariable
+    def render_unicode(self, renderer):
         return "%s(%s)(%s)" % tuple([e.render_unicode(renderer) for e in [self.base] + self.children[0].children + [self.children[0].base]])
 
 class LambdaSymbol(Symbol):
@@ -43,7 +43,7 @@ class LambdaSymbol(Symbol):
 
 class IntegralExpression(ApplicationExpression):
     @alias_render_latex
-    def render_latex(self, renderer):  # @UnusedVariable
+    def render_latex(self, renderer):
         integrand, limit_min, limit_max = self.children
         dummy_var = integrand.children[0]
         return "%s_{%s=%s}^{%s}{%s}" % tuple([e.render_latex(renderer) for e in (self.base, dummy_var, limit_min, limit_max, integrand.base)])
@@ -115,8 +115,6 @@ class LogicQuantificationExpression(ApplicationExpression):
                               self.children[1].render_unicode_wrap_parenthesis(renderer))
 
 class LogicQuantificationSymbol(Symbol):
-    __default_arity__ = ArityArrow(ArityCross(A0,A0),A0)
-    #__default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0)),A0)
     __default_application_class__ = LogicQuantificationExpression
 
 

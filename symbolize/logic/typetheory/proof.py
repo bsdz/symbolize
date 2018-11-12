@@ -3,16 +3,19 @@ symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 '''
+from warnings import warn
 from ...expressions import ExpressionMetaClass, Expression, Symbol,\
         BaseWithChildrenExpression, ApplicationExpression, AbstractionExpression,\
         ExpressionCombination,\
         A0, ArityArrow, ArityCross
 from symbolize.utility import ToBeImplemented
 
-class ProofExpressionMetaClass(ExpressionMetaClass):
-    pass
+class PropositionException(Exception): pass
 
-class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
+class ProofExpressionMetaClass(ExpressionMetaClass): pass
+
+class ProofExpression(Expression, 
+                      metaclass=ProofExpressionMetaClass):
     def __init__(self, *args, **kwargs):
         self.proposition_type = kwargs.pop("proposition_type", None)
         super().__init__()
@@ -58,7 +61,7 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
         if "inject_proposition" in kwargs: # todo: tidy this up
             apply_proposition_type_kwargs["inject_proposition"] = kwargs.pop("inject_proposition", None)
         new_prop_type = self.apply_proposition_type(expressions, **apply_proposition_type_kwargs)
-        return super().apply(*expressions, application_kwargs={"proposition_type":new_prop_type}, **kwargs)
+        return super().apply(*expressions, proposition_type=new_prop_type, **kwargs)
 
     def abstract(self, *expressions):
         """ [ST] p79 p89
@@ -66,23 +69,30 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
         from .proposition import implies, forall
         # check proof doesn't have expressions[0] free in self
         if self.proposition_type.contains_free(expressions[0]):
+            if self.proposition_type.arity != forall.arity.lhs.args[1]:  # @UndefinedVariable
+                warn("RHS doesn't match forall arity. forcing.")
+                self.proposition_type.arity = forall.arity.lhs.args[1]  # @UndefinedVariable
             new_prop_type = forall(expressions[0], self.proposition_type)
         else:
             new_prop_type = implies(expressions[0].proposition_type, self.proposition_type)
         return super().abstract(*expressions, abstraction_kwargs={"proposition_type":new_prop_type})
   
-class ProofSymbol(Symbol, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):        
-    pass
+class ProofSymbol(Symbol, 
+                  metaclass=ProofExpressionMetaClass, 
+                  expression_base_class=ProofExpression): pass
         
-class ProofExpressionCombination(ExpressionCombination, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):
+class ProofExpressionCombination(ExpressionCombination, 
+                                 metaclass=ProofExpressionMetaClass, 
+                                 expression_base_class=ProofExpression):
     """ [ST] p81 p91
     """
     def __init__(self, *args, **kwargs):
         from .proposition import and_, exists
         # todo: check only two proofs provided
-        exists_expression = kwargs.pop("exists_expression", None)
-        if exists_expression and args[1].proposition_type.contains_free(exists_expression):
-            self.proposition_type = exists(exists_expression, args[1].proposition_type)
+        from .proposition import PropositionSubstitutionExpression
+        #if args[1].proposition_type.contains_free(args[0]):
+        if isinstance(args[1].proposition_type, PropositionSubstitutionExpression):
+            self.proposition_type = exists(args[1].proposition_type.old, args[1].proposition_type)
         else:
             self.proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
         super().__init__(*args, **kwargs)
@@ -90,22 +100,36 @@ class ProofExpressionCombination(ExpressionCombination, metaclass=ProofExpressio
     def compute(self, children=[]):
         return ProofExpressionCombination(*[c.compute() for c in self.children])
 
-class ProofBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression):
-    pass
+class ProofBaseWithChildrenExpression(BaseWithChildrenExpression, 
+                                      metaclass=ProofExpressionMetaClass, 
+                                      expression_base_class=ProofExpression): pass
 
-class ProofApplicationExpression(ApplicationExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofBaseWithChildrenExpression, default_application_class=True):
+class ProofApplicationExpression(ApplicationExpression, 
+                                 metaclass=ProofExpressionMetaClass, 
+                                 expression_base_class=ProofBaseWithChildrenExpression, 
+                                 default_application_class=True):
     def compute(self, children=[]):
         computed_children = [c.compute([]) for c in self.children]
         return self.base.compute(computed_children)
         
-class ProofAbstractionExpression(AbstractionExpression, metaclass=ProofExpressionMetaClass, expression_base_class=ProofBaseWithChildrenExpression, default_abstraction_class=True):
+class ProofAbstractionExpression(AbstractionExpression, 
+                                 metaclass=ProofExpressionMetaClass, 
+                                 expression_base_class=ProofBaseWithChildrenExpression, 
+                                 default_abstraction_class=True):
     def apply_proposition_type(self, expressions, **kwargs):
-        return self.proposition_type.children[1]
+        from .proposition import forall, implies
+        if self.proposition_type.base == forall:
+            # [ST] p90
+            return self.proposition_type.children[1].substitute(self.proposition_type.children[0], expressions[0])
+        elif self.proposition_type.base == implies:
+            return self.proposition_type.children[1]
+        else:
+            raise PropositionException(f"Cannot apply if proposition is of type: {self.proposition_type.base}")
     
     def compute(self, children):
         """ [ST] p80 """
         if children:
-            return self.base.substitute(self.children[0], children[0])
+            return self.base.replace(self.children[0], children[0])
         else:
             return self # nothing to compute
 

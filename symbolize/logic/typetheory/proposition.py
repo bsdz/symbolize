@@ -4,13 +4,14 @@ Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 '''
 
-from ...expressions import ExpressionMetaClass, Expression, Symbol, BaseWithChildrenExpression,\
+from ...expressions import ExpressionMetaClass, Expression, Symbol,\
+        BaseWithChildrenExpression, SubstitutionExpression,\
         A0, ArityArrow, ArityCross,\
         BinaryInfixSymbol, BinaryInfixExpression,\
         LogicQuantificationSymbol, LogicQuantificationExpression
         
 from .proof import ProofSymbol, ProofExpressionCombination
-from symbolize.utility import ToBeImplemented
+from  ...utility import ToBeImplemented
 
 def general_proof_label_generator():
     from itertools import count
@@ -20,35 +21,50 @@ def general_proof_label_generator():
 
 proof_label_generator = general_proof_label_generator()
 
-class PropositionExpressionMetaClass(ExpressionMetaClass):
-    pass
+class PropositionExpressionMetaClass(ExpressionMetaClass): pass
 
-class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
-        
+class PropositionSubstitutionExpression(SubstitutionExpression):
+    def get_proof(self, name, **kwargs):
+        proof = self.original.get_proof(name, **kwargs)
+        proof.proposition_type = self # todo: copy?
+        return proof
+
+class PropositionExpression(Expression, 
+                            metaclass=PropositionExpressionMetaClass):
+       
+    __default_substitution_class__ = PropositionSubstitutionExpression
+     
     def get_proof(self, name, **kwargs):
         raise ToBeImplemented("Need to implement")
     
-    def apply(self, *expressions):
-        return super().apply(*expressions, application_kwargs={})
-        
-class PropositionSymbol(Symbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+    
+class PropositionSymbol(Symbol, 
+                        metaclass=PropositionExpressionMetaClass, 
+                        expression_base_class=PropositionExpression):
     """*@DynamicAttrs*"""
     def get_proof(self, name, **kwargs):
         return ProofSymbol(str_repr=name, proposition_type=self)
 
-class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
-    pass
+class PropositionBaseWithChildrenExpression(BaseWithChildrenExpression, 
+                                            metaclass=PropositionExpressionMetaClass, 
+                                            expression_base_class=PropositionExpression): pass
 
-class PropositionBinaryInfixExpression(BinaryInfixExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression):
-    pass
+class PropositionBinaryInfixExpression(BinaryInfixExpression, 
+                                       metaclass=PropositionExpressionMetaClass, 
+                                       expression_base_class=PropositionBaseWithChildrenExpression): pass
         
-class PropositionBinaryInfixSymbol(BinaryInfixSymbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+class PropositionBinaryInfixSymbol(BinaryInfixSymbol, 
+                                   metaclass=PropositionExpressionMetaClass, 
+                                   expression_base_class=PropositionExpression):
     __default_application_class__ = PropositionBinaryInfixExpression
         
-class PropositionLogicQuantificationExpression(LogicQuantificationExpression, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionBaseWithChildrenExpression):
-    pass
+class PropositionLogicQuantificationExpression(LogicQuantificationExpression, 
+                                               metaclass=PropositionExpressionMetaClass, 
+                                               expression_base_class=PropositionBaseWithChildrenExpression):  pass
         
-class PropositionLogicQuantificationSymbol(LogicQuantificationSymbol, metaclass=PropositionExpressionMetaClass, expression_base_class=PropositionExpression):
+class PropositionLogicQuantificationSymbol(LogicQuantificationSymbol, 
+                                           metaclass=PropositionExpressionMetaClass, 
+                                           expression_base_class=PropositionExpression):
     __default_application_class__ = PropositionLogicQuantificationExpression
         
 
@@ -98,6 +114,7 @@ class ForallPropositionExpression(PropositionLogicQuantificationExpression):
         return p2.abstract(p1).alias(name)
         
 class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,ArityArrow(A0,A0)),A0)
     __default_application_class__ = ForallPropositionExpression
 
 class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
@@ -106,9 +123,10 @@ class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
     def get_proof(self, name, **kwargs):
         p1 = self.children[0]
         p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
-        return ProofExpressionCombination(p1, p2, exists_expression=kwargs.get("exists_expression", None)).alias(name)
+        return ProofExpressionCombination(p1, p2).alias(name)
         
 class ExistsPropositionSymbol(PropositionLogicQuantificationSymbol):
+    __default_arity__ = ArityArrow(ArityCross(A0,A0),A0) # todo: is this correct?
     __default_application_class__ = ExistsPropositionExpression
 
 and_ = AndPropositionSymbol('∧', latex_repr=r'\land')

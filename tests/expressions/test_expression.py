@@ -8,14 +8,16 @@ import unittest
 from copy import deepcopy
 
 from symbolize.expressions import Symbol, ExpressionException, general_bind_expression_generator, ExpressionCombination
-from symbolize.expressions import APPLY_LEFT_BRACKET, APPLY_RIGHT_BRACKET, ABSTRACT_LEFT_BRACKET, ABSTRACT_RIGHT_BRACKET
+from symbolize.expressions import APPLY_LEFT_BRACKET, APPLY_RIGHT_BRACKET, ABSTRACT_LEFT_BRACKET, ABSTRACT_RIGHT_BRACKET, SUBSTITUTE_LEFT_BRACKET, SUBSTITUTE_RIGHT_BRACKET
 from symbolize.expressions.arity import ArityArrow, ArityCross, A0
 
 bracket_map = {
     "APL": APPLY_LEFT_BRACKET, 
     "APR": APPLY_RIGHT_BRACKET, 
     "ABL": ABSTRACT_LEFT_BRACKET, 
-    "ABR": ABSTRACT_RIGHT_BRACKET
+    "ABR": ABSTRACT_RIGHT_BRACKET,
+    "SBL": SUBSTITUTE_LEFT_BRACKET, 
+    "SBR": SUBSTITUTE_RIGHT_BRACKET
 }
 
 plus = Symbol('+', arity=ArityArrow(ArityCross(A0,A0),A0))
@@ -56,7 +58,15 @@ class ExpressionTest(unittest.TestCase):
         sin_y = Symbol('sin(y)')
         self.assertEqual(repr(plus.apply(y, sin_y).abstract(y)), '{ABL}y{ABR}+{APL}y, sin(y){APR}'.format(**bracket_map))
         
-        self.assertEqual(plus.apply(y, sin_y).abstract(y).arity, ArityArrow(A0,A0), "arity from abstration")
+        self.assertEqual(plus.apply(y, sin_y).abstract(y).arity, ArityArrow(A0,A0), "arity from abstraction")
+     
+    def test_substitution(self):
+        x, y, z = map(Symbol, "xyz")
+        
+        self.assertEqual(repr(x.substitute(y, z)), 'x{SBL}y:=z{SBR}'.format(**bracket_map))
+        
+        # todo how does substitution affect arity in general?
+        #self.assertEqual(x.substitute(y, z).arity, '', "arity from abstraction")
             
     def test_walk(self):
         u,v,w,x,y,z = [Symbol(i) for i in 'uvwxyz']
@@ -116,7 +126,7 @@ class ExpressionTest(unittest.TestCase):
         for i in (s,t,u,v):
             self.assertTrue(expr.contains_free(i), "is free")
         
-    def test_substitute(self):
+    def test_replace(self):
         s,t,u,v,w,x,y,z = [Symbol(i) for i in 'stuvwxyz']
         u.arity = ArityArrow(ArityCross(A0,A0),A0)
         w.arity = ArityArrow(ArityCross(A0,A0,A0),A0)
@@ -125,12 +135,12 @@ class ExpressionTest(unittest.TestCase):
         u2 = Symbol('u2', arity=ArityArrow(ArityCross(A0,A0),A0))
         
         tests = [
-            [x.substitute(x, x), x],
-            [u(v, w(x,y,z)).substitute(x, s), u(v, w(s,y,z))],
-            [u(v, w(x,y,z)).substitute(s, t), u(v, w(x,y,z))],
-            [u(v, w(x,y,z)).substitute(x, s).substitute(y, t), u(v, w(s,t,z))],
-            [u1(x,y).substitute(u1,u2), u2(x,y)],
-            [u1(x,y).abstract(z).substitute(x,s), u1(s,y).abstract(z)],
+            [x.replace(x, x), x],
+            [u(v, w(x,y,z)).replace(x, s), u(v, w(s,y,z))],
+            [u(v, w(x,y,z)).replace(s, t), u(v, w(x,y,z))],
+            [u(v, w(x,y,z)).replace(x, s).replace(y, t), u(v, w(s,t,z))],
+            [u1(x,y).replace(u1,u2), u2(x,y)],
+            [u1(x,y).abstract(z).replace(x,s), u1(s,y).abstract(z)],
         ]
         
         for i, (e1,e2) in enumerate(tests):

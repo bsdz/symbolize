@@ -129,7 +129,7 @@ class TestDeductionRules(unittest.TestCase):
         
     def test_universal_quantifier_introduction(self):
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
+        P = PropositionSymbol('P', assume_contains=[x], arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         r = p.abstract(x)
@@ -140,7 +140,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_universal_quantifier_elimination(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x]) #, arity=ArityArrow(A0,A0))
+        P = PropositionSymbol('P', assume_contains=[x], arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
         # test contructed quantification
@@ -166,10 +166,10 @@ class TestDeductionRules(unittest.TestCase):
     def test_existential_quantifier_introduction(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
+        P = PropositionSymbol('P', assume_contains=[x], arity=ArityArrow(A0,A0)).substitute(x, a)
         p = P.get_proof('p')
         
-        r = ProofExpressionCombination(a,p, exists_expression=x)
+        r = ProofExpressionCombination(a,p)
         
         self.assertIsInstance(r, ProofExpression, "result is a proof")
         self.assertEqual(r.proposition_type, exists(x, P), "proof has correct expr")
@@ -177,11 +177,11 @@ class TestDeductionRules(unittest.TestCase):
     def test_existential_quantifier_elimination(self):
         a = A.get_proof('a')
         x = A.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
+        P = PropositionSymbol('P', assume_contains=[x]).substitute(x, a)
         p = P.get_proof('p')
         
-        # test contructed quantification
-        r1 = ProofExpressionCombination(a, p,  exists_expression=x)
+        # test constructed quantification
+        r1 = ProofExpressionCombination(a, p)
         
         s11 = Fst(r1)
         s12 = Snd(r1)
@@ -198,7 +198,7 @@ class TestDeductionRules(unittest.TestCase):
          
         # test given quantification
         exists_x_P = exists(x, P)
-        r2 = exists_x_P.get_proof('f', exists_expression=x)
+        r2 = exists_x_P.get_proof('f')
         
         s21 = Fst(r2)
         s22 = Snd(r2)

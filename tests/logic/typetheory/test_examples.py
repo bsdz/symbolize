@@ -148,20 +148,20 @@ class TestDeductionRules(unittest.TestCase):
         
         X = PropositionSymbol('X')
         x = X.get_proof('x')
-        P = PropositionSymbol('P', assume_contains=[x])#, arity=ArityArrow(A0,A0))
+        P = PropositionSymbol('P', assume_contains=[x]).substitute(x, x) # todo: kludge!
         p = P.get_proof('p')
         Q = PropositionSymbol('Q')
 
         # forwards iff
         #
         Exists_x_P_implies_Q = implies(exists(x, P), Q)
-        e = Exists_x_P_implies_Q.get_proof('e', exists_expression=x)
+        e = Exists_x_P_implies_Q.get_proof('e')
         
         r1 = e(ProofExpressionCombination(x,p)).abstract(p).abstract(x)
         
         outputs = {
             e: implies(exists(x, P), Q),
-            r1: forall(x,implies(P,Q)),
+            r1: forall(x,implies(P,Q, target_arity=ArityArrow(A0,A0))), # todo: do we need to force arity?
         }
         
         for _p, _t in outputs.items():
@@ -170,10 +170,10 @@ class TestDeductionRules(unittest.TestCase):
     
         # backwards iff
         #
-        Forall_x_P_implies_Q = forall(x,implies(P,Q))
+        Forall_x_P_implies_Q = forall(x,implies(P,Q, target_arity=ArityArrow(A0,A0)))
         e = Forall_x_P_implies_Q.get_proof('e')
         Exists_x_P = exists(x, P)
-        p = Exists_x_P.get_proof('p', exists_expression=x)
+        p = Exists_x_P.get_proof('p')
         
         r2 = e(Fst(p))(Snd(p)).abstract(p)
         

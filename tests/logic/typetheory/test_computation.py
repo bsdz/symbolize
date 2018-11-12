@@ -6,7 +6,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-#from symbolize.expressions.arity import A0, ArityArrow
+from symbolize.expressions.arity import A0, ArityArrow
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import ProofExpressionCombination, ProofExpression, fst, snd, inl, inr, cases, Fst, Snd
 from symbolize.logic.typetheory.boolean import bool_, True_, False_, ifthenelse
@@ -33,7 +33,7 @@ class TestComputationRules(unittest.TestCase):
         
         r = e.abstract(x).apply(a)
         
-        self.assertEqual(r.run(), e.substitute(x, a))
+        self.assertEqual(r.run(), e.replace(x, a))
     
     def test_cases_inl_inr(self):
         A_implies_C = implies(A, C)
@@ -59,10 +59,10 @@ class TestComputationRules(unittest.TestCase):
         P = PropositionSymbol('P', assume_contains=[x]) #, arity=ArityArrow(A0,A0))
         p = P.get_proof('p')
         
-        r1 = Fst(ProofExpressionCombination(a, p,  exists_expression=x))
+        r1 = Fst(ProofExpressionCombination(a, p))
         self.assertEqual(r1.run(), a)
         
-        r2 = Snd(ProofExpressionCombination(a, p,  exists_expression=x))   
+        r2 = Snd(ProofExpressionCombination(a, p))   
         self.assertEqual(r2.run(), p)
         
     def test_ifthenelse(self):
@@ -80,7 +80,7 @@ class TestComputationRules(unittest.TestCase):
     def test_prim_succ(self):
         
         n = N.get_proof('n')
-        C = PropositionSymbol('C', assume_contains=[n]) #, arity=ArityArrow(A0,A0))
+        C = PropositionSymbol('C', assume_contains=[n], arity=ArityArrow(A0,A0))
         c = C.get_proof('c')
         
         
@@ -91,5 +91,5 @@ class TestComputationRules(unittest.TestCase):
         r2 = prim(succ(n), c, f)
         
         self.assertEqual(r1.run(), c)
-        self.assertEqual(r2.run(), f(n).apply(prim(n, c, f)))        
+        self.assertEqual(r2.run(), f(n).apply(prim(n, c, f)))
         

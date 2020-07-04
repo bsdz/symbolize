@@ -5,7 +5,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 '''
 from .base import Renderer
 
-class TypeStringRendererMixin(object):
+class TypeStringRendererMixin:
     def render_typestring(self, renderer):  # @UnusedVariable
         raise NotImplementedError()
     

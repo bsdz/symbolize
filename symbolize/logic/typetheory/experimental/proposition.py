@@ -6,7 +6,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from ....expressions import Symbol, Expression
 
-class Proposition(object):
+class Proposition:
     # instances are proofs
     proposition_expr = None # class prop
     def __init__(self, baserepr, arity=None):

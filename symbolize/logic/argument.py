@@ -9,7 +9,7 @@ from textwrap import dedent
 from ..expressions import Expression, Symbol
 from ..utility import generate_random_string
 
-class Argument(object):
+class Argument:
     
     """support a list of true or false statements (premises) that 
     have a conclusion."""

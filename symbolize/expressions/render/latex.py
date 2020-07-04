@@ -6,7 +6,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from .base import Renderer
 
-class LatexRendererMixin(object):
+class LatexRendererMixin:
     def render_latex(self, renderer):  # @UnusedVariable
         raise NotImplementedError()
     

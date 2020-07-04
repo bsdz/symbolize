@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -24,6 +23,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -43,9 +43,9 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
-*,cover
+*.cover
 .hypothesis/
-.idea/
+.pytest_cache/
 
 # Translations
 *.mo
@@ -54,6 +54,7 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
+db.sqlite3
 
 # Flask stuff:
 instance/
@@ -80,20 +81,18 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# dotenv
+# Environments
 .env
-
-# virtualenv
 .venv
+env/
 venv/
 ENV/
-
-# Eclipse project settings
-.project
-.pydevproject
+env.bak/
+venv.bak/
 
 # Spyder project settings
 .spyderproject
+.spyproject
 
 # Rope project settings
 .ropeproject
@@ -101,13 +100,22 @@ ENV/
 # mkdocs documentation
 /site
 
-# Visual Studio 2015 cache/options directory
-# User-specific files
-*.pyproj.user
-*.pyproj
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-# cache/options directory
+# mypy
+.mypy_cache/
+
+# JS modules
+node_modules
+bower_components
+
+# vs & vscode
 .vs/
+.vscode/
+.env
+
+# jetbrains & pycharm
+.idea/
+
+# pydev / eclipse
+.project
+.pydevproject
+.settings/

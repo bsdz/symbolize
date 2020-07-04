@@ -7,7 +7,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 from typing import List
 from copy import deepcopy
 
-class ArityExpression(object):
+class ArityExpression:
     """Arity as described in [BN] p17.
     """
     def repr_brackets(self):

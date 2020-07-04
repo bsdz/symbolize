@@ -1,8 +1,8 @@
-'''
+"""
 symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
-'''
+"""
 
 from ....expressions import ExpressionCombination
 
@@ -11,24 +11,26 @@ from ....definitions.logic import and_, implies, or_
 
 from .proposition import get_proposition_class
 
+
 # conjunctions
 #
-def conjunction_introduction(a,b): # [ST] p79 4.4
+def conjunction_introduction(a, b):  # [ST] p79 4.4
     """Introduce conjunction.
-    
+
     Args:
         a (Proposition): left hand proof.
         b (Proposition): right hand proof.
     """
     new_expr = and_(a.proposition_expr, b.proposition_expr)
     cls = get_proposition_class(new_expr)
-    #proof_expr = pair(a.proof_expr, b.proof_expr)
+    # proof_expr = pair(a.proof_expr, b.proof_expr)
     proof_expr = ExpressionCombination(a.proof_expr, b.proof_expr)
     return cls(proof_expr)
 
-def conjunction_elimination_1(a): # [ST] p79 4.4
+
+def conjunction_elimination_1(a):  # [ST] p79 4.4
     """Eliminate conjunction on right.
-    
+
     Args:
         a (Proposition): proof containing conjunction.
     """
@@ -39,9 +41,10 @@ def conjunction_elimination_1(a): # [ST] p79 4.4
     proof_expr = fst(a.proof_expr)
     return cls(proof_expr)
 
-def conjunction_elimination_2(a): # [ST] p79 4.4
+
+def conjunction_elimination_2(a):  # [ST] p79 4.4
     """Eliminate conjunction on left.
-    
+
     Args:
         a (Proposition): proof containing conjunction.
     """
@@ -52,11 +55,12 @@ def conjunction_elimination_2(a): # [ST] p79 4.4
     proof_expr = snd(a.proof_expr)
     return cls(proof_expr)
 
+
 # implications
-#  
-def implication_introduction(a, b): # [ST] p79 4.4
+#
+def implication_introduction(a, b):  # [ST] p79 4.4
     """Introduce implication.
-    
+
     Args:
         a (Proposition): left hand proof.
         b (Proposition): right hand proof.
@@ -66,9 +70,10 @@ def implication_introduction(a, b): # [ST] p79 4.4
     proof_expr = b.proof_expr.abstract(a.proof_expr)
     return cls(proof_expr)
 
+
 def implication_elimation(a, b):  # [ST] p80 4.4
     """Eliminate implication.
-    
+
     Args:
         a (Proposition): left hand proof.
         b (Proposition): right hand proof.
@@ -80,11 +85,12 @@ def implication_elimation(a, b):  # [ST] p80 4.4
     proof_expr = a.proof_expr.apply(b.proof_expr)
     return cls(proof_expr)
 
+
 # disjunctions
 #
-def disjunction_introduction_1(a, B): # [ST] p81 4.4
+def disjunction_introduction_1(a, B):  # [ST] p81 4.4
     """Introduce disjunction on left.
-    
+
     Args:
         a (Proposition): proof.
         B (PropositionType): proposition.
@@ -96,9 +102,10 @@ def disjunction_introduction_1(a, B): # [ST] p81 4.4
     proof_expr = inl(a.proof_expr)
     return cls(proof_expr)
 
-def disjunction_introduction_2(a, B): # [ST] p80 4.4
+
+def disjunction_introduction_2(a, B):  # [ST] p80 4.4
     """Introduce disjunction on right.
-    
+
     Args:
         a (Proposition): proof.
         B (PropositionType): proposition.
@@ -110,9 +117,10 @@ def disjunction_introduction_2(a, B): # [ST] p80 4.4
     proof_expr = inr(a.proof_expr)
     return cls(proof_expr)
 
+
 def disjunction_elimination(a, b, c):  # [ST] p80 4.4
     """Eliminate implication.
-    
+
     Args:
         a (Proposition): proof requiring elimination.
         b (Proposition): 1st implication proof deducing C from a.
@@ -123,11 +131,10 @@ def disjunction_elimination(a, b, c):  # [ST] p80 4.4
     if b.proposition_expr.base != implies or c.proposition_expr.base != implies:
         raise Exception("Cannot eliminate disjunction without two implications")
     if b.proposition_expr.children[1] != c.proposition_expr.children[1]:
-        raise Exception("Cannot eliminate if both implications do not have same consequence")
+        raise Exception(
+            "Cannot eliminate if both implications do not have same consequence"
+        )
     new_expr = b.proposition_expr.children[1]
     cls = get_proposition_class(new_expr)
     proof_expr = cases(a.proof_expr, b.proof_expr, c.proof_expr)
     return cls(proof_expr)
-
-
-

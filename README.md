@@ -5,7 +5,7 @@ An attempt to implement symbolic math calculations and intuitionistic logic usin
 # Install
 
 ```
-python setup.py install
+python -m pip install git+https://github.com/bsdz/symbolize.git
 ```
 
 # Example

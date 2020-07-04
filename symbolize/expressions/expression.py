@@ -112,12 +112,15 @@ class Expression(
     GraphToolRendererMixin,
     metaclass=ExpressionMetaClass,
 ):
+    def repr_function(self):
+        return self.repr_typestring()
 
-    repr_function = lambda self: self.repr_typestring()
-    jupyter_repr_latex_function = lambda self: "$$%s$$" % self.repr_latex()
-    jupyter_repr_html_function = (
-        lambda self: None
-    )  # lambda self: "<pre>%s</pre>" % self.repr_unicode()
+    def jupyter_repr_latex_function(self):
+        return "$$%s$$" % self.repr_latex()
+
+    def jupyter_repr_html_function(self):
+        return None
+        # return "<pre>%s</pre>" % self.repr_unicode()
 
     def __init__(self, *args, **kwargs):
         self.parent = None
@@ -274,7 +277,7 @@ class Expression(
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
         func can return False to terminate the walk.
-        
+
         abstract method.
         """
         raise NotImplementedError(
@@ -283,7 +286,7 @@ class Expression(
 
     def equals(self, other):
         """Compares expression with another.
-        
+
         abstract method.
         """
         raise NotImplementedError(
@@ -292,7 +295,7 @@ class Expression(
 
     def replace(self, from_expr, to_expr: "Expression") -> "Expression":
         """ Replaces all occurrences of from_expr with to_expr.
-        
+
         abstract method.
         """
         raise NotImplementedError(
@@ -437,7 +440,7 @@ class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
 
         return (
             to_expr.copy() if self == from_expr else self.copy()
-        )  #  exact substitution - [ST] 2.4
+        )  # exact substitution - [ST] 2.4
 
 
 class ExpressionCombination(
@@ -516,7 +519,7 @@ class SubstitutionExpression(
         **kwargs,
     ):
         """Substitutes source for target in original expression.
-        
+
         Args:
             original Expression: original expression.
             old Expression: expression to substitute.
@@ -583,7 +586,8 @@ class SubstitutionExpression(
 
     @alias_render_latex
     def render_latex(self, renderer):
-        return r"%s%s%s \coloneqq %s%s" % (
+        # NOTE: mathjax does not support \coloneqq
+        return r"%s%s%s \mathrel{\vcenter{:}}= %s%s" % (
             self.original.render_typestring(renderer),
             SUBSTITUTE_LEFT_BRACKET,
             self.old.render_typestring(renderer),
@@ -813,4 +817,3 @@ class AbstractionExpression(
             graph.gp["basevertex"] = graph.new_graph_property("int", lambda_vertex)
 
         return graph
-

@@ -1,9 +1,8 @@
-'''
+"""
 symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
-'''
+"""
 from ..expressions import Symbol
 
-x,y,z, a,b,c, n,m, i,j,k = [Symbol(c) for c in 'xyzabcnmijk']
-
+x, y, z, a, b, c, n, m, i, j, k = [Symbol(c) for c in "xyzabcnmijk"]

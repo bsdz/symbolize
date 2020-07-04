@@ -3,13 +3,15 @@ symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 """
-
-from ..expression import Expression
+from typing import TYPE_CHECKING
 from .base import Renderer
+
+if TYPE_CHECKING:
+    from ..expression import Expression
 
 
 class GraphToolRendererMixin:
-    def render_graphtool(self, renderer):  # @UnusedVariable
+    def render_graphtool(self, renderer):
         raise NotImplementedError()
 
 
@@ -28,7 +30,7 @@ def _repr_png_(self):
 
 
 class GraphToolRenderer(Renderer):
-    def render(self, expression: Expression) -> str:
+    def render(self, expression: "Expression") -> str:
         return expression.render_graphtool(self)
 
     def new_graph(self):

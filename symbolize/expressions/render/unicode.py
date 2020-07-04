@@ -3,8 +3,11 @@ symbolize - Mathematical Symbol Engine
 Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 """
-from ..expression import Expression
+from typing import TYPE_CHECKING
 from .base import Renderer
+
+if TYPE_CHECKING:
+    from ..expression import Expression
 
 
 class UnicodeRendererMixin:
@@ -32,7 +35,7 @@ class UnicodeRenderer(Renderer):
         super().__init__()
         self.postfix_hooks = []  # function that generate unicode for postfix
 
-    def render(self, expression: Expression) -> str:
+    def render(self, expression: "Expression") -> str:
 
         rendered = expression.render_unicode(self)
 

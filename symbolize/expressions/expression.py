@@ -588,20 +588,20 @@ class SubstitutionExpression(
     def render_latex(self, renderer):
         # NOTE: mathjax does not support \coloneqq
         return r"%s%s%s \mathrel{\vcenter{:}}= %s%s" % (
-            self.original.render_typestring(renderer),
+            self.original.render_latex(renderer),
             SUBSTITUTE_LEFT_BRACKET,
-            self.old.render_typestring(renderer),
-            self.new.render_typestring(renderer),
+            self.old.render_latex(renderer),
+            self.new.render_latex(renderer),
             SUBSTITUTE_RIGHT_BRACKET,
         )
 
     @alias_render_unicode
     def render_unicode(self, renderer):
         return r"%s%s%s≔%s%s" % (
-            self.original.render_typestring(renderer),
+            self.original.render_unicode(renderer),
             SUBSTITUTE_LEFT_BRACKET,
-            self.old.render_typestring(renderer),
-            self.new.render_typestring(renderer),
+            self.old.render_unicode(renderer),
+            self.new.render_unicode(renderer),
             SUBSTITUTE_RIGHT_BRACKET,
         )
 

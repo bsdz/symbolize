@@ -15,10 +15,6 @@ from symbolize.logic.argument import Argument
 from symbolize.logic.typetheory.proposition import implies, ImpliesPropositionExpression, not_
 from symbolize.logic.typetheory.variables import A, B, C, Falsum
 
-# switch on HTML render mode so we can display in GitHub markdown
-from symbolize.expressions import Expression, Symbol
-Expression.jupyter_repr_html_function = lambda self: "%s" % self.repr_unicode()
-
 A_implies_B = implies(A, B)
 B_implies_C = implies(B, C)
 a = A_implies_B.get_proof('a')
@@ -27,17 +23,17 @@ x = A.get_proof('x')
 
 a
 ```
-a : A ⟹ B
+<img src="https://render.githubusercontent.com/render/math?math=a : A \Rightarrow B">
 
 ```python
 b
 ```
-b : B ⟹ C
+<img src="https://render.githubusercontent.com/render/math?math=b : B \Rightarrow C">
 
 ```python
 x
 ```
-x : A
+<img src="https://render.githubusercontent.com/render/math?math=x : A">
 
 ```python
 arg1 = Argument([x, a], a(x))
@@ -47,28 +43,16 @@ arg4 = Argument([arg2, x], arg3.conclusion.abstract(b))
 arg5 = Argument([arg2, x], arg4.conclusion.abstract(a))
 arg5
 ```
-<table>
-        <tr><td style="border-bottom: 1px solid black !important;"><table>
-        <tr><td style="valign='bottom';"><table>
-        <tr><td style="border-bottom: 1px solid black !important;"><table>
-        <tr><td style="valign='bottom';"><table>
-        <tr><td style="border-bottom: 1px solid black !important;"><table>
-        <tr><td style="valign='bottom';">x : A</td><td style="vertical-align:bottom">a : A ⟹ B</td></tr>
-        </table></td></tr>
-        <tr><td style='text-align:center;background-color:white'>a(x) : B</td></tr>
-        </table></td><td style="vertical-align:bottom">b : B ⟹ C</td></tr>
-        </table></td></tr>
-        <tr><td style='text-align:center;background-color:white'>b(a(x)) : C</td></tr>
-        </table></td><td style="vertical-align:bottom">x : A</td></tr>
-        </table></td></tr>
-        <tr><td style='text-align:center;background-color:white'>λ(a).λ(b).λ(x).(b(a(x))) : (A ⟹ B) ⟹ ((B ⟹ C) ⟹ (A ⟹ C))</td></tr>
-        </table>
+
+<img src="https://render.githubusercontent.com/render/math?math=\frac{\frac{\frac{x : A \quad a : A \Rightarrow B}{a(x) : B} \quad b : B \Rightarrow C}{b(a(x)) : C} \quad x : A}{\lambda{}(a).\lambda{}(b).\lambda{}(x).(b(a(x))) : (A \Rightarrow B) \Rightarrow ((B \Rightarrow C) \Rightarrow (A \Rightarrow C))}">
+
 
 ```python
-new_type = arg5.conclusion.proposition_type.substitute(C, Falsum).copy()
+new_type = arg5.conclusion.proposition_type.replace(C, Falsum).copy()
 new_type
 ```
-(A ⟹ B) ⟹ ((B ⟹ ⟘) ⟹ (A ⟹ ⟘))
+<img src="https://render.githubusercontent.com/render/math?math=(A \Rightarrow B) \Rightarrow ((B \Rightarrow ⟘) \Rightarrow (A \Rightarrow ⟘))">
+
 
 ```python
 new_type.walk(print)
@@ -97,15 +81,17 @@ def my_sub(wr):
 new_type.walk(my_sub)
 new_type
 ```
-(A ⟹ B) ⟹ ((¬(B)) ⟹ (¬(A)))
+<img src="https://render.githubusercontent.com/render/math?math=(A \Rightarrow B) \Rightarrow ((\neg(B)) \Rightarrow (\neg(A)))">
+
 
 ```python
-# switch off HTML render and render using latex
-Expression.jupyter_repr_html_function = lambda self: None
-arg5
+# switch off Tex render and render using unicode
+from symbolize.expressions import Expression
+Expression.jupyter_repr_html_function = lambda self: f"{self.repr_unicode()}"
+new_type
 ```
+(A ⟹ B) ⟹ ((¬(B)) ⟹ (¬(A)))
 
-![Proposition Formula As Image](examples/images/example-formula-argument-1.png)
 
 For more examples see the Jupyter notebooks in the examples folder.
 

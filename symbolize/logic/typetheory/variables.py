@@ -6,8 +6,8 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from .proposition import PropositionSymbol
 
-Falsum = PropositionSymbol("⟘")
-Verum = PropositionSymbol("⟙")
+Falsum = PropositionSymbol("⟘", latex_repr=r"\bot")
+Verum = PropositionSymbol("⟙", latex_repr=r"\top")
 
 # some generic propositions
 #

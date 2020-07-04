@@ -51,7 +51,7 @@ arg5
 new_type = arg5.conclusion.proposition_type.replace(C, Falsum).copy()
 new_type
 ```
-<img src="https://render.githubusercontent.com/render/math?math=(A \Rightarrow B) \Rightarrow ((B \Rightarrow ⟘) \Rightarrow (A \Rightarrow ⟘))">
+<img src="https://render.githubusercontent.com/render/math?math=(A \Rightarrow B) \Rightarrow ((B \Rightarrow \bot) \Rightarrow (A \Rightarrow \bot))">
 
 
 ```python

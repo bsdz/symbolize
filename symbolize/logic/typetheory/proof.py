@@ -6,6 +6,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 from warnings import warn
 from ...expressions import (
     ExpressionMetaClass,
+    ExpressionClassType,
     Expression,
     Symbol,
     BaseWithChildrenExpression,
@@ -82,7 +83,7 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
         """ [ST] p79 p89
         """
         apply_proposition_type_kwargs = {}
-        if "inject_proposition" in kwargs:  # todo: tidy this up
+        if "inject_proposition" in kwargs:  # TODO: tidy this up
             apply_proposition_type_kwargs["inject_proposition"] = kwargs.pop(
                 "inject_proposition", None
             )
@@ -116,15 +117,15 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
 
 
 class ProofSymbol(
-    Symbol, metaclass=ProofExpressionMetaClass, expression_base_class=ProofExpression
+    Symbol, ProofExpression, metaclass=ProofExpressionMetaClass,
 ):
     pass
 
 
 class ProofExpressionCombination(
     ExpressionCombination,
+    ProofExpression,
     metaclass=ProofExpressionMetaClass,
-    expression_base_class=ProofExpression,
 ):
     """ [ST] p81 p91
     """
@@ -152,17 +153,17 @@ class ProofExpressionCombination(
 
 class ProofBaseWithChildrenExpression(
     BaseWithChildrenExpression,
+    ProofExpression,
     metaclass=ProofExpressionMetaClass,
-    expression_base_class=ProofExpression,
 ):
     pass
 
 
 class ProofApplicationExpression(
     ApplicationExpression,
+    ProofBaseWithChildrenExpression,
     metaclass=ProofExpressionMetaClass,
-    expression_base_class=ProofBaseWithChildrenExpression,
-    default_application_class=True,
+    expression_class_type=ExpressionClassType.APPLICATION,
 ):
     def compute(self, children=[]):
         computed_children = [c.compute([]) for c in self.children]
@@ -171,9 +172,9 @@ class ProofApplicationExpression(
 
 class ProofAbstractionExpression(
     AbstractionExpression,
+    ProofBaseWithChildrenExpression,
     metaclass=ProofExpressionMetaClass,
-    expression_base_class=ProofBaseWithChildrenExpression,
-    default_abstraction_class=True,
+    expression_class_type=ExpressionClassType.ABSTRACTION,
 ):
     def apply_proposition_type(self, expressions, **kwargs):
         from .proposition import forall, implies

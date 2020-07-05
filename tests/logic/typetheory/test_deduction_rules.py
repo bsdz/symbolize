@@ -50,7 +50,7 @@ class TestDeductionRules(unittest.TestCase):
         self.assertEqual(s11.proposition_type, A, "fst prop")
         self.assertEqual(s12.proposition_type, B, "snd prop")
 
-        ## test given conjunction
+        # test given conjunction
         A_and_B = and_(A, B)
         r2 = A_and_B.get_proof("s2")  # , arity=ArityCross(A0,A0))
         s21 = fst(r2)

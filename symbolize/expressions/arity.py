@@ -4,7 +4,6 @@ Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 """
 
-from typing import List
 from copy import deepcopy
 
 
@@ -35,7 +34,7 @@ A0 = ArityPlaceHolder()  # convenience instance
 
 
 class ArityCross(ArityExpression):
-    def __init__(self, *args: List[ArityExpression]):
+    def __init__(self, *args: ArityExpression):
         self.args = args
 
     def __eq__(self, other):

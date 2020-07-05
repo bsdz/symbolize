@@ -9,8 +9,9 @@ from copy import deepcopy
 from warnings import warn
 from itertools import count
 from functools import wraps
+from enum import IntFlag
 
-from .arity import A0, ArityArrow, ArityCross
+from .arity import A0, ArityArrow, ArityCross, ArityExpression
 from .render.typestring import TypeStringRenderer, TypeStringRendererMixin
 from .render.latex import LatexRenderer, LatexRendererMixin
 from .render.graph import GraphToolRenderer, GraphToolRendererMixin
@@ -90,18 +91,30 @@ SUBSTITUTE_LEFT_BRACKET = "["
 SUBSTITUTE_RIGHT_BRACKET = "]"
 
 
+class ExpressionClassType(IntFlag):
+    ABSTRACTION = 1
+    APPLICATION = 2
+    SUBSTITUTION = 4
+
+
 class ExpressionMetaClass(type):
+    """This meta class injects as class attributes the
+    various abstraction, application and substitution
+    classes used for abstract(), apply() and substitute()
+    methods."""
     def __new__(cls, clsname, bases, dct, **kwargs):
-        expression_base_class = kwargs.pop("expression_base_class", None)
-        if expression_base_class is not None:
-            bases = bases + (expression_base_class,)
         new_type = type.__new__(cls, clsname, bases, dct)
-        if kwargs.pop("default_abstraction_class", False):
-            cls.__default_abstraction_class__ = new_type
-        if kwargs.pop("default_application_class", False):
-            cls.__default_application_class__ = new_type
-        if kwargs.pop("default_substitution_class", False):
-            cls.__default_substitution_class__ = new_type
+
+        expression_class_type = kwargs.pop(
+            "expression_class_type", ExpressionClassType(0)
+        )
+        if ExpressionClassType.ABSTRACTION in expression_class_type:
+            cls.__abstraction_class__ = new_type
+        if ExpressionClassType.APPLICATION in expression_class_type:
+            cls.__application_class__ = new_type
+        if ExpressionClassType.SUBSTITUTION in expression_class_type:
+            cls.__substitution_class__ = new_type
+
         return new_type
 
 
@@ -187,7 +200,7 @@ class Expression(
         return new_alias
 
     def list_copies(self):
-        # todo: is this useful?
+        # TODO: is this useful?
         print([k for k, v in globals().items() if v is self])
 
     def copy(self):
@@ -195,32 +208,19 @@ class Expression(
         return deepcopy(self)
 
     @property
-    def default_application_class(self):
-        if hasattr(self.__class__, "__default_application_class__"):
-            return self.__class__.__default_application_class__
-        else:
-            return type(self.__class__).__default_application_class__
+    def application_class(self):
+        return self.__class__.__application_class__
 
     @property
-    def default_abstraction_class(self):
-        if hasattr(self.__class__, "__default_abstraction_class__"):
-            return self.__class__.__default_abstraction_class__
-        else:
-            return type(self.__class__).__default_abstraction_class__
+    def abstraction_class(self):
+        return self.__class__.__abstraction_class__
 
     @property
-    def default_substitution_class(self):
-        if hasattr(self.__class__, "__default_substitution_class__"):
-            return self.__class__.__default_substitution_class__
-        else:
-            return type(self.__class__).__default_substitution_class__
+    def substitution_class(self):
+        return self.__class__.__substitution_class__
 
     def apply(
-        self,
-        *expressions: List["Expression"],
-        check_arity=True,
-        target_arity=None,
-        **kwargs,
+        self, *expressions: "Expression", check_arity=True, target_arity=None, **kwargs,
     ) -> "Expression":
         """ [BN] 3.8.4
         """
@@ -234,7 +234,7 @@ class Expression(
                     "Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s"
                     % (self.arity.lhs, expressions[0].arity)
                 )
-            if len(expressions) > 1 and not all(
+            if len(expressions) > 1 and isinstance(self.arity.lhs, ArityCross) and not all(
                 [e.arity == a for e, a in zip(expressions, self.arity.lhs.args)]
             ):
                 raise ExpressionException(
@@ -247,7 +247,7 @@ class Expression(
         if self.arity.rhs == A0:
             if target_arity is None:
                 target_arity = self.arity.rhs
-            return self.default_application_class(
+            return self.application_class(
                 self, expressions, target_arity, **kwargs
             )
         else:
@@ -256,7 +256,7 @@ class Expression(
             )
 
     def abstract(
-        self, *expressions: List["Expression"], abstraction_kwargs={}
+        self, *expressions: "Expression", abstraction_kwargs={}
     ) -> "Expression":
         """ [BN] 3.8.5
             prevent arity cross of single expression
@@ -267,12 +267,12 @@ class Expression(
             else expressions[0].arity,
             self.arity,
         )
-        return self.default_abstraction_class(
+        return self.abstraction_class(
             self, expressions, new_arity, **abstraction_kwargs
         )
 
     def substitute(self, old, new, substitution_kwargs={}):
-        return self.default_substitution_class(self, old, new, **substitution_kwargs)
+        return self.substitution_class(self, old, new, **substitution_kwargs)
 
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
@@ -377,8 +377,8 @@ class Expression(
         return new_expr
 
 
-class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
-    __default_arity__ = A0
+class Symbol(Expression, metaclass=ExpressionMetaClass):
+    __default_arity__ : ArityExpression = A0
 
     def __init__(
         self,
@@ -444,9 +444,10 @@ class Symbol(metaclass=ExpressionMetaClass, expression_base_class=Expression):
 
 
 class ExpressionCombination(
-    metaclass=ExpressionMetaClass, expression_base_class=Expression
+    Expression,
+    metaclass=ExpressionMetaClass,
 ):
-    def __init__(self, *expressions: List[Expression]):
+    def __init__(self, *expressions: Expression):
         """Combines list into comma-concatenated expression.
         Args:
             expressions (List[Expression]): list of expressions
@@ -486,7 +487,7 @@ class ExpressionCombination(
     def walk(self, func, **options):
         raise ToBeImplemented(f"Walk not implemented for this class yet: {type(self)}")
 
-    def replace(self, from_expr, to_expr: "Expression") -> "Expression":
+    def replace(self, from_expr, to_expr: Expression) -> Expression:
         raise ToBeImplemented("Substitute not implemented for this class yet")
 
     @alias_render_typestring
@@ -503,11 +504,11 @@ class ExpressionCombination(
 
 
 class SubstitutionExpression(
+    Expression,
     metaclass=ExpressionMetaClass,
-    expression_base_class=Expression,
-    default_substitution_class=True,
+    expression_class_type=ExpressionClassType.SUBSTITUTION,
 ):
-    __default_arity__ = A0
+    __default_arity__ : ArityExpression = A0
 
     def __init__(
         self,
@@ -607,8 +608,11 @@ class SubstitutionExpression(
 
 
 class BaseWithChildrenExpression(
-    metaclass=ExpressionMetaClass, expression_base_class=Expression
+    Expression,
+    metaclass=ExpressionMetaClass,
 ):
+    __default_arity__ : ArityExpression = A0
+
     # todo: perhaps utilize ExpressionCombination for children here?
     def __init__(
         self,
@@ -691,9 +695,9 @@ class BaseWithChildrenExpression(
 
 
 class ApplicationExpression(
+    BaseWithChildrenExpression,
     metaclass=ExpressionMetaClass,
-    expression_base_class=BaseWithChildrenExpression,
-    default_application_class=True,
+    expression_class_type=ExpressionClassType.APPLICATION,
 ):
     @alias_render_typestring
     def render_typestring(self, renderer):
@@ -723,7 +727,7 @@ class ApplicationExpression(
         )
 
     def render_graphtool(self, renderer):
-        from graph_tool.generation import graph_union  # @UnresolvedImport
+        from graph_tool.generation import graph_union
 
         graph = self.base.render_graphtool(renderer)
         base_vertex = graph.gp["basevertex"]
@@ -752,9 +756,9 @@ class ApplicationExpression(
 
 
 class AbstractionExpression(
+    BaseWithChildrenExpression,
     metaclass=ExpressionMetaClass,
-    expression_base_class=BaseWithChildrenExpression,
-    default_abstraction_class=True,
+    expression_class_type=ExpressionClassType.ABSTRACTION,
 ):
     @alias_render_typestring
     def render_typestring(self, renderer):
@@ -784,7 +788,7 @@ class AbstractionExpression(
         )
 
     def render_graphtool(self, renderer):
-        from graph_tool.generation import graph_union  # @UnresolvedImport
+        from graph_tool.generation import graph_union
 
         graph = self.base.render_graphtool(renderer)
         base_vertex = graph.gp["basevertex"]

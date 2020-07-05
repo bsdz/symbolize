@@ -47,7 +47,7 @@ class PropositionSubstitutionExpression(SubstitutionExpression):
 
 class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
 
-    __default_substitution_class__ = PropositionSubstitutionExpression
+    __substitution_class__ = PropositionSubstitutionExpression
 
     def get_proof(self, name, **kwargs):
         raise ToBeImplemented("Need to implement")
@@ -55,8 +55,8 @@ class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass
 
 class PropositionSymbol(
     Symbol,
+    PropositionExpression,
     metaclass=PropositionExpressionMetaClass,
-    expression_base_class=PropositionExpression,
 ):
     """*@DynamicAttrs*"""
 
@@ -66,42 +66,42 @@ class PropositionSymbol(
 
 class PropositionBaseWithChildrenExpression(
     BaseWithChildrenExpression,
+    PropositionExpression,
     metaclass=PropositionExpressionMetaClass,
-    expression_base_class=PropositionExpression,
 ):
     pass
 
 
 class PropositionBinaryInfixExpression(
     BinaryInfixExpression,
+    PropositionBaseWithChildrenExpression,
     metaclass=PropositionExpressionMetaClass,
-    expression_base_class=PropositionBaseWithChildrenExpression,
 ):
     pass
 
 
 class PropositionBinaryInfixSymbol(
     BinaryInfixSymbol,
+    PropositionExpression,
     metaclass=PropositionExpressionMetaClass,
-    expression_base_class=PropositionExpression,
 ):
-    __default_application_class__ = PropositionBinaryInfixExpression
+    __application_class__ = PropositionBinaryInfixExpression
 
 
 class PropositionLogicQuantificationExpression(
     LogicQuantificationExpression,
+    PropositionBaseWithChildrenExpression,
     metaclass=PropositionExpressionMetaClass,
-    expression_base_class=PropositionBaseWithChildrenExpression,
 ):
     pass
 
 
 class PropositionLogicQuantificationSymbol(
     LogicQuantificationSymbol,
+    PropositionExpression,
     metaclass=PropositionExpressionMetaClass,
-    expression_base_class=PropositionExpression,
 ):
-    __default_application_class__ = PropositionLogicQuantificationExpression
+    __application_class__ = PropositionLogicQuantificationExpression
 
 
 # definitions
@@ -117,7 +117,7 @@ class AndPropositionExpression(PropositionBinaryInfixExpression):
 
 
 class AndPropositionSymbol(PropositionBinaryInfixSymbol):
-    __default_application_class__ = AndPropositionExpression
+    __application_class__ = AndPropositionExpression
 
 
 class OrPropositionExpression(PropositionBinaryInfixExpression):
@@ -134,7 +134,7 @@ class OrPropositionExpression(PropositionBinaryInfixExpression):
 
 
 class OrPropositionSymbol(PropositionBinaryInfixSymbol):
-    __default_application_class__ = OrPropositionExpression
+    __application_class__ = OrPropositionExpression
 
 
 class ImpliesPropositionExpression(PropositionBinaryInfixExpression):
@@ -148,7 +148,7 @@ class ImpliesPropositionExpression(PropositionBinaryInfixExpression):
 
 
 class ImpliesPropositionSymbol(PropositionBinaryInfixSymbol):
-    __default_application_class__ = ImpliesPropositionExpression
+    __application_class__ = ImpliesPropositionExpression
 
 
 class ForallPropositionExpression(PropositionLogicQuantificationExpression):
@@ -163,7 +163,7 @@ class ForallPropositionExpression(PropositionLogicQuantificationExpression):
 
 class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0, ArityArrow(A0, A0)), A0)
-    __default_application_class__ = ForallPropositionExpression
+    __application_class__ = ForallPropositionExpression
 
 
 class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
@@ -178,7 +178,7 @@ class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
 
 class ExistsPropositionSymbol(PropositionLogicQuantificationSymbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)  # todo: is this correct?
-    __default_application_class__ = ExistsPropositionExpression
+    __application_class__ = ExistsPropositionExpression
 
 
 and_ = AndPropositionSymbol("∧", latex_repr=r"\land")

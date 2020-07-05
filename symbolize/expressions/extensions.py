@@ -35,7 +35,7 @@ class BinaryInfixExpression(ApplicationExpression):
 
 class BinaryInfixSymbol(Symbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    __default_application_class__ = BinaryInfixExpression
+    __application_class__ = BinaryInfixExpression
 
 
 class LambdaExpression(ApplicationExpression):
@@ -64,7 +64,7 @@ class LambdaExpression(ApplicationExpression):
 
 class LambdaSymbol(Symbol):
     __default_arity__ = ArityArrow(ArityArrow(A0, A0), A0)
-    __default_application_class__ = LambdaExpression
+    __application_class__ = LambdaExpression
 
 
 class IntegralExpression(ApplicationExpression):
@@ -80,7 +80,7 @@ class IntegralExpression(ApplicationExpression):
         )
 
     @alias_render_unicode
-    def render_unicode(self, renderer):  # @UnusedVariable
+    def render_unicode(self, renderer):
         integrand, limit_min, limit_max = self.children
         dummy_var = integrand.children[0]
         return "%s%s (%s=%s..%s)" % tuple(
@@ -93,7 +93,7 @@ class IntegralExpression(ApplicationExpression):
 
 class IntegralSymbol(Symbol):
     __default_arity__ = ArityArrow(ArityCross(ArityArrow(A0, A0), A0, A0), A0)
-    __default_application_class__ = IntegralExpression
+    __application_class__ = IntegralExpression
 
 
 class InclusionExclusionExpression(ApplicationExpression):
@@ -161,12 +161,12 @@ class InclusionExclusionExpression(ApplicationExpression):
 
 class InclusionExclusionSymbol(Symbol):
     __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
-    __default_application_class__ = InclusionExclusionExpression
+    __application_class__ = InclusionExclusionExpression
 
 
 class LogicQuantificationExpression(ApplicationExpression):
     @alias_render_latex
-    def render_latex(self, renderer):  # @UnusedVariable
+    def render_latex(self, renderer):
         return "%s{%s}.%s" % (
             self.base.render_latex(renderer),
             self.children[0].render_latex_wrap_parenthesis(renderer),
@@ -174,7 +174,7 @@ class LogicQuantificationExpression(ApplicationExpression):
         )
 
     @alias_render_unicode
-    def render_unicode(self, renderer):  # @UnusedVariable
+    def render_unicode(self, renderer):
         return "%s%s.%s" % (
             self.base.render_unicode(renderer),
             self.children[0].render_unicode_wrap_parenthesis(renderer),
@@ -183,4 +183,4 @@ class LogicQuantificationExpression(ApplicationExpression):
 
 
 class LogicQuantificationSymbol(Symbol):
-    __default_application_class__ = LogicQuantificationExpression
+    __application_class__ = LogicQuantificationExpression

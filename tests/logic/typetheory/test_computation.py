@@ -7,10 +7,9 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 import unittest
 
 from symbolize.expressions.arity import A0, ArityArrow
-from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
+from symbolize.logic.typetheory.proposition import implies, forall
 from symbolize.logic.typetheory.proof import (
     ProofExpressionCombination,
-    ProofExpression,
     fst,
     snd,
     inl,
@@ -19,14 +18,13 @@ from symbolize.logic.typetheory.proof import (
     Fst,
     Snd,
 )
-from symbolize.logic.typetheory.boolean import bool_, True_, False_, ifthenelse
+from symbolize.logic.typetheory.boolean import True_, False_, ifthenelse
 from symbolize.logic.typetheory.natural import N, succ, prim, zero
 from symbolize.logic.typetheory.variables import A, B, C
 from symbolize.logic.typetheory.proposition import PropositionSymbol
 
 
 class TestComputationRules(unittest.TestCase):
-    
     def test_fst_snd(self):
         p = A.get_proof("p")
         q = B.get_proof("q")
@@ -101,4 +99,3 @@ class TestComputationRules(unittest.TestCase):
 
         self.assertEqual(r1.run(), c)
         self.assertEqual(r2.run(), f(n).apply(prim(n, c, f)))
-

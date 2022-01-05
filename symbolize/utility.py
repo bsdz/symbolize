@@ -20,7 +20,3 @@ def generate_random_string(n):
     import string
 
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=n))
-
-
-class ToBeImplemented(Exception):
-    pass

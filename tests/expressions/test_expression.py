@@ -50,10 +50,10 @@ class ExpressionTest(unittest.TestCase):
         x = Symbol("x")
         z = Symbol("z", ArityArrow(ArityCross(A0, A0), A0))
         self.assertEqual(repr(z.apply(x, y)), "z(x, y)")
-        self.assertEqual(z.apply(x, y).arity, A0, "correct arity after apply")
+        self.assertEqual(z.apply(x, y).arity, A0)
 
         sin = Symbol("sin", arity=ArityArrow(A0, A0))
-        self.assertEqual(sin.apply(x).arity, A0, "correct arity after apply")
+        self.assertEqual(sin.apply(x).arity, A0)
 
     def test_apply_bad_arity(self):
         y = Symbol("y")
@@ -89,8 +89,8 @@ class ExpressionTest(unittest.TestCase):
             repr(x.substitute(y, z)), "x{SBL}y:=z{SBR}".format(**bracket_map)
         )
 
-        # todo how does substitution affect arity in general?
-        # self.assertEqual(x.substitute(y, z).arity, '', "arity from abstraction")
+        # TODO how does substitution affect arity in general?
+        # self.assertEqual(x.substitute(y, z).arity, '')
 
     def test_walk(self):
         u, v, w, x, y, z = [Symbol(i) for i in "uvwxyz"]
@@ -104,7 +104,7 @@ class ExpressionTest(unittest.TestCase):
             return collected.append(wr)
 
         u(v, w(x, y, z)).abstract(x, y).walk(func1)
-        self.assertGreater(len(collected), 0, "collect data")
+        self.assertGreater(len(collected), 0)
 
         collected2 = []
 
@@ -117,17 +117,17 @@ class ExpressionTest(unittest.TestCase):
             u(v, w(x, y, z)).walk(func2)
         except:  # noqa
             pass
-        self.assertGreater(len(collected2), 0, "collect data")
+        self.assertGreater(len(collected2), 0)
 
-        self.assertGreater(len(collected), len(collected2), "collect data")
+        self.assertGreater(len(collected), len(collected2))
 
     def test_contains(self):
         u, v, w, x, y, z = [Symbol(i) for i in "uvwxyz"]
-        self.assertIn(x, x, "same expr")
+        self.assertIn(x, x)
 
         u.arity = ArityArrow(ArityCross(A0, A0), A0)
         w.arity = ArityArrow(ArityCross(A0, A0, A0), A0)
-        self.assertIn(x, u(v, w(x, y, z)), "in nested expr")
+        self.assertIn(x, u(v, w(x, y, z)))
 
     def test_contains_bind(self):
         s, t, u, v, w, x, y, z = [Symbol(i) for i in "stuvwxyz"]
@@ -135,9 +135,9 @@ class ExpressionTest(unittest.TestCase):
         s.arity = ArityArrow(ArityCross(ArityArrow(A0, A0), A0), A0)
         expr = s(u(v, w).abstract(x), t).abstract(y, z)
         for i in (x, y, z):
-            self.assertTrue(expr.contains_bind(i), "has bind")
+            self.assertTrue(expr.contains_bind(i))
         for i in (s, t, u, v):
-            self.assertFalse(expr.contains_bind(i), "hasn't bind")
+            self.assertFalse(expr.contains_bind(i))
 
     def test_contains_free(self):
         r, s, t, u, v, w, x, y, z = [Symbol(i) for i in "rstuvwxyz"]
@@ -145,13 +145,13 @@ class ExpressionTest(unittest.TestCase):
         s.arity = ArityArrow(ArityCross(ArityArrow(A0, A0), A0), A0)
         expr = s(u(v, w).abstract(x), t).abstract(y, z)
         for i in (x, y, z):
-            self.assertTrue(expr.contains_bind(i), "has bind")
+            self.assertTrue(expr.contains_bind(i))
         for i in (r, s, t, u, v):
-            self.assertFalse(expr.contains_bind(i), "hasn't bind")
+            self.assertFalse(expr.contains_bind(i))
         for i in (r, x, y, z):
-            self.assertFalse(expr.contains_free(i), "not free")
+            self.assertFalse(expr.contains_free(i))
         for i in (s, t, u, v):
-            self.assertTrue(expr.contains_free(i), "is free")
+            self.assertTrue(expr.contains_free(i))
 
     def test_replace(self):
         s, t, u, v, w, x, y, z = [Symbol(i) for i in "stuvwxyz"]
@@ -171,7 +171,8 @@ class ExpressionTest(unittest.TestCase):
         ]
 
         for i, (e1, e2) in enumerate(tests):
-            self.assertEqual(e1, e2, "check sub %s" % i)
+            with self.subTest(f"sub {i}"):
+                self.assertEqual(e1, e2)
 
     def test_general_bind_form(self):
         s, t, u, v, w, x, y, z = [Symbol(i) for i in "stuvwxyz"]
@@ -203,7 +204,8 @@ class ExpressionTest(unittest.TestCase):
         ]
 
         for i, (e1, e2) in enumerate(tests):
-            self.assertEqual(e1, e2, "check general bind form %s" % i)
+            with self.subTest(f'general bind form {i}'):
+                self.assertEqual(e1, e2)
 
     def test_beta_reduction(self):
         s, t, u, v, w, x, y, z = [Symbol(i) for i in "stuvwxyz"]
@@ -218,7 +220,8 @@ class ExpressionTest(unittest.TestCase):
         ]
 
         for i, (e1, e2) in enumerate(tests):
-            self.assertEqual(e1, e2, "check beta reduction %s" % i)
+            with self.subTest(f'beta reduction {i}'):
+                self.assertEqual(e1, e2)
 
 
 class ExpressionCombinationTest(unittest.TestCase):
@@ -226,13 +229,13 @@ class ExpressionCombinationTest(unittest.TestCase):
         x, y, z = [Symbol(i) for i in "xyz"]
         expr = ExpressionCombination(x, y, z)
         self.assertEqual(repr(expr), "x, y, z")
-        self.assertEqual(expr.arity, ArityCross(A0, A0, A0), "arity from combination")
+        self.assertEqual(expr.arity, ArityCross(A0, A0, A0))
 
     def test_selection(self):
         x, y, z = [Symbol(i) for i in "xyz"]
         expr = ExpressionCombination(x, y, z)
         self.assertEqual(expr[1], y)
-        self.assertEqual(expr[1].arity, A0, "arity from selection")
+        self.assertEqual(expr[1].arity, A0)
 
 
 if __name__ == "__main__":

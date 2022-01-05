@@ -20,7 +20,6 @@ from ...expressions import (
 )
 
 from .proof import ProofSymbol, ProofExpressionCombination
-from ...utility import ToBeImplemented
 
 
 def general_proof_label_generator():
@@ -41,25 +40,20 @@ class PropositionExpressionMetaClass(ExpressionMetaClass):
 class PropositionSubstitutionExpression(SubstitutionExpression):
     def get_proof(self, name, **kwargs):
         proof = self.original.get_proof(name, **kwargs)
-        proof.proposition_type = self  # todo: copy?
+        proof.proposition_type = self  # TODO: copy?
         return proof
 
 
 class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
-
     __substitution_class__ = PropositionSubstitutionExpression
 
     def get_proof(self, name, **kwargs):
-        raise ToBeImplemented("Need to implement")
+        raise NotImplementedError("Need to implement")
 
 
 class PropositionSymbol(
-    Symbol,
-    PropositionExpression,
-    metaclass=PropositionExpressionMetaClass,
+    Symbol, PropositionExpression, metaclass=PropositionExpressionMetaClass,
 ):
-    """*@DynamicAttrs*"""
-
     def get_proof(self, name, **kwargs):
         return ProofSymbol(str_repr=name, proposition_type=self)
 
@@ -81,9 +75,7 @@ class PropositionBinaryInfixExpression(
 
 
 class PropositionBinaryInfixSymbol(
-    BinaryInfixSymbol,
-    PropositionExpression,
-    metaclass=PropositionExpressionMetaClass,
+    BinaryInfixSymbol, PropositionExpression, metaclass=PropositionExpressionMetaClass,
 ):
     __application_class__ = PropositionBinaryInfixExpression
 
@@ -129,7 +121,7 @@ class OrPropositionExpression(PropositionBinaryInfixExpression):
 
         p1 = self.children[0].get_proof(next(proof_label_generator), **kwargs)
         p2 = self.children[1].get_proof(next(proof_label_generator), **kwargs)
-        # todo - can be inl or inr with indicator of which proof has evidence
+        # TODO - can be inl or inr with indicator of which proof has evidence
         return inl(p1, inject_proposition=p2.proposition_type).alias(name)
 
 
@@ -162,7 +154,7 @@ class ForallPropositionExpression(PropositionLogicQuantificationExpression):
 
 
 class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
-    __default_arity__ = ArityArrow(ArityCross(A0, ArityArrow(A0, A0)), A0)
+    __arity__ = ArityArrow(ArityCross(A0, ArityArrow(A0, A0)), A0)
     __application_class__ = ForallPropositionExpression
 
 
@@ -177,7 +169,7 @@ class ExistsPropositionExpression(PropositionLogicQuantificationExpression):
 
 
 class ExistsPropositionSymbol(PropositionLogicQuantificationSymbol):
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)  # todo: is this correct?
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)  # TODO: is this correct?
     __application_class__ = ExistsPropositionExpression
 
 

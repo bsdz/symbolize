@@ -17,7 +17,6 @@ from ...expressions import (
     ArityArrow,
     ArityCross,
 )
-from symbolize.utility import ToBeImplemented
 
 
 class PropositionException(Exception):
@@ -77,7 +76,7 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
 
     def apply_proposition_type(self, expressions, **apply_proposition_type_kwargs):
         """ Provides the new proposition type generated after application. """
-        raise ToBeImplemented("Need to implement a proposition type method!")
+        raise NotImplementedError("Need to implement a proposition type method!")
 
     def apply(self, *expressions, **kwargs):
         """ [ST] p79 p89
@@ -99,13 +98,9 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
 
         # check proof doesn't have expressions[0] free in self
         if self.proposition_type.contains_free(expressions[0]):
-            if (
-                self.proposition_type.arity != forall.arity.lhs.args[1]
-            ):  # @UndefinedVariable
+            if self.proposition_type.arity != forall.arity.lhs.args[1]:
                 warn("RHS doesn't match forall arity. forcing.")
-                self.proposition_type.arity = forall.arity.lhs.args[
-                    1
-                ]  # @UndefinedVariable
+                self.proposition_type.arity = forall.arity.lhs.args[1]
             new_prop_type = forall(expressions[0], self.proposition_type)
         else:
             new_prop_type = implies(
@@ -123,9 +118,7 @@ class ProofSymbol(
 
 
 class ProofExpressionCombination(
-    ExpressionCombination,
-    ProofExpression,
-    metaclass=ProofExpressionMetaClass,
+    ExpressionCombination, ProofExpression, metaclass=ProofExpressionMetaClass,
 ):
     """ [ST] p81 p91
     """
@@ -133,14 +126,15 @@ class ProofExpressionCombination(
     def __init__(self, *args, **kwargs):
         from .proposition import and_, exists
 
-        # todo: check only two proofs provided
+        # TODO: check only two proofs provided
         from .proposition import PropositionSubstitutionExpression
 
-        # if args[1].proposition_type.contains_free(args[0]):
         if isinstance(args[1].proposition_type, PropositionSubstitutionExpression):
-            self.proposition_type = exists(
-                args[1].proposition_type.old, args[1].proposition_type
-            )
+            if args[0] != args[1].proposition_type.new:
+                raise PropositionException("type must match substitition variable")
+            self.proposition_type = exists(args[1].proposition_type.old, args[1].proposition_type.original)
+        elif args[1].proposition_type.contains_free(args[0]):
+            self.proposition_type = exists(args[0], args[1].proposition_type)
         else:
             self.proposition_type = and_(
                 args[0].proposition_type, args[1].proposition_type
@@ -152,9 +146,7 @@ class ProofExpressionCombination(
 
 
 class ProofBaseWithChildrenExpression(
-    BaseWithChildrenExpression,
-    ProofExpression,
-    metaclass=ProofExpressionMetaClass,
+    BaseWithChildrenExpression, ProofExpression, metaclass=ProofExpressionMetaClass,
 ):
     pass
 
@@ -200,13 +192,13 @@ class ProofAbstractionExpression(
 
 
 # definitions
-# todo: check function inputs like .experimental.deduction_rules
+# TODO: check function inputs like .experimental.deduction_rules
 #
 class fstProofSymbol(ProofSymbol):
     """ [ST] p79
     """
 
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[0]
@@ -219,7 +211,7 @@ class sndProofSymbol(ProofSymbol):
     """ [ST] p79
     """
 
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[1]
@@ -232,16 +224,16 @@ class inlProofSymbol(ProofSymbol):
     """ [ST] p81
     """
 
-    __default_arity__ = ArityArrow(A0, A0)
+    __arity__ = ArityArrow(A0, A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         from .proposition import or_
 
-        self._inject_proposition = kwargs["inject_proposition"]  # todo: feels wrong?
+        self._inject_proposition = kwargs["inject_proposition"]  # TODO: feels wrong?
         return or_(expr[0].proposition_type, kwargs["inject_proposition"])
 
     def compute(self, children):
-        # todo: should we have a computation rule here?
+        # TODO: should we have a computation rule here?
         return self.apply(children[0], inject_proposition=self._inject_proposition)
 
 
@@ -249,16 +241,16 @@ class inrProofSymbol(ProofSymbol):
     """ [ST] p81
     """
 
-    __default_arity__ = ArityArrow(A0, A0)
+    __arity__ = ArityArrow(A0, A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         from .proposition import or_
 
-        self._inject_proposition = kwargs["inject_proposition"]  # todo: feels wrong?
+        self._inject_proposition = kwargs["inject_proposition"]  # TODO: feels wrong?
         return or_(kwargs["inject_proposition"], expr[0].proposition_type)
 
     def compute(self, children):
-        # todo: should we have a computation rule here?
+        # TODO: should we have a computation rule here?
         return self.apply(children[0], inject_proposition=self._inject_proposition)
 
 
@@ -266,12 +258,12 @@ class CasesProofSymbol(ProofSymbol):
     """ [ST] p81
     """
 
-    __default_arity__ = ArityArrow(
+    __arity__ = ArityArrow(
         ArityCross(A0, ArityArrow(A0, A0), ArityArrow(A0, A0)), A0
     )
 
     def apply_proposition_type(self, expr, **kwargs):
-        # todo: check inputs
+        # TODO: check inputs
         return expr[1].proposition_type.children[1]
 
     def compute(self, children):
@@ -287,7 +279,7 @@ class FstProofSymbol(ProofSymbol):
     """ [ST] p91
     """
 
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         # return expr[0].proposition_type.children[0].proposition_type
@@ -301,7 +293,7 @@ class SndProofSymbol(ProofSymbol):
     """ [ST] p91
     """
 
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         return expr[0].proposition_type.children[1]

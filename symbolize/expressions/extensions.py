@@ -34,7 +34,7 @@ class BinaryInfixExpression(ApplicationExpression):
 
 
 class BinaryInfixSymbol(Symbol):
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
     __application_class__ = BinaryInfixExpression
 
 
@@ -63,7 +63,7 @@ class LambdaExpression(ApplicationExpression):
 
 
 class LambdaSymbol(Symbol):
-    __default_arity__ = ArityArrow(ArityArrow(A0, A0), A0)
+    __arity__ = ArityArrow(ArityArrow(A0, A0), A0)
     __application_class__ = LambdaExpression
 
 
@@ -92,7 +92,7 @@ class IntegralExpression(ApplicationExpression):
 
 
 class IntegralSymbol(Symbol):
-    __default_arity__ = ArityArrow(ArityCross(ArityArrow(A0, A0), A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(ArityArrow(A0, A0), A0, A0), A0)
     __application_class__ = IntegralExpression
 
 
@@ -160,7 +160,7 @@ class InclusionExclusionExpression(ApplicationExpression):
 
 
 class InclusionExclusionSymbol(Symbol):
-    __default_arity__ = ArityArrow(ArityCross(A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
     __application_class__ = InclusionExclusionExpression
 
 

@@ -40,8 +40,8 @@ class TestDeductionRules(unittest.TestCase):
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
     def test_identity(self):
         """ [ST] p83 """
@@ -50,8 +50,8 @@ class TestDeductionRules(unittest.TestCase):
 
         r = x.abstract(x)
 
-        self.assertIsInstance(r, ProofExpression, "result is a proof")
-        self.assertEqual(r.proposition_type, implies(A, A), "proof has correct expr")
+        self.assertIsInstance(r, ProofExpression)
+        self.assertEqual(r.proposition_type, implies(A, A))
 
     def test_A_implies_B_implies_C_both_imply_A_implies_C(self):
         """ [ST] p83-84 """
@@ -72,8 +72,8 @@ class TestDeductionRules(unittest.TestCase):
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
     def test_A_or_B_implies_C_iff_A_implies_C_and_B_implies_C(self):
 
@@ -97,8 +97,8 @@ class TestDeductionRules(unittest.TestCase):
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
         # iff backward
         #
@@ -116,8 +116,8 @@ class TestDeductionRules(unittest.TestCase):
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
     def test_forall_x_B_implies_C_forall_x_B_both_imply_forall_x_C(self):
         """ [ST] p92 """
@@ -144,8 +144,8 @@ class TestDeductionRules(unittest.TestCase):
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
     def test_exists_x_P_implies_Q_deduce_forall_x_P_implies_Q(self):
         """ [ST] p93 """
@@ -154,7 +154,7 @@ class TestDeductionRules(unittest.TestCase):
         x = X.get_proof("x")
         P = PropositionSymbol("P", assume_contains=[x]).substitute(
             x, x
-        )  # todo: kludge!
+        )  # TODO: kludge!
         p = P.get_proof("p")
         Q = PropositionSymbol("Q")
 
@@ -169,12 +169,12 @@ class TestDeductionRules(unittest.TestCase):
             e: implies(exists(x, P), Q),
             r1: forall(
                 x, implies(P, Q, target_arity=ArityArrow(A0, A0))
-            ),  # todo: do we need to force arity?
+            ),  # TODO: do we need to force arity?
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
         # backwards iff
         #
@@ -191,8 +191,8 @@ class TestDeductionRules(unittest.TestCase):
         }
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
     @unittest.skip("needs work")
     def test_addone(self):

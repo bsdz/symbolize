@@ -10,7 +10,7 @@ from .proof import ProofSymbol
 
 
 class NaturalNumberProofSymbol(ProofSymbol):
-    __default_arity__ = A0
+    __arity__ = A0
 
 
 N = PropositionSymbol("N", latex_repr=r"\mathbb{N}")
@@ -21,7 +21,7 @@ class succProofSymbol(ProofSymbol):
     """ [ST] p100
     """
 
-    __default_arity__ = ArityArrow(A0, A0)
+    __arity__ = ArityArrow(A0, A0)
 
     def apply_proposition_type(self, expr):
         return N
@@ -35,7 +35,7 @@ class primProofSymbol(ProofSymbol):
     note: arity does not match natrec from [BN] p197
     """
 
-    __default_arity__ = ArityArrow(
+    __arity__ = ArityArrow(
         ArityCross(A0, A0, ArityArrow(A0, ArityArrow(A0, A0))), A0
     )
 

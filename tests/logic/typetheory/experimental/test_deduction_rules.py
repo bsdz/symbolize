@@ -35,15 +35,13 @@ class TestDeductionRules(unittest.TestCase):
 
         r = conjunction_introduction(p, q)
 
-        self.assertIsInstance(r, Proposition, "result is a proposition")
+        self.assertIsInstance(r, Proposition)
         self.assertEqual(
             r.proposition_expr,
             and_(A.proposition_expr, B.proposition_expr),
             "proof has correct expr",
         )
-        self.assertEqual(
-            r.proof_expr, pair(p.proof_expr, q.proof_expr), "proof has correct expr"
-        )
+        self.assertEqual(r.proof_expr, pair(p.proof_expr, q.proof_expr))
 
     def test_conjunction_elimination(self):
         p = A("p")
@@ -55,11 +53,11 @@ class TestDeductionRules(unittest.TestCase):
         s11 = conjunction_elimination_1(r1)
         s12 = conjunction_elimination_2(r1)
 
-        self.assertIsInstance(s11, Proposition, "result is a proposition")
-        self.assertIsInstance(s12, Proposition, "result is a proposition")
+        self.assertIsInstance(s11, Proposition)
+        self.assertIsInstance(s12, Proposition)
 
-        self.assertEqual(s11.proposition_expr, A.proposition_expr, "fst prop")
-        self.assertEqual(s12.proposition_expr, B.proposition_expr, "snd prop")
+        self.assertEqual(s11.proposition_expr, A.proposition_expr)
+        self.assertEqual(s12.proposition_expr, B.proposition_expr)
 
         self.assertEqual(
             s11.proof_expr,
@@ -78,14 +76,14 @@ class TestDeductionRules(unittest.TestCase):
         s21 = conjunction_elimination_1(r2)
         s22 = conjunction_elimination_2(r2)
 
-        self.assertIsInstance(s21, Proposition, "result is a proposition")
-        self.assertIsInstance(s22, Proposition, "result is a proposition")
+        self.assertIsInstance(s21, Proposition)
+        self.assertIsInstance(s22, Proposition)
 
-        self.assertEqual(s21.proposition_expr, A.proposition_expr, "fst prop")
-        self.assertEqual(s22.proposition_expr, B.proposition_expr, "snd prop")
+        self.assertEqual(s21.proposition_expr, A.proposition_expr)
+        self.assertEqual(s22.proposition_expr, B.proposition_expr)
 
-        self.assertEqual(s21.proof_expr, fst(r2.proof_expr), "proof has correct expr")
-        self.assertEqual(s22.proof_expr, snd(r2.proof_expr), "proof has correct expr")
+        self.assertEqual(s21.proof_expr, fst(r2.proof_expr))
+        self.assertEqual(s22.proof_expr, snd(r2.proof_expr))
 
     def test_implication_introduction(self):
         x = A("x")
@@ -93,15 +91,13 @@ class TestDeductionRules(unittest.TestCase):
 
         r = implication_introduction(x, e)
 
-        self.assertIsInstance(r, Proposition, "result is a proposition")
+        self.assertIsInstance(r, Proposition)
         self.assertEqual(
             r.proposition_expr,
             implies(A.proposition_expr, B.proposition_expr),
             "proof has correct expr",
         )
-        self.assertEqual(
-            r.proof_expr, e.proof_expr.abstract(x.proof_expr), "proof has correct expr"
-        )
+        self.assertEqual(r.proof_expr, e.proof_expr.abstract(x.proof_expr))
 
     def test_implication_elimination(self):
         a = A("a")
@@ -112,12 +108,10 @@ class TestDeductionRules(unittest.TestCase):
         r1 = implication_introduction(x, e)
 
         s1 = implication_elimation(r1, a)
-        self.assertIsInstance(s1, Proposition, "result is a proposition")
-        self.assertEqual(s1.proposition_expr, B.proposition_expr, "correct prop")
-        # todo: is this correct? r1 is already abstracted
-        self.assertEqual(
-            s1.proof_expr, r1.proof_expr.apply(a.proof_expr), "proof has correct expr"
-        )
+        self.assertIsInstance(s1, Proposition)
+        self.assertEqual(s1.proposition_expr, B.proposition_expr)
+        # TODO: is this correct? r1 is already abstracted
+        self.assertEqual(s1.proof_expr, r1.proof_expr.apply(a.proof_expr))
 
         # test give implication
         A_implies_B = get_proposition_class(
@@ -126,11 +120,9 @@ class TestDeductionRules(unittest.TestCase):
         r2 = A_implies_B("r2", arity=ArityArrow(A0, A0))
 
         s2 = implication_elimation(r2, a)
-        self.assertIsInstance(s2, Proposition, "result is a proposition")
-        self.assertEqual(s2.proposition_expr, B.proposition_expr, "correct prop")
-        self.assertEqual(
-            s2.proof_expr, r2.proof_expr.apply(a.proof_expr), "proof has correct expr"
-        )
+        self.assertIsInstance(s2, Proposition)
+        self.assertEqual(s2.proposition_expr, B.proposition_expr)
+        self.assertEqual(s2.proof_expr, r2.proof_expr.apply(a.proof_expr))
 
     def test_disjunction_introduction(self):
         q = A("q")
@@ -138,23 +130,19 @@ class TestDeductionRules(unittest.TestCase):
 
         s1 = disjunction_introduction_1(q, B)
 
-        self.assertIsInstance(s1, Proposition, "result is a proposition")
+        self.assertIsInstance(s1, Proposition)
         self.assertEqual(
-            s1.proposition_expr,
-            or_(A.proposition_expr, B.proposition_expr),
-            "proof has correct expr",
+            s1.proposition_expr, or_(A.proposition_expr, B.proposition_expr),
         )
-        self.assertEqual(s1.proof_expr, inl(q.proof_expr), "proof has correct expr")
+        self.assertEqual(s1.proof_expr, inl(q.proof_expr))
 
         s2 = disjunction_introduction_2(r, A)
 
-        self.assertIsInstance(s2, Proposition, "result is a proposition")
+        self.assertIsInstance(s2, Proposition)
         self.assertEqual(
-            s2.proposition_expr,
-            or_(A.proposition_expr, B.proposition_expr),
-            "proof has correct expr",
+            s2.proposition_expr, or_(A.proposition_expr, B.proposition_expr),
         )
-        self.assertEqual(s2.proof_expr, inr(r.proof_expr), "proof has correct expr")
+        self.assertEqual(s2.proof_expr, inr(r.proof_expr))
 
     def test_disjunction_elimination(self):
 
@@ -176,25 +164,17 @@ class TestDeductionRules(unittest.TestCase):
         p2 = disjunction_introduction_2(r, A)
 
         s1 = disjunction_elimination(p1, f, g)
-        self.assertIsInstance(s1, Proposition, "result is a proposition")
+        self.assertIsInstance(s1, Proposition)
+        self.assertEqual(s1.proposition_expr, C.proposition_expr)
         self.assertEqual(
-            s1.proposition_expr, C.proposition_expr, "proof has correct expr"
-        )
-        self.assertEqual(
-            s1.proof_expr,
-            cases(p1.proof_expr, f.proof_expr, g.proof_expr),
-            "proof has correct expr",
+            s1.proof_expr, cases(p1.proof_expr, f.proof_expr, g.proof_expr),
         )
 
         s2 = disjunction_elimination(p2, f, g)
-        self.assertIsInstance(s2, Proposition, "result is a proposition")
+        self.assertIsInstance(s2, Proposition)
+        self.assertEqual(s2.proposition_expr, C.proposition_expr)
         self.assertEqual(
-            s2.proposition_expr, C.proposition_expr, "proof has correct expr"
-        )
-        self.assertEqual(
-            s2.proof_expr,
-            cases(p2.proof_expr, f.proof_expr, g.proof_expr),
-            "proof has correct expr",
+            s2.proof_expr, cases(p2.proof_expr, f.proof_expr, g.proof_expr),
         )
 
         # test given disjunction
@@ -202,14 +182,10 @@ class TestDeductionRules(unittest.TestCase):
         p3 = A_or_B("p3")
 
         s3 = disjunction_elimination(p3, f, g)
-        self.assertIsInstance(s3, Proposition, "result is a proposition")
+        self.assertIsInstance(s3, Proposition)
+        self.assertEqual(s3.proposition_expr, C.proposition_expr)
         self.assertEqual(
-            s3.proposition_expr, C.proposition_expr, "proof has correct expr"
-        )
-        self.assertEqual(
-            s3.proof_expr,
-            cases(p3.proof_expr, f.proof_expr, g.proof_expr),
-            "proof has correct expr",
+            s3.proof_expr, cases(p3.proof_expr, f.proof_expr, g.proof_expr),
         )
 
 

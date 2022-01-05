@@ -10,7 +10,7 @@ from .proof import ProofSymbol
 
 # true and false are members (not python True/False!)
 class BooleanProofSymbol(ProofSymbol):
-    __default_arity__ = A0
+    __arity__ = A0
 
 
 bool_ = PropositionSymbol("bool")
@@ -22,7 +22,7 @@ class IfThenElseProofSymbol(ProofSymbol):
     """ [ST] p97
     """
 
-    __default_arity__ = ArityArrow(ArityCross(A0, A0, A0), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0, A0), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         return expr[1].proposition_type  # or expr[2]?

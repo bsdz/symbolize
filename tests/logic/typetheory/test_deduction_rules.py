@@ -31,8 +31,8 @@ class TestDeductionRules(unittest.TestCase):
 
         r = ProofExpressionCombination(p, q)
 
-        self.assertIsInstance(r, ProofExpression, "result is a proof")
-        self.assertEqual(r.proposition_type, and_(A, B), "proof has correct type")
+        self.assertIsInstance(r, ProofExpression)
+        self.assertEqual(r.proposition_type, and_(A, B))
 
     def test_conjunction_elimination(self):
         p = A.get_proof("p")
@@ -44,11 +44,11 @@ class TestDeductionRules(unittest.TestCase):
         s11 = fst(r1)
         s12 = snd(r1)
 
-        self.assertIsInstance(s11, ProofExpression, "result is a proof")
-        self.assertIsInstance(s12, ProofExpression, "result is a proof")
+        self.assertIsInstance(s11, ProofExpression)
+        self.assertIsInstance(s12, ProofExpression)
 
-        self.assertEqual(s11.proposition_type, A, "fst prop")
-        self.assertEqual(s12.proposition_type, B, "snd prop")
+        self.assertEqual(s11.proposition_type, A)
+        self.assertEqual(s12.proposition_type, B)
 
         # test given conjunction
         A_and_B = and_(A, B)
@@ -56,11 +56,11 @@ class TestDeductionRules(unittest.TestCase):
         s21 = fst(r2)
         s22 = snd(r2)
 
-        self.assertIsInstance(s21, ProofExpression, "result is a proof")
-        self.assertIsInstance(s22, ProofExpression, "result is a proof")
+        self.assertIsInstance(s21, ProofExpression)
+        self.assertIsInstance(s22, ProofExpression)
 
-        self.assertEqual(s21.proposition_type, A, "fst prop")
-        self.assertEqual(s22.proposition_type, B, "snd prop")
+        self.assertEqual(s21.proposition_type, A)
+        self.assertEqual(s22.proposition_type, B)
 
     def test_implication_introduction(self):
         x = A.get_proof("x")
@@ -68,8 +68,8 @@ class TestDeductionRules(unittest.TestCase):
 
         r = e.abstract(x)
 
-        self.assertIsInstance(r, ProofExpression, "result is a proof")
-        self.assertEqual(r.proposition_type, implies(A, B), "proof has correct expr")
+        self.assertIsInstance(r, ProofExpression)
+        self.assertEqual(r.proposition_type, implies(A, B))
 
     def test_implication_elimination(self):
         a = A.get_proof("a")
@@ -80,16 +80,16 @@ class TestDeductionRules(unittest.TestCase):
         r1 = e.abstract(x)
 
         s1 = r1.apply(a)
-        self.assertIsInstance(s1, ProofExpression, "result is a proof")
-        self.assertEqual(s1.proposition_type, B, "correct prop")
+        self.assertIsInstance(s1, ProofExpression)
+        self.assertEqual(s1.proposition_type, B)
 
         # test give implication
         A_implies_B = implies(A, B)
         r2 = A_implies_B.get_proof("r2")  # , arity=ArityArrow(A0,A0))
 
         s2 = r2.apply(a)
-        self.assertIsInstance(s2, ProofExpression, "result is a proof")
-        self.assertEqual(s2.proposition_type, B, "correct prop")
+        self.assertIsInstance(s2, ProofExpression)
+        self.assertEqual(s2.proposition_type, B)
 
     def test_disjunction_introduction(self):
         q = A.get_proof("q")
@@ -97,13 +97,13 @@ class TestDeductionRules(unittest.TestCase):
 
         s1 = inl(q, inject_proposition=B)
 
-        self.assertIsInstance(s1, ProofExpression, "result is a proof")
-        self.assertEqual(s1.proposition_type, or_(A, B), "proof has correct expr")
+        self.assertIsInstance(s1, ProofExpression)
+        self.assertEqual(s1.proposition_type, or_(A, B))
 
         s2 = inr(r, inject_proposition=A)
 
-        self.assertIsInstance(s2, ProofExpression, "result is a proof")
-        self.assertEqual(s2.proposition_type, or_(A, B), "proof has correct expr")
+        self.assertIsInstance(s2, ProofExpression)
+        self.assertEqual(s2.proposition_type, or_(A, B))
 
     def test_disjunction_elimination(self):
 
@@ -121,20 +121,20 @@ class TestDeductionRules(unittest.TestCase):
         p2 = inr(r, inject_proposition=A)
 
         s1 = cases(p1, f, g)
-        self.assertIsInstance(s1, ProofExpression, "result is a proof")
-        self.assertEqual(s1.proposition_type, C, "proof has correct expr")
+        self.assertIsInstance(s1, ProofExpression)
+        self.assertEqual(s1.proposition_type, C)
 
         s2 = cases(p2, f, g)
-        self.assertIsInstance(s2, ProofExpression, "result is a proof")
-        self.assertEqual(s2.proposition_type, C, "proof has correct expr")
+        self.assertIsInstance(s2, ProofExpression)
+        self.assertEqual(s2.proposition_type, C)
 
         # test given disjunction
         A_or_B = or_(A, B)
         p3 = A_or_B.get_proof("p3")
 
         s3 = cases(p3, f, g)
-        self.assertIsInstance(s3, ProofExpression, "result is a proof")
-        self.assertEqual(s3.proposition_type, C, "proof has correct expr")
+        self.assertIsInstance(s3, ProofExpression)
+        self.assertEqual(s3.proposition_type, C)
 
     def test_universal_quantifier_introduction(self):
         x = A.get_proof("x")
@@ -143,8 +143,8 @@ class TestDeductionRules(unittest.TestCase):
 
         r = p.abstract(x)
 
-        self.assertIsInstance(r, ProofExpression, "result is a proof")
-        self.assertEqual(r.proposition_type, forall(x, P), "proof has correct expr")
+        self.assertIsInstance(r, ProofExpression)
+        self.assertEqual(r.proposition_type, forall(x, P))
 
     def test_universal_quantifier_elimination(self):
         a = A.get_proof("a")
@@ -157,12 +157,11 @@ class TestDeductionRules(unittest.TestCase):
 
         s1 = r1.apply(a)
 
-        self.assertIsInstance(s1, ProofExpression, "result is a proof")
+        self.assertIsInstance(s1, ProofExpression)
         self.assertEqual(
-            s1.proposition_type, P.substitute(x, a), "proof has correct expr"
-        )
+            s1.proposition_type, P.substitute(x, a))
 
-        # todo: test constructed quantification with P actually
+        # TODO: test constructed quantification with P actually
         # containing x.
 
         # test given quantification
@@ -171,41 +170,39 @@ class TestDeductionRules(unittest.TestCase):
 
         s2 = r2.apply(a)
 
-        self.assertIsInstance(s2, ProofExpression, "result is a proof")
-        self.assertEqual(s2.proposition_type, P.substitute(x, a), "correct prop")
+        self.assertIsInstance(s2, ProofExpression)
+        self.assertEqual(s2.proposition_type, P.substitute(x, a))
 
     def test_existential_quantifier_introduction(self):
         a = A.get_proof("a")
         x = A.get_proof("x")
-        P = PropositionSymbol(
-            "P", assume_contains=[x], arity=ArityArrow(A0, A0)
-        ).substitute(x, a)
-        p = P.get_proof("p")
+        P = PropositionSymbol("P", assume_contains=[x])
+        P1 = P.substitute(x, a)
+        p = P1.get_proof("p")
 
         r = ProofExpressionCombination(a, p)
 
-        self.assertIsInstance(r, ProofExpression, "result is a proof")
-        self.assertEqual(r.proposition_type, exists(x, P), "proof has correct expr")
+        self.assertIsInstance(r, ProofExpression)
+        self.assertEqual(r.proposition_type, exists(x, P))
 
     def test_existential_quantifier_elimination(self):
-        a = A.get_proof("a")
         x = A.get_proof("x")
-        P = PropositionSymbol("P", assume_contains=[x]).substitute(x, a)
-        p = P.get_proof("p")
+        P = PropositionSymbol("P", assume_contains=[x])
 
         # test constructed quantification
-        r1 = ProofExpressionCombination(a, p)
+        prop = exists(x, P)
+        p = prop.get_proof("p")
 
-        s11 = Fst(r1)
-        s12 = Snd(r1)
+        s11 = Fst(p)
+        s12 = Snd(p)
 
-        self.assertIsInstance(s11, ProofExpression, "result is a proof")
-        self.assertIsInstance(s12, ProofExpression, "result is a proof")
+        self.assertIsInstance(s11, ProofExpression)
+        self.assertIsInstance(s12, ProofExpression)
 
-        self.assertEqual(s11.proposition_type, A, "Fst prop")
-        self.assertEqual(s12.proposition_type, P, "Snd prop")
+        self.assertEqual(s11.proposition_type, A)
+        self.assertEqual(s12.proposition_type, P)
 
-        # todo: test constructed quantification with P actually
+        # TODO: test constructed quantification with P actually
         # containing x.
 
         # test given quantification
@@ -215,19 +212,19 @@ class TestDeductionRules(unittest.TestCase):
         s21 = Fst(r2)
         s22 = Snd(r2)
 
-        self.assertIsInstance(s21, ProofExpression, "result is a proof")
-        self.assertIsInstance(s22, ProofExpression, "result is a proof")
+        self.assertIsInstance(s21, ProofExpression)
+        self.assertIsInstance(s22, ProofExpression)
 
-        self.assertEqual(s21.proposition_type, A, "Fst prop")
-        self.assertEqual(s22.proposition_type, P, "Snd prop")
+        self.assertEqual(s21.proposition_type, A)
+        self.assertEqual(s22.proposition_type, P)
 
     def test_boolean_introduction(self):
 
         outputs = {True_: bool_, False_: bool_}
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
     def test_boolean_elimination(self):
 
@@ -241,8 +238,8 @@ class TestDeductionRules(unittest.TestCase):
         outputs = {tr: bool_, r: C}
 
         for _p, _t in outputs.items():
-            self.assertIsInstance(_p, ProofExpression, "result is a proof")
-            self.assertEqual(_p.proposition_type, _t, "proof has correct expr")
+            self.assertIsInstance(_p, ProofExpression)
+            self.assertEqual(_p.proposition_type, _t)
 
 
 if __name__ == "__main__":

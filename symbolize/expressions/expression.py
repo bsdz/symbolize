@@ -16,7 +16,6 @@ from .render.typestring import TypeStringRenderer, TypeStringRendererMixin
 from .render.latex import LatexRenderer, LatexRendererMixin
 from .render.graph import GraphToolRenderer, GraphToolRendererMixin
 from .render.unicode import UnicodeRenderer, UnicodeRendererMixin
-from ..utility import ToBeImplemented
 
 
 def alias_render_typestring(f):
@@ -70,8 +69,9 @@ class ExpressionWalkResult:
 
 
 def general_bind_expression_generator():
+    # we have an infinite collection of variables
     prefix = "__gbe_"
-    for i in count(start=0, step=1):  # we have an infinite collection of variables
+    for i in count(start=0, step=1):
         yield Symbol("%s%s" % (prefix, i))
 
 
@@ -102,6 +102,7 @@ class ExpressionMetaClass(type):
     various abstraction, application and substitution
     classes used for abstract(), apply() and substitute()
     methods."""
+
     def __new__(cls, clsname, bases, dct, **kwargs):
         new_type = type.__new__(cls, clsname, bases, dct)
 
@@ -207,24 +208,12 @@ class Expression(
         """A deep copy of this expression"""
         return deepcopy(self)
 
-    @property
-    def application_class(self):
-        return self.__class__.__application_class__
-
-    @property
-    def abstraction_class(self):
-        return self.__class__.__abstraction_class__
-
-    @property
-    def substitution_class(self):
-        return self.__class__.__substitution_class__
-
     def apply(
         self, *expressions: "Expression", check_arity=True, target_arity=None, **kwargs,
     ) -> "Expression":
         """ [BN] 3.8.4
         """
-        if check_arity:  # todo: do we need this?
+        if check_arity:  # TODO: do we need this?
             if not isinstance(self.arity, ArityArrow):
                 raise ExpressionException(
                     "Cannot apply when arity has no arrow: %s" % self.arity
@@ -234,8 +223,12 @@ class Expression(
                     "Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s"
                     % (self.arity.lhs, expressions[0].arity)
                 )
-            if len(expressions) > 1 and isinstance(self.arity.lhs, ArityCross) and not all(
-                [e.arity == a for e, a in zip(expressions, self.arity.lhs.args)]
+            if (
+                len(expressions) > 1
+                and isinstance(self.arity.lhs, ArityCross)
+                and not all(
+                    [e.arity == a for e, a in zip(expressions, self.arity.lhs.args)]
+                )
             ):
                 raise ExpressionException(
                     "Cannot apply when arity arrow lhs does not match child arity: %s ≠ %s"
@@ -247,7 +240,7 @@ class Expression(
         if self.arity.rhs == A0:
             if target_arity is None:
                 target_arity = self.arity.rhs
-            return self.application_class(
+            return self.__class__.__application_class__(
                 self, expressions, target_arity, **kwargs
             )
         else:
@@ -267,12 +260,14 @@ class Expression(
             else expressions[0].arity,
             self.arity,
         )
-        return self.abstraction_class(
+        return self.__class__.__abstraction_class__(
             self, expressions, new_arity, **abstraction_kwargs
         )
 
     def substitute(self, old, new, substitution_kwargs={}):
-        return self.substitution_class(self, old, new, **substitution_kwargs)
+        return self.__class__.__substitution_class__(
+            self, old, new, **substitution_kwargs
+        )
 
     def walk(self, func, **options):
         """walks the expression, calling func on each sub part.
@@ -366,7 +361,7 @@ class Expression(
     def beta_reduction(self):
         """beta-reduce expression, ie apply to abstraction
         """
-        # todo: test arity
+        # TODO: test arity
         new_expr = self.copy()
         if isinstance(new_expr, ApplicationExpression) and isinstance(
             new_expr.base, AbstractionExpression
@@ -378,7 +373,7 @@ class Expression(
 
 
 class Symbol(Expression, metaclass=ExpressionMetaClass):
-    __default_arity__ : ArityExpression = A0
+    __arity__: ArityExpression = A0
 
     def __init__(
         self,
@@ -398,7 +393,7 @@ class Symbol(Expression, metaclass=ExpressionMetaClass):
         super().__init__(*args, **kwargs)
         self.str_repr = str_repr
         self.latex_repr = latex_repr if latex_repr is not None else str_repr
-        self._arity = arity if arity is not None else self.__class__.__default_arity__
+        self._arity = arity if arity is not None else self.__class__.__arity__
         self.canonical = canonical
 
     @alias_render_typestring
@@ -444,8 +439,7 @@ class Symbol(Expression, metaclass=ExpressionMetaClass):
 
 
 class ExpressionCombination(
-    Expression,
-    metaclass=ExpressionMetaClass,
+    Expression, metaclass=ExpressionMetaClass,
 ):
     def __init__(self, *expressions: Expression):
         """Combines list into comma-concatenated expression.
@@ -485,10 +479,10 @@ class ExpressionCombination(
         return new_expr
 
     def walk(self, func, **options):
-        raise ToBeImplemented(f"Walk not implemented for this class yet: {type(self)}")
+        raise NotImplementedError(f"Walk not implemented for this class yet: {type(self)}")
 
     def replace(self, from_expr, to_expr: Expression) -> Expression:
-        raise ToBeImplemented("Substitute not implemented for this class yet")
+        raise NotImplementedError("Substitute not implemented for this class yet")
 
     @alias_render_typestring
     def render_typestring(self, renderer):
@@ -508,7 +502,7 @@ class SubstitutionExpression(
     metaclass=ExpressionMetaClass,
     expression_class_type=ExpressionClassType.SUBSTITUTION,
 ):
-    __default_arity__ : ArityExpression = A0
+    __arity__: ArityExpression = A0
 
     def __init__(
         self,
@@ -531,11 +525,11 @@ class SubstitutionExpression(
         self.old = old.copy()
         self.new = new.copy()
 
-        # use base arity (todo: is this correct?)
+        # use base arity (TODO: is this correct?)
         self._arity = (
             self.original.copy()
             if arity is not None
-            else self.__class__.__default_arity__
+            else self.__class__.__arity__
         )
 
     def equals(self, other):
@@ -608,12 +602,11 @@ class SubstitutionExpression(
 
 
 class BaseWithChildrenExpression(
-    Expression,
-    metaclass=ExpressionMetaClass,
+    Expression, metaclass=ExpressionMetaClass,
 ):
-    __default_arity__ : ArityExpression = A0
+    __arity__: ArityExpression = A0
 
-    # todo: perhaps utilize ExpressionCombination for children here?
+    # TODO: perhaps utilize ExpressionCombination for children here?
     def __init__(
         self,
         base: "Expression",
@@ -628,7 +621,7 @@ class BaseWithChildrenExpression(
         for e in self.children:
             e.parent = self
         self._arity = (
-            arity.copy() if arity is not None else self.__class__.__default_arity__
+            arity.copy() if arity is not None else self.__class__.__arity__
         )
 
     def __getitem__(self, index):
@@ -648,14 +641,14 @@ class BaseWithChildrenExpression(
     def equals(self, other):
         """Following [BN] 3.9.
         """
-        # todo: convert to general bind form before comparison (make optional?)
+        # TODO: convert to general bind form before comparison (make optional?)
         if not isinstance(other, self.__class__):
             return False
 
         if self.base != other.base:
             return False
 
-        if self.children and other.children:  # todo: do we need to check arity here?
+        if self.children and other.children:  # TODO: do we need to check arity here?
             if not all(
                 [
                     t == o and t.arity == o.arity
@@ -679,7 +672,7 @@ class BaseWithChildrenExpression(
 
         # check from_expr is free in this expression
         if self.contains_bind(to_expr):
-            raise ToBeImplemented("Cannot yet substitute bound expression")
+            raise NotImplementedError("Cannot yet substitute bound expression")
 
         new_expr = self.copy()
         new_expr.base = new_expr.base.replace(from_expr, to_expr)  # [ST] 2.4

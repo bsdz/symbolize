@@ -97,35 +97,22 @@ class ExpressionClassType(IntFlag):
     SUBSTITUTION = 4
 
 
-class ExpressionMetaClass(type):
-    """This meta class injects as class attributes the
-    various abstraction, application and substitution
-    classes used for abstract(), apply() and substitute()
-    methods."""
-
-    def __new__(cls, clsname, bases, dct, **kwargs):
-        new_type = type.__new__(cls, clsname, bases, dct)
-
-        expression_class_type = kwargs.pop(
-            "expression_class_type", ExpressionClassType(0)
-        )
-        if ExpressionClassType.ABSTRACTION in expression_class_type:
-            cls.__abstraction_class__ = new_type
-        if ExpressionClassType.APPLICATION in expression_class_type:
-            cls.__application_class__ = new_type
-        if ExpressionClassType.SUBSTITUTION in expression_class_type:
-            cls.__substitution_class__ = new_type
-
-        return new_type
-
-
 class Expression(
     TypeStringRendererMixin,
     LatexRendererMixin,
     UnicodeRendererMixin,
     GraphToolRendererMixin,
-    metaclass=ExpressionMetaClass,
 ):
+
+    def __init_subclass__(cls, expression_class_type=ExpressionClassType(0), **kwargs):
+        super().__init_subclass__(**kwargs)
+        if ExpressionClassType.ABSTRACTION in expression_class_type:
+            cls.__abstraction_class__ = cls
+        if ExpressionClassType.APPLICATION in expression_class_type:
+            cls.__application_class__ = cls
+        if ExpressionClassType.SUBSTITUTION in expression_class_type:
+            cls.__substitution_class__ = cls
+
     def repr_function(self):
         return self.repr_typestring()
 
@@ -372,7 +359,7 @@ class Expression(
         return new_expr
 
 
-class Symbol(Expression, metaclass=ExpressionMetaClass):
+class Symbol(Expression):
     __arity__: ArityExpression = A0
 
     def __init__(
@@ -439,7 +426,7 @@ class Symbol(Expression, metaclass=ExpressionMetaClass):
 
 
 class ExpressionCombination(
-    Expression, metaclass=ExpressionMetaClass,
+    Expression
 ):
     def __init__(self, *expressions: Expression):
         """Combines list into comma-concatenated expression.
@@ -499,7 +486,6 @@ class ExpressionCombination(
 
 class SubstitutionExpression(
     Expression,
-    metaclass=ExpressionMetaClass,
     expression_class_type=ExpressionClassType.SUBSTITUTION,
 ):
     __arity__: ArityExpression = A0
@@ -602,7 +588,7 @@ class SubstitutionExpression(
 
 
 class BaseWithChildrenExpression(
-    Expression, metaclass=ExpressionMetaClass,
+    Expression
 ):
     __arity__: ArityExpression = A0
 
@@ -689,7 +675,6 @@ class BaseWithChildrenExpression(
 
 class ApplicationExpression(
     BaseWithChildrenExpression,
-    metaclass=ExpressionMetaClass,
     expression_class_type=ExpressionClassType.APPLICATION,
 ):
     @alias_render_typestring
@@ -750,7 +735,6 @@ class ApplicationExpression(
 
 class AbstractionExpression(
     BaseWithChildrenExpression,
-    metaclass=ExpressionMetaClass,
     expression_class_type=ExpressionClassType.ABSTRACTION,
 ):
     @alias_render_typestring

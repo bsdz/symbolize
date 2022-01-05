@@ -5,7 +5,6 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 """
 
 from ...expressions import (
-    ExpressionMetaClass,
     Expression,
     Symbol,
     BaseWithChildrenExpression,
@@ -33,10 +32,6 @@ def general_proof_label_generator():
 proof_label_generator = general_proof_label_generator()
 
 
-class PropositionExpressionMetaClass(ExpressionMetaClass):
-    pass
-
-
 class PropositionSubstitutionExpression(SubstitutionExpression):
     def get_proof(self, name, **kwargs):
         proof = self.original.get_proof(name, **kwargs)
@@ -44,7 +39,7 @@ class PropositionSubstitutionExpression(SubstitutionExpression):
         return proof
 
 
-class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass):
+class PropositionExpression(Expression):
     __substitution_class__ = PropositionSubstitutionExpression
 
     def get_proof(self, name, **kwargs):
@@ -52,7 +47,7 @@ class PropositionExpression(Expression, metaclass=PropositionExpressionMetaClass
 
 
 class PropositionSymbol(
-    Symbol, PropositionExpression, metaclass=PropositionExpressionMetaClass,
+    Symbol, PropositionExpression
 ):
     def get_proof(self, name, **kwargs):
         return ProofSymbol(str_repr=name, proposition_type=self)
@@ -61,7 +56,6 @@ class PropositionSymbol(
 class PropositionBaseWithChildrenExpression(
     BaseWithChildrenExpression,
     PropositionExpression,
-    metaclass=PropositionExpressionMetaClass,
 ):
     pass
 
@@ -69,13 +63,12 @@ class PropositionBaseWithChildrenExpression(
 class PropositionBinaryInfixExpression(
     BinaryInfixExpression,
     PropositionBaseWithChildrenExpression,
-    metaclass=PropositionExpressionMetaClass,
 ):
     pass
 
 
 class PropositionBinaryInfixSymbol(
-    BinaryInfixSymbol, PropositionExpression, metaclass=PropositionExpressionMetaClass,
+    BinaryInfixSymbol, PropositionExpression,
 ):
     __application_class__ = PropositionBinaryInfixExpression
 
@@ -83,7 +76,6 @@ class PropositionBinaryInfixSymbol(
 class PropositionLogicQuantificationExpression(
     LogicQuantificationExpression,
     PropositionBaseWithChildrenExpression,
-    metaclass=PropositionExpressionMetaClass,
 ):
     pass
 
@@ -91,7 +83,6 @@ class PropositionLogicQuantificationExpression(
 class PropositionLogicQuantificationSymbol(
     LogicQuantificationSymbol,
     PropositionExpression,
-    metaclass=PropositionExpressionMetaClass,
 ):
     __application_class__ = PropositionLogicQuantificationExpression
 

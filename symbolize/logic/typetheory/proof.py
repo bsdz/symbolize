@@ -5,7 +5,6 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 """
 from warnings import warn
 from ...expressions import (
-    ExpressionMetaClass,
     ExpressionClassType,
     Expression,
     Symbol,
@@ -23,11 +22,7 @@ class PropositionException(Exception):
     pass
 
 
-class ProofExpressionMetaClass(ExpressionMetaClass):
-    pass
-
-
-class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
+class ProofExpression(Expression):
     def __init__(self, *args, **kwargs):
         self.proposition_type = kwargs.pop("proposition_type", None)
         super().__init__()
@@ -112,13 +107,13 @@ class ProofExpression(Expression, metaclass=ProofExpressionMetaClass):
 
 
 class ProofSymbol(
-    Symbol, ProofExpression, metaclass=ProofExpressionMetaClass,
+    Symbol, ProofExpression,
 ):
     pass
 
 
 class ProofExpressionCombination(
-    ExpressionCombination, ProofExpression, metaclass=ProofExpressionMetaClass,
+    ExpressionCombination, ProofExpression,
 ):
     """ [ST] p81 p91
     """
@@ -146,7 +141,7 @@ class ProofExpressionCombination(
 
 
 class ProofBaseWithChildrenExpression(
-    BaseWithChildrenExpression, ProofExpression, metaclass=ProofExpressionMetaClass,
+    BaseWithChildrenExpression, ProofExpression,
 ):
     pass
 
@@ -154,7 +149,6 @@ class ProofBaseWithChildrenExpression(
 class ProofApplicationExpression(
     ApplicationExpression,
     ProofBaseWithChildrenExpression,
-    metaclass=ProofExpressionMetaClass,
     expression_class_type=ExpressionClassType.APPLICATION,
 ):
     def compute(self, children=[]):
@@ -165,7 +159,6 @@ class ProofApplicationExpression(
 class ProofAbstractionExpression(
     AbstractionExpression,
     ProofBaseWithChildrenExpression,
-    metaclass=ProofExpressionMetaClass,
     expression_class_type=ExpressionClassType.ABSTRACTION,
 ):
     def apply_proposition_type(self, expressions, **kwargs):

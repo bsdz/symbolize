@@ -107,11 +107,11 @@ class Expression(
     def __init_subclass__(cls, expression_class_type=ExpressionClassType(0), **kwargs):
         super().__init_subclass__(**kwargs)
         if ExpressionClassType.ABSTRACTION in expression_class_type:
-            cls.__abstraction_class__ = cls
+            Expression.__abstraction_class__ = cls
         if ExpressionClassType.APPLICATION in expression_class_type:
-            cls.__application_class__ = cls
+            Expression.__application_class__ = cls
         if ExpressionClassType.SUBSTITUTION in expression_class_type:
-            cls.__substitution_class__ = cls
+            Expression.__substitution_class__ = cls
 
     def repr_function(self):
         return self.repr_typestring()

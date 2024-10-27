@@ -23,17 +23,17 @@ x = A.get_proof('x')
 
 a
 ```
-<img src="https://render.githubusercontent.com/render/math?math=a : A \Rightarrow B">
+$$a : A \Rightarrow B$$
 
 ```python
 b
 ```
-<img src="https://render.githubusercontent.com/render/math?math=b : B \Rightarrow C">
+$$b : B \Rightarrow C$$
 
 ```python
 x
 ```
-<img src="https://render.githubusercontent.com/render/math?math=x : A">
+$$x : A$$
 
 ```python
 arg1 = Argument([x, a], a(x))
@@ -44,14 +44,14 @@ arg5 = Argument([arg2, x], arg4.conclusion.abstract(a))
 arg5
 ```
 
-<img src="https://render.githubusercontent.com/render/math?math=\frac{\frac{\frac{x : A \quad a : A \Rightarrow B}{a(x) : B} \quad b : B \Rightarrow C}{b(a(x)) : C} \quad x : A}{\lambda{}(a).\lambda{}(b).\lambda{}(x).(b(a(x))) : (A \Rightarrow B) \Rightarrow ((B \Rightarrow C) \Rightarrow (A \Rightarrow C))}">
+$$\frac{\frac{\frac{x : A \quad a : A \Rightarrow B}{a(x) : B} \quad b : B \Rightarrow C}{b(a(x)) : C} \quad x : A}{\lambda{}(a).\lambda{}(b).\lambda{}(x).(b(a(x))) : (A \Rightarrow B) \Rightarrow ((B \Rightarrow C) \Rightarrow (A \Rightarrow C))}$$
 
 
 ```python
 new_type = arg5.conclusion.proposition_type.replace(C, Falsum).copy()
 new_type
 ```
-<img src="https://render.githubusercontent.com/render/math?math=(A \Rightarrow B) \Rightarrow ((B \Rightarrow \bot) \Rightarrow (A \Rightarrow \bot))">
+$$(A \Rightarrow B) \Rightarrow ((B \Rightarrow \bot) \Rightarrow (A \Rightarrow \bot))$$
 
 
 ```python
@@ -81,7 +81,7 @@ def my_sub(wr):
 new_type.walk(my_sub)
 new_type
 ```
-<img src="https://render.githubusercontent.com/render/math?math=(A \Rightarrow B) \Rightarrow ((\neg(B)) \Rightarrow (\neg(A)))">
+$$(A \Rightarrow B) \Rightarrow ((\neg(B)) \Rightarrow (\neg(A)))$$
 
 
 ```python

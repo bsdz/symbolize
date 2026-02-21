@@ -10,6 +10,7 @@ plus = BinaryInfixSymbol("+")
 mult = BinaryInfixSymbol("⨯", latex_repr=r"\cdot")
 divide = BinaryInfixSymbol("/")
 
+eq = BinaryInfixSymbol("=", latex_repr=r"=")
 gt = BinaryInfixSymbol(">", latex_repr=r">")
 geq = BinaryInfixSymbol("≥", latex_repr=r"\geq")
 lt = BinaryInfixSymbol("<", latex_repr=r"<")

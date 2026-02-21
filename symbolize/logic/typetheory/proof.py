@@ -23,12 +23,21 @@ class PropositionException(Exception):
 
 
 class ProofExpression(Expression):
+    def __init_subclass__(cls, expression_class_type=ExpressionClassType(0), **kwargs):
+        super().__init_subclass__(**kwargs)
+        if ExpressionClassType.ABSTRACTION in expression_class_type:
+            ProofExpression.__abstraction_class__ = cls
+        if ExpressionClassType.APPLICATION in expression_class_type:
+            ProofExpression.__application_class__ = cls
+        if ExpressionClassType.SUBSTITUTION in expression_class_type:
+            ProofExpression.__substitution_class__ = cls
+
     def __init__(self, *args, **kwargs):
         self.proposition_type = kwargs.pop("proposition_type", None)
         super().__init__()
 
     def repr_typestring(self):
-        """ Overrides base method to support displaying proposition types. """
+        """Overrides base method to support displaying proposition types."""
         from symbolize.expressions.render.typestring import TypeStringRenderer
 
         if self.proposition_type is None:
@@ -40,7 +49,7 @@ class ProofExpression(Expression):
             )
 
     def repr_latex(self):
-        """ Overrides base method to support displaying proposition types. """
+        """Overrides base method to support displaying proposition types."""
         from symbolize.expressions.render.latex import LatexRenderer
 
         if self.proposition_type is None:
@@ -52,7 +61,7 @@ class ProofExpression(Expression):
             )
 
     def repr_unicode(self):
-        """ Overrides base method to support displaying proposition types. """
+        """Overrides base method to support displaying proposition types."""
         from symbolize.expressions.render.unicode import UnicodeRenderer
 
         if self.proposition_type is None:
@@ -70,12 +79,11 @@ class ProofExpression(Expression):
         return self
 
     def apply_proposition_type(self, expressions, **apply_proposition_type_kwargs):
-        """ Provides the new proposition type generated after application. """
+        """Provides the new proposition type generated after application."""
         raise NotImplementedError("Need to implement a proposition type method!")
 
     def apply(self, *expressions, **kwargs):
-        """ [ST] p79 p89
-        """
+        """[ST] p79 p89"""
         apply_proposition_type_kwargs = {}
         if "inject_proposition" in kwargs:  # TODO: tidy this up
             apply_proposition_type_kwargs["inject_proposition"] = kwargs.pop(
@@ -87,8 +95,7 @@ class ProofExpression(Expression):
         return super().apply(*expressions, proposition_type=new_prop_type, **kwargs)
 
     def abstract(self, *expressions):
-        """ [ST] p79 p89
-        """
+        """[ST] p79 p89"""
         from .proposition import implies, forall
 
         # check proof doesn't have expressions[0] free in self
@@ -107,16 +114,17 @@ class ProofExpression(Expression):
 
 
 class ProofSymbol(
-    Symbol, ProofExpression,
+    Symbol,
+    ProofExpression,
 ):
     pass
 
 
 class ProofExpressionCombination(
-    ExpressionCombination, ProofExpression,
+    ExpressionCombination,
+    ProofExpression,
 ):
-    """ [ST] p81 p91
-    """
+    """[ST] p81 p91"""
 
     def __init__(self, *args, **kwargs):
         from .proposition import and_, exists
@@ -127,7 +135,9 @@ class ProofExpressionCombination(
         if isinstance(args[1].proposition_type, PropositionSubstitutionExpression):
             if args[0] != args[1].proposition_type.new:
                 raise PropositionException("type must match substitition variable")
-            self.proposition_type = exists(args[1].proposition_type.old, args[1].proposition_type.original)
+            self.proposition_type = exists(
+                args[1].proposition_type.old, args[1].proposition_type.original
+            )
         elif args[1].proposition_type.contains_free(args[0]):
             self.proposition_type = exists(args[0], args[1].proposition_type)
         else:
@@ -141,7 +151,8 @@ class ProofExpressionCombination(
 
 
 class ProofBaseWithChildrenExpression(
-    BaseWithChildrenExpression, ProofExpression,
+    BaseWithChildrenExpression,
+    ProofExpression,
 ):
     pass
 
@@ -151,6 +162,31 @@ class ProofApplicationExpression(
     ProofBaseWithChildrenExpression,
     expression_class_type=ExpressionClassType.APPLICATION,
 ):
+    def apply_proposition_type(self, expressions, **kwargs):
+        from .proposition import forall, implies, PropositionSubstitutionExpression
+
+        prop_type = self.proposition_type
+        if isinstance(prop_type, PropositionSubstitutionExpression):
+            prop_base = prop_type.original.base
+        else:
+            prop_base = prop_type.base
+
+        if prop_base == forall:
+            return prop_type.children[1].substitute(
+                prop_type.children[0], expressions[0]
+            )
+        elif prop_base == implies:
+            if isinstance(prop_type, PropositionSubstitutionExpression):
+                # implies(A, B)[x/y] -> B[x/y]
+                return prop_type.original.children[1].substitute(
+                    prop_type.old, prop_type.new
+                )
+            return prop_type.children[1]
+        else:
+            raise PropositionException(
+                f"Cannot apply if proposition is of type: {prop_base}"
+            )
+
     def compute(self, children=[]):
         computed_children = [c.compute([]) for c in self.children]
         return self.base.compute(computed_children)
@@ -177,7 +213,7 @@ class ProofAbstractionExpression(
             )
 
     def compute(self, children):
-        """ [ST] p80 """
+        """[ST] p80"""
         if children:
             return self.base.replace(self.children[0], children[0])
         else:
@@ -188,8 +224,7 @@ class ProofAbstractionExpression(
 # TODO: check function inputs like .experimental.deduction_rules
 #
 class fstProofSymbol(ProofSymbol):
-    """ [ST] p79
-    """
+    """[ST] p79"""
 
     __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
@@ -201,8 +236,7 @@ class fstProofSymbol(ProofSymbol):
 
 
 class sndProofSymbol(ProofSymbol):
-    """ [ST] p79
-    """
+    """[ST] p79"""
 
     __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
@@ -214,8 +248,7 @@ class sndProofSymbol(ProofSymbol):
 
 
 class inlProofSymbol(ProofSymbol):
-    """ [ST] p81
-    """
+    """[ST] p81"""
 
     __arity__ = ArityArrow(A0, A0)
 
@@ -231,8 +264,7 @@ class inlProofSymbol(ProofSymbol):
 
 
 class inrProofSymbol(ProofSymbol):
-    """ [ST] p81
-    """
+    """[ST] p81"""
 
     __arity__ = ArityArrow(A0, A0)
 
@@ -248,12 +280,9 @@ class inrProofSymbol(ProofSymbol):
 
 
 class CasesProofSymbol(ProofSymbol):
-    """ [ST] p81
-    """
+    """[ST] p81"""
 
-    __arity__ = ArityArrow(
-        ArityCross(A0, ArityArrow(A0, A0), ArityArrow(A0, A0)), A0
-    )
+    __arity__ = ArityArrow(ArityCross(A0, ArityArrow(A0, A0), ArityArrow(A0, A0)), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
         # TODO: check inputs
@@ -269,8 +298,7 @@ class CasesProofSymbol(ProofSymbol):
 
 
 class FstProofSymbol(ProofSymbol):
-    """ [ST] p91
-    """
+    """[ST] p91"""
 
     __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
@@ -283,8 +311,7 @@ class FstProofSymbol(ProofSymbol):
 
 
 class SndProofSymbol(ProofSymbol):
-    """ [ST] p91
-    """
+    """[ST] p91"""
 
     __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 

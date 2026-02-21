@@ -100,8 +100,17 @@ For more examples see the Jupyter notebooks in the examples folder.
 
 # To Do
 
-There is still lots to do initially implementing finite types and natural numbers. Further 
-into the project I would like to implement some simple symbolic manipulations and perhaps
+The project has some structural challenges mostly due to the rigid, class-heavy architecture
+which couples data with execution logic. Implementing natural numbers exposed issues with
+recursion depth and arity management since operations like succ or prim require distinct
+Python classes and their own compute method (with eager evaluation). The eager evaluation will
+create infinite loops or memory exhaustion during complex symbolic reductions.
+
+Moving on, I think the next iteration might use centralized evaluator to handle dependent types
+and lazy reduction. Also I'll try and move away from the class structure to a term based approach
+where each datum captures its kind, children and proposition type.
+
+Further into the project I would like to implement some simple symbolic manipulations and perhaps
 even implement Gruntz (http://www.cybertester.com/data/gruntz.pdf)
 
 # References

@@ -103,7 +103,6 @@ class Expression(
     UnicodeRendererMixin,
     GraphToolRendererMixin,
 ):
-
     def __init_subclass__(cls, expression_class_type=ExpressionClassType(0), **kwargs):
         super().__init_subclass__(**kwargs)
         if ExpressionClassType.ABSTRACTION in expression_class_type:
@@ -138,8 +137,7 @@ class Expression(
         return self.apply(*args, **kwargs)
 
     def __eq__(self, other):
-        """Overload == and compare expressions.
-        """
+        """Overload == and compare expressions."""
         return self.equals(other)
 
     def __hash__(self):
@@ -196,10 +194,13 @@ class Expression(
         return deepcopy(self)
 
     def apply(
-        self, *expressions: "Expression", check_arity=True, target_arity=None, **kwargs,
+        self,
+        *expressions: "Expression",
+        check_arity=True,
+        target_arity=None,
+        **kwargs,
     ) -> "Expression":
-        """ [BN] 3.8.4
-        """
+        """[BN] 3.8.4"""
         if check_arity:  # TODO: do we need this?
             if not isinstance(self.arity, ArityArrow):
                 raise ExpressionException(
@@ -224,22 +225,18 @@ class Expression(
         else:
             warn("Skipping arity check on apply")
 
-        if self.arity.rhs == A0:
+        if True:  # self.arity.rhs == A0:
             if target_arity is None:
                 target_arity = self.arity.rhs
             return self.__class__.__application_class__(
                 self, expressions, target_arity, **kwargs
             )
-        else:
-            raise ExpressionException(
-                f"Do no support apply when rhs arity is {self.arity.rhs}"
-            )
 
     def abstract(
         self, *expressions: "Expression", abstraction_kwargs={}
     ) -> "Expression":
-        """ [BN] 3.8.5
-            prevent arity cross of single expression
+        """[BN] 3.8.5
+        prevent arity cross of single expression
         """
         new_arity = ArityArrow(
             ArityCross(*[e.arity for e in expressions])
@@ -276,7 +273,7 @@ class Expression(
         )
 
     def replace(self, from_expr, to_expr: "Expression") -> "Expression":
-        """ Replaces all occurrences of from_expr with to_expr.
+        """Replaces all occurrences of from_expr with to_expr.
 
         abstract method.
         """
@@ -316,8 +313,7 @@ class Expression(
         return self.contains(expr) and not self.contains_bind(expr)
 
     def general_bind_form(self):
-        """replaces all bound variables with general ordinal expression.
-        """
+        """replaces all bound variables with general ordinal expression."""
         new_expr = self.copy()
 
         gbe_generator = general_bind_expression_generator()
@@ -346,8 +342,7 @@ class Expression(
         return new_expr
 
     def beta_reduction(self):
-        """beta-reduce expression, ie apply to abstraction
-        """
+        """beta-reduce expression, ie apply to abstraction"""
         # TODO: test arity
         new_expr = self.copy()
         if isinstance(new_expr, ApplicationExpression) and isinstance(
@@ -425,9 +420,7 @@ class Symbol(Expression):
         )  # exact substitution - [ST] 2.4
 
 
-class ExpressionCombination(
-    Expression
-):
+class ExpressionCombination(Expression):
     def __init__(self, *expressions: Expression):
         """Combines list into comma-concatenated expression.
         Args:
@@ -466,7 +459,9 @@ class ExpressionCombination(
         return new_expr
 
     def walk(self, func, **options):
-        raise NotImplementedError(f"Walk not implemented for this class yet: {type(self)}")
+        raise NotImplementedError(
+            f"Walk not implemented for this class yet: {type(self)}"
+        )
 
     def replace(self, from_expr, to_expr: Expression) -> Expression:
         raise NotImplementedError("Substitute not implemented for this class yet")
@@ -513,9 +508,7 @@ class SubstitutionExpression(
 
         # use base arity (TODO: is this correct?)
         self._arity = (
-            self.original.copy()
-            if arity is not None
-            else self.__class__.__arity__
+            self.original.copy() if arity is not None else self.__class__.__arity__
         )
 
     def equals(self, other):
@@ -587,9 +580,7 @@ class SubstitutionExpression(
         )
 
 
-class BaseWithChildrenExpression(
-    Expression
-):
+class BaseWithChildrenExpression(Expression):
     __arity__: ArityExpression = A0
 
     # TODO: perhaps utilize ExpressionCombination for children here?
@@ -606,9 +597,7 @@ class BaseWithChildrenExpression(
         self.children = list(deepcopy(expressions))
         for e in self.children:
             e.parent = self
-        self._arity = (
-            arity.copy() if arity is not None else self.__class__.__arity__
-        )
+        self._arity = arity.copy() if arity is not None else self.__class__.__arity__
 
     def __getitem__(self, index):
         """Overload [] for selection"""
@@ -625,8 +614,7 @@ class BaseWithChildrenExpression(
             return new_expr
 
     def equals(self, other):
-        """Following [BN] 3.9.
-        """
+        """Following [BN] 3.9."""
         # TODO: convert to general bind form before comparison (make optional?)
         if not isinstance(other, self.__class__):
             return False
@@ -652,7 +640,6 @@ class BaseWithChildrenExpression(
             expr.walk(func, **options)
 
     def replace(self, from_expr, to_expr: "Expression") -> "Expression":
-
         if self == from_expr:  # exact substitution
             return to_expr.copy()  # [ST] 2.4
 
@@ -784,9 +771,9 @@ class AbstractionExpression(
             intersection_map = subgraph.new_vertex_property("int")
             for v in subgraph.vertices():
                 intersection_map[v] = -1
-            intersection_map[
-                subgraph.vertex(subgraph.gp["basevertex"])
-            ] = subgraph_placeholder_vertex
+            intersection_map[subgraph.vertex(subgraph.gp["basevertex"])] = (
+                subgraph_placeholder_vertex
+            )
 
             graph, combined_props = graph_union(
                 graph,

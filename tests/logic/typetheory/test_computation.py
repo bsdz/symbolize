@@ -61,7 +61,6 @@ class TestComputationRules(unittest.TestCase):
         self.assertEqual(r2.run(), g(r))
 
     def test_Fst_Snd(self):
-
         a = A.get_proof("a")
         x = A.get_proof("x")
         P = PropositionSymbol("P", assume_contains=[x])  # , arity=ArityArrow(A0,A0))
@@ -74,7 +73,6 @@ class TestComputationRules(unittest.TestCase):
         self.assertEqual(r2.run(), p)
 
     def test_ifthenelse(self):
-
         C = PropositionSymbol("C")
         c = C.get_proof("c")
         d = C.get_proof("d")
@@ -85,15 +83,13 @@ class TestComputationRules(unittest.TestCase):
         self.assertEqual(r1.run(), c)
         self.assertEqual(r2.run(), d)
 
-    @unittest.skip("needs fixing")
     def test_prim_succ(self):
-
         n = N.get_proof("n")
-        C = PropositionSymbol("C", assume_contains=[n], arity=ArityArrow(A0, A0))
+        C = PropositionSymbol("C", assume_contains=[n])
         c = C.get_proof("c")
 
-        Forall_n_C_implies_C = forall(n, implies(C, C))
-        f = Forall_n_C_implies_C.get_proof("f")
+        h = C.get_proof("h")
+        f = h.abstract(h).abstract(n)
 
         r1 = prim(zero, c, f)
         r2 = prim(succ(n), c, f)

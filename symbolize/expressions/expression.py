@@ -138,7 +138,11 @@ class Expression(
 
     def __eq__(self, other):
         """Overload == and compare expressions."""
-        return self.equals(other)
+        if self.equals(other):
+            return True
+        if isinstance(other, SubstitutionExpression) and other.is_trivial:
+            return self == other.original
+        return False
 
     def __hash__(self):
         # hash using rendered type string
@@ -310,7 +314,8 @@ class Expression(
         return False
 
     def contains_free(self, expr):
-        return self.contains(expr) and not self.contains_bind(expr)
+        """checks whether expr occurs free, i.e. outside any abstraction binding it"""
+        return self == expr or expr in self._assume_contains
 
     def general_bind_form(self):
         """replaces all bound variables with general ordinal expression."""
@@ -411,39 +416,41 @@ class Symbol(Expression):
         pass
 
     def replace(self, from_expr, to_expr: "Expression") -> "Expression":
-        # substitute assumptions
-        if from_expr in self._assume_contains:
-            self._assume_contains[self._assume_contains.index(from_expr)] = to_expr
+        if self == from_expr:  # exact substitution - [ST] 2.4
+            return to_expr.copy()
 
-        return (
-            to_expr.copy() if self == from_expr else self.copy()
-        )  # exact substitution - [ST] 2.4
+        new_expr = self.copy()
+        # substitute assumptions
+        if from_expr in new_expr._assume_contains:
+            new_expr._assume_contains[new_expr._assume_contains.index(from_expr)] = (
+                to_expr
+            )
+        return new_expr
 
 
 class ExpressionCombination(Expression):
-    def __init__(self, *expressions: Expression):
+    def __init__(self, *expressions: Expression, **kwargs):
         """Combines list into comma-concatenated expression.
         Args:
             expressions (List[Expression]): list of expressions
         """
+        super().__init__(**kwargs)
         self.children = list(deepcopy(expressions))
         self._arity = ArityCross(*[e.arity for e in expressions])  # [BN] 3.8.6
-        self._str_repr_alias = None
-        self._latex_repr_alias = None
-        self._unicode_repr_alias = None
 
     def equals(self, other):
         """Overload == and compare expressions.
         Following [BN] 3.9.
         """
         # combinations are dealt with separately
-        if self.children and other.children:
-            return all(
-                [
-                    t == o and t.arity == o.arity
-                    for t, o in zip(self.children, other.children)
-                ]
-            )
+        if not isinstance(other, ExpressionCombination):
+            return False
+        return len(self.children) == len(other.children) and all(
+            [
+                t == o and t.arity == o.arity
+                for t, o in zip(self.children, other.children)
+            ]
+        )
 
     def __getitem__(self, index):
         """Overload [] for selection"""
@@ -461,6 +468,11 @@ class ExpressionCombination(Expression):
     def walk(self, func, **options):
         raise NotImplementedError(
             f"Walk not implemented for this class yet: {type(self)}"
+        )
+
+    def contains_free(self, expr):
+        return super().contains_free(expr) or any(
+            c.contains_free(expr) for c in self.children
         )
 
     def replace(self, from_expr, to_expr: Expression) -> Expression:
@@ -511,27 +523,47 @@ class SubstitutionExpression(
             self.original.copy() if arity is not None else self.__class__.__arity__
         )
 
+    @property
+    def is_trivial(self):
+        """True when the substitution cannot change the original expression."""
+        return self.old == self.new or not self.original.contains_free(self.old)
+
     def equals(self, other):
-        if not isinstance(other, self.__class__):
-            return False
+        if self.is_trivial:
+            return self.original == other
 
-        if self.original != other.original:
-            return False
-
-        if self.old and other.old:
-            if not (self.old == other.old and self.old.arity == other.old.arity):
+        if isinstance(other, SubstitutionExpression):
+            if other.is_trivial:
+                return self == other.original
+            if self.original != other.original:
                 return False
+            if self.old and other.old:
+                if not (self.old == other.old and self.old.arity == other.old.arity):
+                    return False
+            if self.new and other.new:
+                if not (self.new == other.new and self.new.arity == other.new.arity):
+                    return False
+            return True
 
-        if self.new and other.new:
-            if not (self.new == other.new and self.new.arity == other.new.arity):
-                return False
-        return True
+        return False
+
+    def __hash__(self):
+        # a trivial substitution compares equal to its original so must hash alike
+        if self.is_trivial:
+            return hash(self.original)
+        return super().__hash__()
 
     def contains(self, expr):
-        if self.old == expr:
+        if self.old == expr and not self.new.contains(expr):
             return False
 
         return self.original.replace(self.old, self.new).contains(expr)
+
+    def contains_free(self, expr):
+        if self.old == expr and not self.new.contains_free(expr):
+            return False
+
+        return self.original.replace(self.old, self.new).contains_free(expr)
 
     def walk(self, func, **options):
         func(ExpressionWalkResult(self.original, obj=self))
@@ -632,6 +664,13 @@ class BaseWithChildrenExpression(Expression):
                 return False
         return True
 
+    def contains_free(self, expr):
+        return (
+            super().contains_free(expr)
+            or self.base.contains_free(expr)
+            or any(c.contains_free(expr) for c in self.children)
+        )
+
     def walk(self, func, **options):
         func(ExpressionWalkResult(self.base, obj=self))
         self.base.walk(func, **options)
@@ -654,8 +693,10 @@ class BaseWithChildrenExpression(Expression):
             new_expr.children[i] = child.replace(from_expr, to_expr)
 
         # substitute assumptions
-        if from_expr in self._assume_contains:
-            self._assume_contains[self._assume_contains.index(from_expr)] = to_expr
+        if from_expr in new_expr._assume_contains:
+            new_expr._assume_contains[new_expr._assume_contains.index(from_expr)] = (
+                to_expr
+            )
 
         return new_expr
 
@@ -724,6 +765,13 @@ class AbstractionExpression(
     BaseWithChildrenExpression,
     expression_class_type=ExpressionClassType.ABSTRACTION,
 ):
+    def contains_free(self, expr):
+        if self == expr or expr in self._assume_contains:
+            return True
+        if any(c == expr for c in self.children):  # bound here
+            return False
+        return self.base.contains_free(expr)
+
     @alias_render_typestring
     def render_typestring(self, renderer):
         return "%s%s%s%s" % (

@@ -8,7 +8,6 @@ import unittest
 from symbolize.expressions import A0, ArityArrow, ArityCross, ExpressionCombination
 
 from symbolize.definitions.logic import and_, implies, or_
-from symbolize.definitions.operators import pair
 from symbolize.definitions.functions import fst, snd, inl, inr, cases
 
 from symbolize.logic.typetheory.experimental.proposition import (
@@ -41,7 +40,7 @@ class TestDeductionRules(unittest.TestCase):
             and_(A.proposition_expr, B.proposition_expr),
             "proof has correct expr",
         )
-        self.assertEqual(r.proof_expr, pair(p.proof_expr, q.proof_expr))
+        self.assertEqual(r.proof_expr, ExpressionCombination(p.proof_expr, q.proof_expr))
 
     def test_conjunction_elimination(self):
         p = A("p")

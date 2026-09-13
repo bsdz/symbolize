@@ -135,16 +135,14 @@ class ProofExpressionCombination(
         if isinstance(args[1].proposition_type, PropositionSubstitutionExpression):
             if args[0] != args[1].proposition_type.new:
                 raise PropositionException("type must match substitition variable")
-            self.proposition_type = exists(
+            proposition_type = exists(
                 args[1].proposition_type.old, args[1].proposition_type.original
             )
         elif args[1].proposition_type.contains_free(args[0]):
-            self.proposition_type = exists(args[0], args[1].proposition_type)
+            proposition_type = exists(args[0], args[1].proposition_type)
         else:
-            self.proposition_type = and_(
-                args[0].proposition_type, args[1].proposition_type
-            )
-        super().__init__(*args, **kwargs)
+            proposition_type = and_(args[0].proposition_type, args[1].proposition_type)
+        super().__init__(*args, proposition_type=proposition_type, **kwargs)
 
     def compute(self, children=[]):
         return ProofExpressionCombination(*[c.compute() for c in self.children])
@@ -212,7 +210,7 @@ class ProofAbstractionExpression(
                 f"Cannot apply if proposition is of type: {self.proposition_type.base}"
             )
 
-    def compute(self, children):
+    def compute(self, children=[]):
         """[ST] p80"""
         if children:
             return self.base.replace(self.children[0], children[0])
@@ -303,8 +301,8 @@ class FstProofSymbol(ProofSymbol):
     __arity__ = ArityArrow(ArityCross(A0, A0), A0)
 
     def apply_proposition_type(self, expr, **kwargs):
-        # return expr[0].proposition_type.children[0].proposition_type
-        return expr[0].proposition_type.children[0]
+        c0 = expr[0].proposition_type.children[0]
+        return getattr(c0, "proposition_type", c0)
 
     def compute(self, children):
         return children[0][0]

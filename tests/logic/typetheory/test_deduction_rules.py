@@ -6,7 +6,6 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.expressions.arity import ArityArrow, A0
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import (
     ProofExpressionCombination,
@@ -138,7 +137,7 @@ class TestDeductionRules(unittest.TestCase):
 
     def test_universal_quantifier_introduction(self):
         x = A.get_proof("x")
-        P = PropositionSymbol("P", assume_contains=[x], arity=ArityArrow(A0, A0))
+        P = PropositionSymbol("P", assume_contains=[x])
         p = P.get_proof("p")
 
         r = p.abstract(x)
@@ -149,7 +148,7 @@ class TestDeductionRules(unittest.TestCase):
     def test_universal_quantifier_elimination(self):
         a = A.get_proof("a")
         x = A.get_proof("x")
-        P = PropositionSymbol("P", assume_contains=[x], arity=ArityArrow(A0, A0))
+        P = PropositionSymbol("P", assume_contains=[x])
         p = P.get_proof("p")
 
         # test contructed quantification

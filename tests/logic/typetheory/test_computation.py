@@ -6,22 +6,20 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.expressions.arity import A0, ArityArrow
-from symbolize.logic.typetheory.proposition import implies, forall
+from symbolize.logic.typetheory.boolean import False_, True_, ifthenelse
+from symbolize.logic.typetheory.natural import N, prim, succ, zero
 from symbolize.logic.typetheory.proof import (
+    Fst,
     ProofExpressionCombination,
+    Snd,
+    cases,
     fst,
-    snd,
     inl,
     inr,
-    cases,
-    Fst,
-    Snd,
+    snd,
 )
-from symbolize.logic.typetheory.boolean import True_, False_, ifthenelse
-from symbolize.logic.typetheory.natural import N, succ, prim, zero
+from symbolize.logic.typetheory.proposition import PropositionSymbol, implies
 from symbolize.logic.typetheory.variables import A, B, C
-from symbolize.logic.typetheory.proposition import PropositionSymbol
 
 
 class TestComputationRules(unittest.TestCase):

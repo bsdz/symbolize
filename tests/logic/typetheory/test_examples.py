@@ -6,7 +6,6 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.expressions.arity import A0, ArityArrow
 from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
 from symbolize.logic.typetheory.proof import (
     ProofExpressionCombination,
@@ -169,9 +168,7 @@ class TestDeductionRules(unittest.TestCase):
 
         outputs = {
             e: implies(exists(x, P), Q),
-            r1: forall(
-                x, implies(P, Q, target_arity=ArityArrow(A0, A0))
-            ),  # TODO: do we need to force arity?
+            r1: forall(x, implies(P, Q)),
         }
 
         for _p, _t in outputs.items():
@@ -180,7 +177,7 @@ class TestDeductionRules(unittest.TestCase):
 
         # backwards iff
         #
-        Forall_x_P_implies_Q = forall(x, implies(P, Q, target_arity=ArityArrow(A0, A0)))
+        Forall_x_P_implies_Q = forall(x, implies(P, Q))
         e = Forall_x_P_implies_Q.get_proof("e")
         Exists_x_P = exists(x, P)
         p = Exists_x_P.get_proof("p")

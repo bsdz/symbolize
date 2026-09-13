@@ -15,7 +15,7 @@ from symbolize.definitions.variables import x, y
 class DefinitionsTest(unittest.TestCase):
     def test_natrec(self):
         self.assertEqual(repr(natrec.arity), '(∅ ⨯ ∅ ⨯ ((∅ ⨯ ∅) ⟶ ∅)) ⟶ ∅')
-    
+
     def test_listrec(self):
         self.assertEqual(repr(listrec.arity), '(∅ ⨯ ∅ ⨯ ((∅ ⨯ ∅ ⨯ ∅) ⟶ ∅)) ⟶ ∅')
 

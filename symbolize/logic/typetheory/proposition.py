@@ -155,7 +155,7 @@ class ForallPropositionExpression(PropositionLogicQuantificationExpression):
 
 
 class ForallPropositionSymbol(PropositionLogicQuantificationSymbol):
-    __arity__ = ArityArrow(ArityCross(A0, ArityArrow(A0, A0)), A0)
+    __arity__ = ArityArrow(ArityCross(A0, A0), A0)
     __application_class__ = ForallPropositionExpression
 
 

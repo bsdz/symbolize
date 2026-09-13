@@ -93,10 +93,9 @@ class ExpressionTest(unittest.TestCase):
         # self.assertEqual(x.substitute(y, z).arity, '')
 
     def test_walk(self):
-        u, v, w, x, y, z = [Symbol(i) for i in "uvwxyz"]
-
-        u.arity = ArityArrow(ArityCross(A0, A0), A0)
-        w.arity = ArityArrow(ArityCross(A0, A0, A0), A0)
+        u = Symbol("u", arity=ArityArrow(ArityCross(A0, A0), A0))
+        w = Symbol("w", arity=ArityArrow(ArityCross(A0, A0, A0), A0))
+        v, x, y, z = [Symbol(i) for i in "vxyz"]
 
         collected = []
 
@@ -122,17 +121,17 @@ class ExpressionTest(unittest.TestCase):
         self.assertGreater(len(collected), len(collected2))
 
     def test_contains(self):
-        u, v, w, x, y, z = [Symbol(i) for i in "uvwxyz"]
+        u = Symbol("u", arity=ArityArrow(ArityCross(A0, A0), A0))
+        w = Symbol("w", arity=ArityArrow(ArityCross(A0, A0, A0), A0))
+        v, x, y, z = [Symbol(i) for i in "vxyz"]
         self.assertIn(x, x)
 
-        u.arity = ArityArrow(ArityCross(A0, A0), A0)
-        w.arity = ArityArrow(ArityCross(A0, A0, A0), A0)
         self.assertIn(x, u(v, w(x, y, z)))
 
     def test_contains_bind(self):
-        s, t, u, v, w, x, y, z = [Symbol(i) for i in "stuvwxyz"]
-        u.arity = ArityArrow(ArityCross(A0, A0), A0)
-        s.arity = ArityArrow(ArityCross(ArityArrow(A0, A0), A0), A0)
+        u = Symbol("u", arity=ArityArrow(ArityCross(A0, A0), A0))
+        s = Symbol("s", arity=ArityArrow(ArityCross(ArityArrow(A0, A0), A0), A0))
+        t, v, w, x, y, z = [Symbol(i) for i in "tvwxyz"]
         expr = s(u(v, w).abstract(x), t).abstract(y, z)
         for i in (x, y, z):
             self.assertTrue(expr.contains_bind(i))
@@ -140,9 +139,9 @@ class ExpressionTest(unittest.TestCase):
             self.assertFalse(expr.contains_bind(i))
 
     def test_contains_free(self):
-        r, s, t, u, v, w, x, y, z = [Symbol(i) for i in "rstuvwxyz"]
-        u.arity = ArityArrow(ArityCross(A0, A0), A0)
-        s.arity = ArityArrow(ArityCross(ArityArrow(A0, A0), A0), A0)
+        u = Symbol("u", arity=ArityArrow(ArityCross(A0, A0), A0))
+        s = Symbol("s", arity=ArityArrow(ArityCross(ArityArrow(A0, A0), A0), A0))
+        r, t, v, w, x, y, z = [Symbol(i) for i in "rtvwxyz"]
         expr = s(u(v, w).abstract(x), t).abstract(y, z)
         for i in (x, y, z):
             self.assertTrue(expr.contains_bind(i))
@@ -154,9 +153,9 @@ class ExpressionTest(unittest.TestCase):
             self.assertTrue(expr.contains_free(i))
 
     def test_replace(self):
-        s, t, u, v, w, x, y, z = [Symbol(i) for i in "stuvwxyz"]
-        u.arity = ArityArrow(ArityCross(A0, A0), A0)
-        w.arity = ArityArrow(ArityCross(A0, A0, A0), A0)
+        u = Symbol("u", arity=ArityArrow(ArityCross(A0, A0), A0))
+        w = Symbol("w", arity=ArityArrow(ArityCross(A0, A0, A0), A0))
+        s, t, v, x, y, z = [Symbol(i) for i in "stvxyz"]
 
         u1 = Symbol("u1", arity=ArityArrow(ArityCross(A0, A0), A0))
         u2 = Symbol("u2", arity=ArityArrow(ArityCross(A0, A0), A0))
@@ -184,7 +183,7 @@ class ExpressionTest(unittest.TestCase):
         gbe2 = next(gbe_gen)
 
         gbe1_u1 = deepcopy(gbe1)
-        gbe1_u1.arity = u1.arity
+        gbe1_u1._arity = u1.arity
 
         tests = [
             [u1(x, y).abstract(z).general_bind_form(), u1(x, y).abstract(gbe1)],

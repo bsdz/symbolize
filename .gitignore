@@ -119,3 +119,7 @@ bower_components
 .project
 .pydevproject
 .settings/
+
+# Local scratch and backups
+scratch.py
+*.bak.*

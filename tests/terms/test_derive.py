@@ -385,7 +385,7 @@ class TestArgument(DeriveTest):
         arg2 = Argument([arg1], a(x).abstract(x), discharges=[x], label="⇒I")
         self.assertEqual(arg2.leaves, (x, a))
         self.assertIn("⇒I", repr(arg2))
-        self.assertIn("apply(a, x) : B", repr(arg1))
+        self.assertIn("a(x) : B", repr(arg1))
 
 
 if __name__ == "__main__":

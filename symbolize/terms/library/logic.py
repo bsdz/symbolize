@@ -14,6 +14,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 from ..arity import A0, Arrow, Cross
 from ..binding import abstract
 from ..decl import SET, Param, Registry, Signature, pvar
+from ..render.notation import INFIX, PREFIX, QUANTIFIER, notation
 from ..term import Abs, Const
 from .falsum import Falsum
 from .pi import Pi
@@ -28,6 +29,13 @@ or_ = Const("∨", Arrow(Cross((A0, A0)), A0))
 not_ = Const("¬", Arrow(A0, A0))
 forall = Const("∀", Arrow(Cross((A0, FAM)), A0))
 exists = Const("∃", Arrow(Cross((A0, FAM)), A0))
+
+notation(implies, INFIX, latex=r"\Rightarrow", unicode="⟹")
+notation(and_, INFIX, latex=r"\land", unicode="∧")
+notation(or_, INFIX, latex=r"\lor", unicode="∨")
+notation(not_, PREFIX, latex=r"\neg", unicode="¬")
+notation(forall, QUANTIFIER, latex=r"\forall", unicode="∀")
+notation(exists, QUANTIFIER, latex=r"\exists", unicode="∃")
 
 _A, _B, _x = pvar("A"), pvar("B"), pvar("x")
 _F = pvar("F", FAM)

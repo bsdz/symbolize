@@ -343,7 +343,7 @@ milestone closes.
 
 ## Status and deviations (as built)
 
-Milestones 1–5 are implemented in `symbolize/terms/`. Where the code differs
+Milestones 1–6 are implemented in `symbolize/terms/`. Where the code differs
 from the sections above:
 
 - **Object-level `lam`/`apply`/`pair`** (`library/pi.py`, `sigma.py`) are the
@@ -370,6 +370,18 @@ from the sections above:
   function). `Term` has `abstract`/`subst`/`free_vars`/`in` sugar.
 - `decl.Registry` also records constructors and formers; `pvar("A")` makes
   pattern variables (`?A`) that cannot collide with user variables.
+- **Rendering** (`render/`): notation is a table keyed by constant *name*
+  (`render/notation.py`), registered by the library modules, so it is
+  independent of the registry. One `TextRenderer` serves three styles:
+  `typestring` is the faithful [BN] syntax (`⟹(A, B)`, `λ((x)b)`,
+  `apply(f, a)`, `pair(a, b)`); `unicode`/`latex` are the pretty forms of the
+  README and notebooks (`A ⟹ B`, `λ(x).b`, `f(a)`, `(a, b)`, `∀x.P(x)`).
+  Binders are rendered by opening them with fresh variables, so display
+  aliases (`p.fst.alias("fst~p")`) keyed by term keep matching under λ.
+  Quantifier domains are not shown; a family `P` renders η-expanded as
+  `∀x.P(x)`. `render/graph.py` gives DOT text and, if installed, a
+  graph-tool graph. Argument trees render to `\frac{}{}` LaTeX and to a
+  text tree; the old HTML table form was not ported.
 
 ## Non-goals (for this iteration)
 

@@ -7,12 +7,14 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from ..arity import A0, Arrow, Cross
 from ..decl import SET, Param, Rule, Signature, TypeFormer, pvar
+from ..render.notation import ATOM, notation
 from ..term import Const
 
 FAM = Arrow(A0, A0)
 STEP2 = Arrow(Cross((A0, A0)), A0)
 
 N = Const("N")
+notation(N, ATOM, latex=r"\mathbb{N}", unicode="ℕ", typestring="N")
 zero = Const("0")
 succ = Const("succ", Arrow(A0, A0))
 natrec = Const("natrec", Arrow(Cross((FAM, A0, A0, STEP2)), A0))

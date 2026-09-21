@@ -16,11 +16,13 @@ from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Tuple
 
 from .arity import A0, Arrow, cross
 from .binding import free_vars, subst_many
+from .render.notation import ATOM, notation
 from .term import (Abs, App, Comb, Const, Sel, Term, TermError, Var,
                    bound_occurrences)
 
 SET = Const("Set")
 """The sort of sets (types). There are no universes: ``Set`` has no type."""
+notation(SET, ATOM, latex=r"\mathrm{Set}", unicode="Set")
 
 
 def pvar(name: str, arity=A0) -> Var:

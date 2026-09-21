@@ -7,6 +7,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from ..arity import A0, Arrow, Cross
 from ..decl import SET, Param, Rule, Signature, TypeFormer, pvar
+from ..render.notation import QUANTIFIER, TUPLE, notation
 from ..term import Const
 
 FAM = Arrow(A0, A0)
@@ -17,6 +18,9 @@ pair = Const("pair", Arrow(Cross((A0, A0)), A0))
 split = Const("split", Arrow(Cross((FAM, A0, STEP2)), A0))
 fst = Const("fst", Arrow(A0, A0))
 snd = Const("snd", Arrow(A0, A0))
+
+notation(Sigma, QUANTIFIER, latex=r"\Sigma", unicode="Σ")
+notation(pair, TUPLE)
 
 _A, _B, _C = pvar("A"), pvar("B", FAM), pvar("C", FAM)
 _a, _b, _p, _e = pvar("a"), pvar("b"), pvar("p"), pvar("e", STEP2)

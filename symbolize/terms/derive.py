@@ -17,7 +17,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from __future__ import annotations
 
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from .arity import A0, Arrow, cross
 from .binding import abstract as _abstract_term
@@ -83,7 +83,7 @@ class Judgement:
     ``P(n)`` to give the set ``P(n)``.
     """
 
-    __slots__ = ("ctx", "term", "type", "hyps", "engine")
+    __slots__ = ("ctx", "term", "type", "hyps", "engine", "aliases")
 
     def __init__(
         self,
@@ -93,12 +93,14 @@ class Judgement:
         hyps: Sequence[Tuple[Var, Term]] = (),
         engine: Engine = DEFAULT,
         check: bool = True,
+        aliases: Optional[Dict[Term, str]] = None,
     ):
         self.ctx = ctx
         self.term = term
         self.type = type
         self.hyps = tuple(hyps)
         self.engine = engine
+        self.aliases: Dict[Term, str] = dict(aliases or {})
         if check and not self.hyps:
             engine.checker.check(ctx, term, type)
 
@@ -151,6 +153,37 @@ class Judgement:
     def repr_full(self) -> str:
         """Include the hypotheses."""
         return "%r  %r" % (self, self.ctx)
+
+    # -- rendering -------------------------------------------------------------
+
+    def alias(self, name: str) -> "Judgement":
+        """Display this judgement's term as ``name`` (rendering only)."""
+        aliases = dict(self.aliases)
+        aliases[self.term] = name
+        return Judgement(
+            self.ctx, self.term, self.type, self.hyps, self.engine, False, aliases
+        )
+
+    def _renderer(self, style: str):
+        from .render.text import TextRenderer
+
+        return TextRenderer(style, self.aliases)
+
+    def repr_typestring(self) -> str:
+        return self._renderer("typestring").render_judgement(self)
+
+    def repr_unicode(self) -> str:
+        return self._renderer("unicode").render_judgement(self)
+
+    def repr_latex(self) -> str:
+        return self._renderer("latex").render_judgement(self)
+
+    def repr_context(self, style: str = "unicode") -> str:
+        return self._renderer(style).render_context(self.ctx)
+
+    def _repr_latex_(self) -> str:
+        """For Jupyter/IPython."""
+        return "$$%s$$" % self.repr_latex()
 
     # -- rules as methods ---------------------------------------------------------
 
@@ -208,7 +241,9 @@ class Judgement:
         return self._with_term(self.engine.whnf(self.term))
 
     def _with_term(self, term: Term) -> "Judgement":
-        return Judgement(self.ctx, term, self.type, self.hyps, self.engine, check=False)
+        return Judgement(
+            self.ctx, term, self.type, self.hyps, self.engine, False, self.aliases
+        )
 
     # -- connectives on sets -----------------------------------------------------
 
@@ -358,7 +393,12 @@ def apply(f: Judgement, a: Judgement) -> Judgement:
     _expect_type(a, dom)
     ctx = merge(f.ctx, a.ctx)
     return Judgement(
-        ctx, _apply(f.term, a.term), _at(fam, a.term), engine=engine, check=False
+        ctx,
+        _apply(f.term, a.term),
+        _at(fam, a.term),
+        engine=engine,
+        check=False,
+        aliases=_aliases(f, a),
     )
 
 
@@ -383,7 +423,9 @@ def abstract(b: Judgement, x: Judgement) -> Judgement:
         type = _forall(x.type, _abstract_term(b.type, [var]))
     else:
         type = _implies(x.type, b.type)
-    return Judgement(ctx, term, type, engine=b.engine, check=False)
+    return Judgement(
+        ctx, term, type, engine=b.engine, check=False, aliases=_aliases(b, x)
+    )
 
 
 def pair(a: Judgement, b: Judgement, family: Optional[Term] = None) -> Judgement:
@@ -398,24 +440,52 @@ def pair(a: Judgement, b: Judgement, family: Optional[Term] = None) -> Judgement
     term = _pair(a.term, b.term)
     if family is not None:
         _expect_type(b, _at(family, a.term))
-        return Judgement(ctx, term, _exists(a.type, family), engine=engine, check=False)
+        return Judgement(
+            ctx,
+            term,
+            _exists(a.type, family),
+            engine=engine,
+            check=False,
+            aliases=_aliases(a, b),
+        )
     if isinstance(a.term, Var) and a.term in b.type:
         fam = _abstract_term(b.type, [a.term])
-        return Judgement(ctx, term, _exists(a.type, fam), engine=engine, check=False)
-    return Judgement(ctx, term, _and(a.type, b.type), engine=engine, check=False)
+        return Judgement(
+            ctx,
+            term,
+            _exists(a.type, fam),
+            engine=engine,
+            check=False,
+            aliases=_aliases(a, b),
+        )
+    return Judgement(
+        ctx,
+        term,
+        _and(a.type, b.type),
+        engine=engine,
+        check=False,
+        aliases=_aliases(a, b),
+    )
 
 
 def fst(p: Judgement) -> Judgement:
     """∧E / ∃E: ``p ∈ Σ(A, B)``  ⊢  ``fst(p) ∈ A``."""
     dom, _ = _expect_former(p, Sigma, "a pair")
-    return Judgement(p.ctx, _fst(p.term), dom, engine=p.engine, check=False)
+    return Judgement(
+        p.ctx, _fst(p.term), dom, engine=p.engine, check=False, aliases=_aliases(p)
+    )
 
 
 def snd(p: Judgement) -> Judgement:
     """∧E / ∃E: ``p ∈ Σ(A, B)``  ⊢  ``snd(p) ∈ B(fst(p))``."""
     _, fam = _expect_former(p, Sigma, "a pair")
     return Judgement(
-        p.ctx, _snd(p.term), _at(fam, _fst(p.term)), engine=p.engine, check=False
+        p.ctx,
+        _snd(p.term),
+        _at(fam, _fst(p.term)),
+        engine=p.engine,
+        check=False,
+        aliases=_aliases(p),
     )
 
 
@@ -424,7 +494,12 @@ def inl(a: Judgement, b_set: Judgement) -> Judgement:
     _require_set(b_set)
     ctx = merge(a.ctx, b_set.ctx)
     return Judgement(
-        ctx, _inl(a.term), _or(a.type, b_set.term), engine=a.engine, check=False
+        ctx,
+        _inl(a.term),
+        _or(a.type, b_set.term),
+        engine=a.engine,
+        check=False,
+        aliases=_aliases(a),
     )
 
 
@@ -433,7 +508,12 @@ def inr(b: Judgement, a_set: Judgement) -> Judgement:
     _require_set(a_set)
     ctx = merge(b.ctx, a_set.ctx)
     return Judgement(
-        ctx, _inr(b.term), _or(a_set.term, b.type), engine=b.engine, check=False
+        ctx,
+        _inr(b.term),
+        _or(a_set.term, b.type),
+        engine=b.engine,
+        check=False,
+        aliases=_aliases(b),
     )
 
 
@@ -451,7 +531,14 @@ def cases(p: Judgement, f: Judgement, g: Judgement) -> Judgement:
     if not engine.defeq(c, _constant_codomain(gc, g)):
         raise DerivationError("%r and %r have different conclusions" % (f, g))
     ctx = merge(p.ctx, f.ctx, g.ctx)
-    return Judgement(ctx, _cases(p.term, f.term, g.term), c, engine=engine, check=False)
+    return Judgement(
+        ctx,
+        _cases(p.term, f.term, g.term),
+        c,
+        engine=engine,
+        check=False,
+        aliases=_aliases(p, f, g),
+    )
 
 
 def abort(p: Judgement, set_: Judgement) -> Judgement:
@@ -461,7 +548,12 @@ def abort(p: Judgement, set_: Judgement) -> Judgement:
         raise DerivationError("%r is not a proof of ⊥" % (p,))
     ctx = merge(p.ctx, set_.ctx)
     return Judgement(
-        ctx, _abort(set_.term, p.term), set_.term, engine=p.engine, check=False
+        ctx,
+        _abort(set_.term, p.term),
+        set_.term,
+        engine=p.engine,
+        check=False,
+        aliases=_aliases(p),
     )
 
 
@@ -488,7 +580,14 @@ def natrec(
     )
     ctx = merge(n.ctx, d.ctx, f.ctx)
     term = _natrec(motive, n.term, d.term, step)
-    return Judgement(ctx, term, _at(motive, n.term), engine=engine, check=False)
+    return Judgement(
+        ctx,
+        term,
+        _at(motive, n.term),
+        engine=engine,
+        check=False,
+        aliases=_aliases(n, d, f),
+    )
 
 
 prim = natrec
@@ -501,7 +600,9 @@ def ifthenelse(b: Judgement, c: Judgement, d: Judgement) -> Judgement:
         raise DerivationError("%r and %r have different types" % (c, d))
     ctx = merge(b.ctx, c.ctx, d.ctx)
     term = _ifthenelse(b.term, c.term, d.term)
-    return Judgement(ctx, term, c.type, engine=b.engine, check=False)
+    return Judgement(
+        ctx, term, c.type, engine=b.engine, check=False, aliases=_aliases(b, c, d)
+    )
 
 
 def substitute(b: Judgement, x: Judgement, a: Judgement) -> Judgement:
@@ -562,13 +663,26 @@ class Argument:
             out.extend(p.leaves if isinstance(p, Argument) else (p,))
         return tuple(out)
 
+    def _renderer(self, style: str):
+        from .render.text import TextRenderer
+
+        aliases: dict = {}
+        for j in self.leaves + (self.conclusion,):
+            aliases.update(j.aliases)
+        return TextRenderer(style, aliases)
+
+    def repr_unicode(self) -> str:
+        return self._renderer("unicode").render_argument(self)
+
+    def repr_latex(self) -> str:
+        return self._renderer("latex").render_argument(self)
+
     def __repr__(self) -> str:
-        top = "   ".join(repr(p) for p in self.premises)
-        if self.discharges:
-            top = "[%s] ... %s" % (", ".join(repr(d) for d in self.discharges), top)
-        label = " (%s)" % self.label if self.label else ""
-        width = max(len(top), len(repr(self.conclusion)))
-        return "%s\n%s%s\n%s" % (top, "-" * width, label, self.conclusion)
+        return self.repr_unicode()
+
+    def _repr_latex_(self) -> str:
+        """For Jupyter/IPython."""
+        return "$$%s$$" % self.repr_latex()
 
 
 # -- contexts -------------------------------------------------------------------------
@@ -618,6 +732,14 @@ def discharge(ctx: Context, var: Var) -> Context:
 
 def _term_of(x: Union[Judgement, Term]) -> Term:
     return x.term if isinstance(x, Judgement) else x
+
+
+def _aliases(*premises: Judgement) -> Dict[Term, str]:
+    """Display aliases inherited from the premises of a rule."""
+    out: Dict[Term, str] = {}
+    for p in premises:
+        out.update(p.aliases)
+    return out
 
 
 def _require_set(j: Judgement) -> None:

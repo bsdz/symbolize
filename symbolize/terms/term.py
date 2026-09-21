@@ -72,6 +72,32 @@ class Term:
         """``x in t``: does the free variable ``x`` occur in ``t``?"""
         return isinstance(var, Var) and var in self.free_vars
 
+    # -- rendering ------------------------------------------------------------
+
+    def repr_typestring(self) -> str:
+        from .render.text import TextRenderer
+
+        return TextRenderer("typestring").render(self)
+
+    def repr_unicode(self) -> str:
+        from .render.text import TextRenderer
+
+        return TextRenderer("unicode").render(self)
+
+    def repr_latex(self) -> str:
+        from .render.text import TextRenderer
+
+        return TextRenderer("latex").render(self)
+
+    def repr_dot(self) -> str:
+        from .render.graph import dot
+
+        return dot(self)
+
+    def _repr_latex_(self) -> str:
+        """For Jupyter/IPython."""
+        return "$$%s$$" % self.repr_latex()
+
 
 @dataclass(frozen=True, repr=False)
 class Var(Term):

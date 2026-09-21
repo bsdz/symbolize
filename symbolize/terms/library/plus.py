@@ -7,12 +7,14 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from ..arity import A0, Arrow, Cross
 from ..decl import SET, Param, Rule, Signature, TypeFormer, pvar
+from ..render.notation import INFIX, notation
 from ..term import Abs, Const
 from .pi import Pi, apply
 
 FAM = Arrow(A0, A0)
 
 Plus = Const("+", Arrow(Cross((A0, A0)), A0))
+notation(Plus, INFIX, latex="+", unicode="+")
 inl = Const("inl", Arrow(A0, A0))
 inr = Const("inr", Arrow(A0, A0))
 when = Const("when", Arrow(Cross((FAM, A0, FAM, FAM)), A0))

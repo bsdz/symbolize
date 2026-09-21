@@ -7,6 +7,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from ..arity import A0, Arrow, Cross
 from ..decl import SET, Param, Rule, Signature, TypeFormer, pvar
+from ..render.notation import APPLY, BINDER, QUANTIFIER, notation
 from ..term import Const
 
 FAM = Arrow(A0, A0)
@@ -14,6 +15,10 @@ FAM = Arrow(A0, A0)
 Pi = Const("Π", Arrow(Cross((A0, FAM)), A0))
 lam = Const("λ", Arrow(FAM, A0))
 apply = Const("apply", Arrow(Cross((A0, A0)), A0))
+
+notation(Pi, QUANTIFIER, latex=r"\Pi", unicode="Π")
+notation(lam, BINDER, latex=r"\lambda", unicode="λ")
+notation(apply, APPLY)
 
 _A, _B, _b = pvar("A"), pvar("B", FAM), pvar("b", FAM)
 _a, _f, _x = pvar("a"), pvar("f"), pvar("x")

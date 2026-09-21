@@ -10,40 +10,12 @@ import unittest
 from symbolize.terms import A0, Abs, Arrow, Const, Cross, Var, abstract
 from symbolize.terms.check import Checker, Context, TypingError
 from symbolize.terms.decl import SET
-from symbolize.terms.library import (
-    STANDARD,
-    Bool,
-    Falsum,
-    N,
-    Pi,
-    Plus,
-    Sigma,
-    abort,
-    and_,
-    apply,
-    boolrec,
-    cases,
-    exists,
-    false,
-    forall,
-    fst,
-    ifthenelse,
-    implies,
-    inl,
-    inr,
-    lam,
-    natrec,
-    not_,
-    numeral,
-    or_,
-    pair,
-    snd,
-    split,
-    succ,
-    true,
-    when,
-    zero,
-)
+from symbolize.terms.library import (STANDARD, Bool, Falsum, N, Pi, Plus,
+                                     Sigma, abort, and_, apply, boolrec, cases,
+                                     exists, false, forall, fst, ifthenelse,
+                                     implies, inl, inr, lam, natrec, not_,
+                                     numeral, or_, pair, snd, split, succ,
+                                     true, when, zero)
 
 
 def const_family(body):

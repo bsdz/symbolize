@@ -18,7 +18,8 @@ from .arity import A0
 from .binding import free_vars, instantiate, subst_many, transform
 from .decl import SET, Param, Registry, Signature, match
 from .eval import Evaluator, beta
-from .term import Abs, App, Const, Term, TermError, Var, _fresh_names, is_closed
+from .term import (Abs, App, Const, Term, TermError, Var, _fresh_names,
+                   is_closed)
 
 
 class TypingError(TermError):

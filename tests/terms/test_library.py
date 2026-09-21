@@ -9,38 +9,11 @@ import unittest
 
 from symbolize.terms import A0, Abs, Arrow, Const, Var, abstract
 from symbolize.terms.eval import Evaluator
-from symbolize.terms.library import (
-    STANDARD,
-    Falsum,
-    N,
-    Pi,
-    Plus,
-    Sigma,
-    and_,
-    apply,
-    boolrec,
-    cases,
-    exists,
-    false,
-    forall,
-    fst,
-    ifthenelse,
-    implies,
-    inl,
-    inr,
-    lam,
-    natrec,
-    not_,
-    numeral,
-    or_,
-    pair,
-    snd,
-    split,
-    succ,
-    true,
-    when,
-    zero,
-)
+from symbolize.terms.library import (STANDARD, Falsum, N, Pi, Plus, Sigma,
+                                     and_, apply, boolrec, cases, exists,
+                                     false, forall, fst, ifthenelse, implies,
+                                     inl, inr, lam, natrec, not_, numeral, or_,
+                                     pair, snd, split, succ, true, when, zero)
 
 
 class LibraryTest(unittest.TestCase):

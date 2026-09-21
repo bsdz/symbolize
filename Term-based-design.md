@@ -341,6 +341,36 @@ Milestone 3 may start with hand-coded `match` cases for `N` and `Bool` to get
 `whnf` working end-to-end, then move them into the registry before the
 milestone closes.
 
+## Status and deviations (as built)
+
+Milestones 1–5 are implemented in `symbolize/terms/`. Where the code differs
+from the sections above:
+
+- **Object-level `lam`/`apply`/`pair`** (`library/pi.py`, `sigma.py`) are the
+  proof constructors, as in [BN]; meta-level `Abs`/`Comb` are only the
+  binding and tupling syntax. Open question 4 is resolved: `Comb`/`Sel` stay,
+  and `f((a, b))` normalises to `f(a, b)` at construction.
+- **Hypothetical premises** in signatures (`Param.hyps`) express
+  `e(x, y) ∈ C(succ(x)) [x ∈ N, y ∈ C(x)]` directly, so `natrec`, `split`
+  and `when` follow the [BN] rule tables; `fst`/`snd`/`cases`/`ifthenelse`
+  are the non-dependent [ST] forms as separate primitives.
+- **Inference limits are by design**: `pair`, `inl`, `lam` and an applied `lam`
+  have no inferable type. The derivation layer (`derive.py`) computes
+  conclusion types from premise types rule by rule and does not re-infer
+  composite proof terms; `judge(term, type)` runs the checker for terms that
+  are checkable.
+- **`Judgement` lives in `derive.py`**, not `check.py`; it carries an
+  `Engine` (registry + evaluator + checker) so `run()`/`whnf()` need no
+  arguments. Judgement equality includes the context.
+- **Discharge is checked**: `abstract` refuses to bind a variable that an
+  undischarged hypothesis depends on (the ∀I side condition), and allows a
+  vacuous discharge.
+- **Old spellings kept as aliases**: `get_proof` (= `hyp`), `.apply()`,
+  `.select(i)`; `prim` (= `natrec` with the motive read off the step
+  function). `Term` has `abstract`/`subst`/`free_vars`/`in` sugar.
+- `decl.Registry` also records constructors and formers; `pvar("A")` makes
+  pattern variables (`?A`) that cannot collide with user variables.
+
 ## Non-goals (for this iteration)
 
 - Universes (`Set ∈ Type`), and therefore polymorphic definitions. `SET` is a

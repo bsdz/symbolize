@@ -16,7 +16,8 @@ from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Tuple
 
 from .arity import A0, Arrow, cross
 from .binding import free_vars, subst_many
-from .term import Abs, App, Comb, Const, Sel, Term, TermError, Var, bound_occurrences
+from .term import (Abs, App, Comb, Const, Sel, Term, TermError, Var,
+                   bound_occurrences)
 
 SET = Const("Set")
 """The sort of sets (types). There are no universes: ``Set`` has no type."""

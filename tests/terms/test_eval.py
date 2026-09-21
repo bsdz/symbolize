@@ -6,18 +6,8 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.terms import (
-    A0,
-    Abs,
-    Arrow,
-    Bound,
-    Comb,
-    Const,
-    Cross,
-    Sel,
-    Var,
-    abstract,
-)
+from symbolize.terms import (A0, Abs, Arrow, Bound, Comb, Const, Cross, Sel,
+                             Var, abstract)
 from symbolize.terms.decl import DeclarationError, Registry, Rule
 from symbolize.terms.eval import Evaluator, ReductionLimit, defeq, nf, whnf
 

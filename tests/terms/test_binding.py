@@ -6,27 +6,10 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.terms import (
-    A0,
-    Abs,
-    ArityError,
-    Arrow,
-    Bound,
-    Comb,
-    Const,
-    Cross,
-    Sel,
-    TermError,
-    Var,
-    abstract,
-    contains_free,
-    free_vars,
-    instantiate,
-    is_closed,
-    open_abs,
-    subst,
-    subst_many,
-)
+from symbolize.terms import (A0, Abs, ArityError, Arrow, Bound, Comb, Const,
+                             Cross, Sel, TermError, Var, abstract,
+                             contains_free, free_vars, instantiate, is_closed,
+                             open_abs, subst, subst_many)
 
 
 class TestFreeVars(unittest.TestCase):
@@ -149,6 +132,20 @@ class TestAbstractInstantiate(unittest.TestCase):
         b = abstract(self.g(self.x, self.y), [self.x], hints=["y"])
         (v3,), body3 = open_abs(b)
         self.assertEqual(v3.name, "y'")
+
+
+class TestTermSugar(unittest.TestCase):
+    def test_methods_delegate(self):
+        x, y = Var("x"), Var("y")
+        g = Const("g", Arrow(Cross((A0, A0)), A0))
+        t = g(x, y)
+        self.assertEqual(t.abstract(x), abstract(t, [x]))
+        self.assertEqual(t.abstract(x, y), abstract(t, [x, y]))
+        self.assertEqual(t.subst(x, y), subst(t, x, y))
+        self.assertEqual(t.free_vars, {x, y})
+        self.assertIn(x, t)
+        self.assertNotIn(x, t.abstract(x))
+        self.assertNotIn("x", t)
 
 
 class TestSubst(unittest.TestCase):

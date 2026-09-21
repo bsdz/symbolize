@@ -18,7 +18,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterator, List, Optional, Sequence, Tuple
+from typing import FrozenSet, Iterator, List, Optional, Sequence, Tuple
 
 from .arity import A0, Arity, Arrow, Cross, cross
 
@@ -47,6 +47,30 @@ class Term:
 
     def __repr__(self) -> str:
         return _repr(self, [])
+
+    # -- conveniences delegating to binding.py -------------------------------
+
+    def abstract(self, *variables: "Var") -> "Abs":
+        """``t.abstract(x, y)`` is ``(x, y)t``."""
+        from .binding import abstract
+
+        return abstract(self, variables)
+
+    def subst(self, var: "Var", replacement: Term) -> Term:
+        """``t.subst(x, a)`` is ``t[x := a]``."""
+        from .binding import subst
+
+        return subst(self, var, replacement)
+
+    @property
+    def free_vars(self) -> FrozenSet["Var"]:
+        from .binding import free_vars
+
+        return free_vars(self)
+
+    def __contains__(self, var: object) -> bool:
+        """``x in t``: does the free variable ``x`` occur in ``t``?"""
+        return isinstance(var, Var) and var in self.free_vars
 
 
 @dataclass(frozen=True, repr=False)

@@ -6,23 +6,9 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.terms import (
-    A0,
-    Abs,
-    App,
-    ArityError,
-    Arrow,
-    Bound,
-    Comb,
-    Const,
-    Cross,
-    Sel,
-    TermError,
-    Var,
-    arrow,
-    cross,
-    is_closed,
-)
+from symbolize.terms import (A0, Abs, App, ArityError, Arrow, Bound, Comb,
+                             Const, Cross, Sel, TermError, Var, arrow, cross,
+                             is_closed)
 
 
 class TestArity(unittest.TestCase):

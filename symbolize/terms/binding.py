@@ -12,21 +12,11 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from __future__ import annotations
 
-from typing import Callable, Dict, FrozenSet, Iterable, Optional, Sequence, Tuple
+from typing import (Callable, Dict, FrozenSet, Iterable, Optional, Sequence,
+                    Tuple)
 
-from .term import (
-    Abs,
-    App,
-    ArityError,
-    Bound,
-    Comb,
-    Sel,
-    Term,
-    TermError,
-    Var,
-    _fresh_names,
-    children,
-)
+from .term import (Abs, App, ArityError, Bound, Comb, Sel, Term, TermError,
+                   Var, _fresh_names, children)
 
 Transform = Callable[[Term, int], Optional[Term]]
 

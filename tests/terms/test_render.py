@@ -10,12 +10,35 @@ import unittest
 
 from symbolize.terms import A0, Arrow, Const, Var
 from symbolize.terms.decl import SET
-from symbolize.terms.derive import (Argument, cases, exists, family, forall,
-                                    hyp, inl, inr, judge, pair, prim, set_var)
-from symbolize.terms.library import (Falsum, N, and_, apply, implies, lam,
-                                     natrec, not_, numeral, or_, succ, zero)
-from symbolize.terms.render import (TextRenderer, dot, latex, tree, typestring,
-                                    unicode)
+from symbolize.terms.derive import (
+    Argument,
+    cases,
+    exists,
+    family,
+    forall,
+    hyp,
+    inl,
+    inr,
+    judge,
+    pair,
+    prim,
+    set_var,
+)
+from symbolize.terms.library import (
+    Falsum,
+    N,
+    and_,
+    apply,
+    implies,
+    lam,
+    natrec,
+    not_,
+    numeral,
+    or_,
+    succ,
+    zero,
+)
+from symbolize.terms.render import TextRenderer, dot, latex, tree, typestring, unicode
 
 
 class TestTerms(unittest.TestCase):
@@ -87,6 +110,10 @@ class TestTerms(unittest.TestCase):
         )
         # applying a lambda directly
         self.assertEqual(latex(apply(lam(e.abstract(x)), a)), r"(\lambda{}(x).e)(a)")
+        # a pair body is already parenthesised
+        from symbolize.terms.library import pair
+
+        self.assertEqual(latex(lam(pair(a, b).abstract(x))), r"\lambda{}(x).(a, b)")
 
     def test_pairs_and_projections(self):
         from symbolize.terms.library import fst, pair, snd

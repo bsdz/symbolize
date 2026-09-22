@@ -139,7 +139,11 @@ class TextRenderer:
         is not (``λ(a).λ(b).λ(x).(b(a(x)))``)."""
         inner, opened, inner_scope = self._open(body, scope)
         rendered = self._render(opened, inner_scope)
-        if isinstance(opened, App) and self._kind(opened) not in (BINDER, QUANTIFIER):
+        if isinstance(opened, App) and self._kind(opened) not in (
+            BINDER,
+            QUANTIFIER,
+            TUPLE,
+        ):
             rendered = "(%s)" % rendered
         if self.style == "latex":
             return "%s{}(%s).%s" % (sym, ", ".join(inner), rendered)

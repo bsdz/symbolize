@@ -370,6 +370,15 @@ from the sections above:
   function). `Term` has `abstract`/`subst`/`free_vars`/`in` sugar.
 - `decl.Registry` also records constructors and formers; `pvar("A")` makes
   pattern variables (`?A`) that cannot collide with user variables.
+- **Identity type** (`library/identity.py`, added after milestone 6): `Id`,
+  `refl` and the `J` eliminator (`idpeel` in [BN] ch. 8), with the rule
+  `J(C, refl(a), d) = d(a)`. `derive.py` adds `eq` (formation), `refl`,
+  `symm`, `trans`, `cong` and `transport`, each computing the `J` motive
+  from its premises' types rather than asking the user for one — the same
+  approach as `prim`. A new `EQUATION` notation kind renders `Id(A, a, b)`
+  as `a = b` in the pretty styles while typestring stays faithful.
+  Propositional equality is deliberately weaker than the definitional
+  equality decided by `defeq`; `refl` bridges the two.
 - **Rendering** (`render/`): notation is a table keyed by constant *name*
   (`render/notation.py`), registered by the library modules, so it is
   independent of the registry. One `TextRenderer` serves three styles:
@@ -387,8 +396,9 @@ from the sections above:
 
 - Universes (`Set ∈ Type`), and therefore polymorphic definitions. `SET` is a
   single built-in sort for formation judgements only.
-- Identity type, lists, W-types — straightforward to add as declarations once
-  the core exists.
+- Lists, W-types — straightforward to add as declarations once the core
+  exists. (The identity type is no longer a non-goal: it is implemented in
+  `library/identity.py`, see below.)
 - General inductive schema / recursor generation (§2 keeps the door open).
 - `Prop` / proof irrelevance (see `Other-proof-engines.md`).
 - Elaboration: implicit arguments, motive inference beyond the constant case,

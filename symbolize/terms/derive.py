@@ -25,7 +25,10 @@ from .binding import free_vars, instantiate, open_abs, subst
 from .check import Checker, Context
 from .decl import SET, Param, Registry
 from .eval import Evaluator
-from .library import STANDARD, Bool, Falsum, N, Pi, Plus, Sigma
+from .library import STANDARD, Bool, Falsum
+from .library import Id as _Id
+from .library import J as _J
+from .library import N, Pi, Plus, Sigma
 from .library import abort as _abort
 from .library import and_ as _and
 from .library import apply as _apply
@@ -42,6 +45,7 @@ from .library import natrec as _natrec
 from .library import not_ as _not
 from .library import or_ as _or
 from .library import pair as _pair
+from .library import refl as _refl
 from .library import snd as _snd
 from .library import succ, zero
 from .term import Abs, App, Const, Term, TermError, Var, _fresh_names
@@ -226,6 +230,29 @@ class Judgement:
     def abort(self, set_: "Judgement") -> "Judgement":
         return abort(self, set_)
 
+    def eq(self, other: "Judgement") -> "Judgement":
+        """The set ``Id(A, self, other)``."""
+        return eq(self, other)
+
+    @property
+    def refl(self) -> "Judgement":
+        return refl(self)
+
+    @property
+    def symm(self) -> "Judgement":
+        return symm(self)
+
+    def trans(self, other: "Judgement") -> "Judgement":
+        return trans(self, other)
+
+    def cong(self, p: "Judgement") -> "Judgement":
+        """``f.cong(p)``: congruence of this function over the identity ``p``."""
+        return cong(self, p)
+
+    def transport(self, p: "Judgement", c: "Judgement") -> "Judgement":
+        """``P.transport(p, c)``: carry ``c`` along ``p``."""
+        return transport(self, p, c)
+
     def subst(self, var: "Judgement", value: "Judgement") -> "Judgement":
         return substitute(self, var, value)
 
@@ -370,6 +397,24 @@ def forall(x: Judgement, body: Judgement) -> Judgement:
 
 def exists(x: Judgement, body: Judgement) -> Judgement:
     return _quantify(_exists, x, body)
+
+
+def eq(a: Judgement, b: Judgement) -> Judgement:
+    """Id-formation: ``a ∈ A``, ``b ∈ A``  ⊢  ``Id(A, a, b) set``."""
+    engine = a.engine
+    if not engine.defeq(a.type, b.type):
+        raise DerivationError(
+            "%r and %r are elements of different sets: %r and %r"
+            % (a, b, a.type, b.type)
+        )
+    return Judgement(
+        merge(a.ctx, b.ctx),
+        _Id(a.type, a.term, b.term),
+        SET,
+        engine=engine,
+        check=False,
+        aliases=_aliases(a, b),
+    )
 
 
 def apply_family(fam: Judgement, *args: Judgement) -> Judgement:
@@ -631,6 +676,133 @@ def substitute(b: Judgement, x: Judgement, a: Judgement) -> Judgement:
         engine=b.engine,
         check=False,
     )
+
+
+# -- identity ([BN] ch. 8) -----------------------------------------------------------
+
+
+def refl(a: Judgement) -> Judgement:
+    """Id-introduction: ``a ∈ A``  ⊢  ``refl(a) ∈ Id(A, a, a)``."""
+    return Judgement(
+        a.ctx,
+        _refl(a.term),
+        _Id(a.type, a.term, a.term),
+        engine=a.engine,
+        check=False,
+        aliases=_aliases(a),
+    )
+
+
+def endpoints(p: Judgement) -> Tuple[Term, Term, Term]:
+    """``(A, a, b)`` from ``p ∈ Id(A, a, b)``."""
+    t = p.engine.whnf(p.type)
+    if not (isinstance(t, App) and t.fn == _Id):
+        raise DerivationError(
+            "%r is not a proof of an identity: its type is %r" % (p, p.type)
+        )
+    return t.args[0], t.args[1], t.args[2]
+
+
+def elim(
+    p: Judgement, motive: Term, base: Term, type: Term, *inherit: Judgement
+) -> Judgement:
+    """``J(motive, p, base)`` with the conclusion type supplied by the rule."""
+    ctx = merge(p.ctx, *[j.ctx for j in inherit])
+    return Judgement(
+        ctx,
+        _J(motive, p.term, base),
+        type,
+        engine=p.engine,
+        check=False,
+        aliases=_aliases(p, *inherit),
+    )
+
+
+def symm(p: Judgement) -> Judgement:
+    """``p ∈ Id(A, a, b)``  ⊢  ``Id(A, b, a)``."""
+    A, a, b = endpoints(p)
+    x, y, z = _fresh(p, A, a, b)
+    motive = _Id(A, y, x).abstract(x, y, z)
+    base = _refl(x).abstract(x)
+    return elim(p, motive, base, _Id(A, b, a))
+
+
+def trans(p: Judgement, q: Judgement) -> Judgement:
+    """``p ∈ Id(A, a, b)``, ``q ∈ Id(A, b, c)``  ⊢  ``Id(A, a, c)``."""
+    engine = p.engine
+    A, a, b = endpoints(p)
+    A2, b2, c = endpoints(q)
+    if not engine.defeq(A, A2):
+        raise DerivationError("%r and %r are identities in different sets" % (p, q))
+    if not engine.defeq(b, b2):
+        raise DerivationError("%r ends at %r but %r starts at %r" % (p, b, q, b2))
+    x, y, z = _fresh(p, q, A, a, b, c)
+    motive = _implies(_Id(A, a, x), _Id(A, a, y)).abstract(x, y, z)
+    w = Var(_fresh_names(["w"], (), {v.name for v in free_vars(A) | free_vars(a)})[0])
+    base = _lam(w.abstract(w)).abstract(x)
+    composed = elim(q, motive, base, _implies(_Id(A, a, b), _Id(A, a, c)), p)
+    return Judgement(
+        composed.ctx,
+        _apply(composed.term, p.term),
+        _Id(A, a, c),
+        engine=engine,
+        check=False,
+        aliases=_aliases(p, q),
+    )
+
+
+def cong(f: Judgement, p: Judgement) -> Judgement:
+    """``f ∈ A ⇒ B``, ``p ∈ Id(A, a, b)``  ⊢  ``Id(B, f(a), f(b))``."""
+    engine = f.engine
+    dom, fam = _expect_former(f, Pi, "a function")
+    B = _constant_codomain(fam, f)
+    A, a, b = endpoints(p)
+    if not engine.defeq(dom, A):
+        raise DerivationError("%r does not accept elements of %r" % (f, A))
+    x, y, z = _fresh(f, p, A, B, a, b)
+    motive = _Id(B, _apply(f.term, x), _apply(f.term, y)).abstract(x, y, z)
+    base = _refl(_apply(f.term, x)).abstract(x)
+    type = _Id(B, _apply(f.term, a), _apply(f.term, b))
+    return elim(p, motive, base, type, f)
+
+
+def transport(fam: Judgement, p: Judgement, c: Judgement) -> Judgement:
+    """``P(z) set [z ∈ A]``, ``p ∈ Id(A, a, b)``, ``c ∈ P(a)``  ⊢  ``P(b)``.
+
+    Substitution of equals for equals: a proof of a family at one endpoint
+    is carried to the other.
+    """
+    engine = p.engine
+    A, a, b = endpoints(p)
+    if not (fam.is_family and len(fam.hyps) == 1):
+        raise DerivationError("%r is not a family of one argument" % (fam,))
+    if not engine.defeq(fam.hyps[0][1], A):
+        raise DerivationError("%r is not a family over %r" % (fam, A))
+    _expect_type(c, _at(fam.term, a))
+    x, y, z = _fresh(fam, p, c, A, a, b)
+    motive = _implies(_at(fam.term, x), _at(fam.term, y)).abstract(x, y, z)
+    w = Var(_fresh_names(["w"], (), {v.name for v in free_vars(fam.term)})[0])
+    base = _lam(w.abstract(w)).abstract(x)
+    carrier = elim(p, motive, base, _implies(_at(fam.term, a), _at(fam.term, b)), fam)
+    return Judgement(
+        merge(carrier.ctx, c.ctx),
+        _apply(carrier.term, c.term),
+        _at(fam.term, b),
+        engine=engine,
+        check=False,
+        aliases=_aliases(fam, p, c),
+    )
+
+
+def _fresh(*parts: Union[Judgement, Term]) -> Tuple[Var, ...]:
+    """Three fresh variables for a J motive, avoiding every name in ``parts``."""
+    avoid = set()
+    for part in parts:
+        term = part.term if isinstance(part, Judgement) else part
+        avoid |= {v.name for v in free_vars(term)}
+        if isinstance(part, Judgement):
+            avoid |= set(part.ctx.names())
+    return tuple(Var(n) for n in _fresh_names(["x", "y", "z"], (), avoid))
 
 
 # -- derivation trees ---------------------------------------------------------------

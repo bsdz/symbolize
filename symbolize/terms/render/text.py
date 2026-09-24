@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING, Dict, Optional, Sequence, Set, Tuple
 
 from ..binding import free_vars, instantiate
 from ..term import Abs, App, Bound, Comb, Const, Sel, Term, Var, _fresh_names
-from .notation import APPLY, BINDER, INFIX, PREFIX, QUANTIFIER, TUPLE, lookup
+from .notation import (APPLY, BINDER, EQUATION, INFIX, PREFIX, QUANTIFIER,
+                       TUPLE, lookup)
 
 if TYPE_CHECKING:
     from ..check import Context
@@ -96,6 +97,12 @@ class TextRenderer:
                     sym,
                     self._operand(args[1], scope),
                 )
+            if kind == EQUATION and len(args) == 3:
+                return "%s %s %s" % (
+                    self._operand(args[1], scope),
+                    sym,
+                    self._operand(args[2], scope),
+                )
             if kind == QUANTIFIER and len(args) == 2:
                 return self._quantifier(sym, args[1], scope)
             if kind == BINDER and len(args) == 1 and isinstance(args[0], Abs):
@@ -117,7 +124,7 @@ class TextRenderer:
     def _operand(self, t: Term, scope: Set[str]) -> str:
         """An operand of an infix connective, parenthesised if compound."""
         s = self._render(t, scope)
-        if self._kind(t) in (INFIX, QUANTIFIER, BINDER) or isinstance(t, Abs):
+        if self._kind(t) in (INFIX, EQUATION, QUANTIFIER, BINDER) or isinstance(t, Abs):
             return "(%s)" % s
         return s
 

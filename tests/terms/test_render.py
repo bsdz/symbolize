@@ -10,35 +10,12 @@ import unittest
 
 from symbolize.terms import A0, Arrow, Const, Var
 from symbolize.terms.decl import SET
-from symbolize.terms.derive import (
-    Argument,
-    cases,
-    exists,
-    family,
-    forall,
-    hyp,
-    inl,
-    inr,
-    judge,
-    pair,
-    prim,
-    set_var,
-)
-from symbolize.terms.library import (
-    Falsum,
-    N,
-    and_,
-    apply,
-    implies,
-    lam,
-    natrec,
-    not_,
-    numeral,
-    or_,
-    succ,
-    zero,
-)
-from symbolize.terms.render import TextRenderer, dot, latex, tree, typestring, unicode
+from symbolize.terms.derive import (Argument, cases, exists, family, forall,
+                                    hyp, inl, inr, judge, pair, prim, set_var)
+from symbolize.terms.library import (Falsum, N, and_, apply, implies, lam,
+                                     natrec, not_, numeral, or_, succ, zero)
+from symbolize.terms.render import (TextRenderer, dot, latex, tree, typestring,
+                                    unicode)
 
 
 class TestTerms(unittest.TestCase):

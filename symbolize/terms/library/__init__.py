@@ -9,13 +9,14 @@ from ..decl import Registry
 from . import logic
 from .bool import BOOL, Bool, boolrec, false, ifthenelse, true
 from .falsum import FALSUM, Falsum, abort
+from .identity import IDENTITY, Id, J, refl
 from .logic import and_, exists, forall, implies, not_, or_
 from .nat import NAT, N, natrec, numeral, succ, zero
 from .pi import PI, Pi, apply, lam
 from .plus import PLUS, Plus, cases, inl, inr, when
 from .sigma import SIGMA, Sigma, fst, pair, snd, split
 
-FORMERS = (PI, SIGMA, PLUS, FALSUM, NAT, BOOL)
+FORMERS = (PI, SIGMA, PLUS, FALSUM, NAT, BOOL, IDENTITY)
 
 
 def standard() -> Registry:
@@ -39,6 +40,10 @@ __all__ = [
     "FALSUM",
     "Falsum",
     "abort",
+    "IDENTITY",
+    "Id",
+    "J",
+    "refl",
     "and_",
     "exists",
     "forall",

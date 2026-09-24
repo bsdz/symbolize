@@ -27,6 +27,7 @@ QUANTIFIER = "quantifier"  # ∀x.B  for Q(A, (x)B)
 BINDER = "binder"  # λx.b  for λ((x)b)
 APPLY = "apply"  # f(a)  for apply(f, a)
 TUPLE = "tuple"  # (a, b)  for pair(a, b)
+EQUATION = "equation"  # a = b  for Id(A, a, b); the set is not shown
 
 
 @dataclass(frozen=True)

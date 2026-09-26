@@ -21,9 +21,10 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from .arity import A0, Arrow, cross
 from .binding import abstract as _abstract_term
-from .binding import free_vars, instantiate, open_abs, subst
+from .binding import free_vars, instantiate, open_abs, subst, subst_many
 from .check import Checker, Context
-from .decl import SET, Param, Registry
+from .decl import (SET, Param, Provenance, Registry, Signature, axioms_used,
+                   pvar)
 from .eval import Evaluator
 from .library import STANDARD, Bool, Falsum
 from .library import Id as _Id
@@ -157,6 +158,28 @@ class Judgement:
     def repr_full(self) -> str:
         """Include the hypotheses."""
         return "%r  %r" % (self, self.ctx)
+
+    # -- trust -----------------------------------------------------------------
+
+    @property
+    def axioms(self) -> Tuple[Const, ...]:
+        """The axioms this proof depends on, definitions unfolded.
+
+        Hypotheses are not included: ``ctx`` already shows what is assumed.
+        """
+        return axioms_used(self.term, self.engine.registry)
+
+    def trust_report(self) -> str:
+        """What this judgement is believed on, rather than proved from."""
+        used = self.axioms
+        if not used:
+            return "%s depends on no axioms" % (self.repr_unicode(),)
+        lines = ["%s depends on %d axiom(s):" % (self.repr_unicode(), len(used))]
+        width = max(len(c.name) for c in used)
+        for c in used:
+            record = self.engine.registry.provenance(c)
+            lines.append("  %-*s  %s" % (width, c.name, record or "local"))
+        return "\n".join(lines)
 
     # -- rendering -------------------------------------------------------------
 
@@ -676,6 +699,90 @@ def substitute(b: Judgement, x: Judgement, a: Judgement) -> Judgement:
         engine=b.engine,
         check=False,
     )
+
+
+# -- axioms and imported statements ---------------------------------------------------
+
+
+def axiom(
+    name: str,
+    statement: Judgement,
+    provenance: Optional[Provenance] = None,
+) -> Judgement:
+    """Declare ``name`` as an inhabitant of ``statement`` without proof.
+
+    This is how a theorem proved elsewhere -- in Lean 4, say -- is brought
+    in: only the *statement* is translated, and the result is a constant
+    with a typing rule, no definition and no computation rules. It is
+    therefore typed, usable in derivations, and opaque to the evaluator.
+
+    Hypotheses the statement depends on (set variables, families) become
+    parameters of the declaration, so the axiom can be re-instantiated.
+
+    Record where it came from in ``provenance``; ``Judgement.axioms`` and
+    ``Judgement.trust_report`` then report it wherever it is used.
+    """
+    _require_set(statement)
+    engine = statement.engine
+    deps = _dependencies(statement)
+    params, result = _schematise(statement, deps)
+    arity = Arrow(cross(*[p.var.arity for p in params]), A0) if params else A0
+    const = Const(name, arity)
+    if const in engine.registry:
+        raise DerivationError("%r is already declared" % (const,))
+    engine.registry.axiom(const, Signature(tuple(params), result), provenance)
+    args = tuple(entry.var for entry in deps)
+    return Judgement(
+        statement.ctx,
+        const(*args) if args else const,
+        statement.term,
+        engine=engine,
+        check=False,
+        aliases=_aliases(statement),
+    )
+
+
+def _dependencies(statement: Judgement) -> Tuple[Param, ...]:
+    """The context entries ``statement`` needs, transitively, in order."""
+    needed = set(free_vars(statement.term))
+    deps: List[Param] = []
+    for entry in reversed(statement.ctx.entries):
+        if entry.var not in needed:
+            continue
+        deps.append(entry)
+        if entry.type is not None:
+            needed |= free_vars(entry.type)
+        for z, t in entry.hyps:
+            needed |= free_vars(t)
+            needed.discard(z)
+    deps.reverse()
+    return tuple(deps)
+
+
+def _schematise(
+    statement: Judgement, deps: Sequence[Param]
+) -> Tuple[List[Param], Term]:
+    """Turn the dependencies into signature parameters, renaming their
+    variables to pattern variables so they cannot collide with a user's."""
+    mapping: Dict[Var, Term] = {}
+    params: List[Param] = []
+    for entry in deps:
+        local = dict(mapping)
+        hyps = []
+        for z, t in entry.hyps:
+            pz = pvar(z.name, z.arity)
+            hyps.append((pz, subst_many(t, local)))
+            local[z] = pz
+        assert entry.type is not None
+        params.append(
+            Param(
+                pvar(entry.var.name, entry.var.arity),
+                subst_many(entry.type, local),
+                tuple(hyps),
+            )
+        )
+        mapping[entry.var] = params[-1].var
+    return params, subst_many(statement.term, mapping)
 
 
 # -- identity ([BN] ch. 8) -----------------------------------------------------------

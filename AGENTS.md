@@ -61,9 +61,12 @@ system and checking it is definitionally equal to the original.
 Current order of work. Each step fits the existing design; steps 1-3 need no
 changes to `term.py`, `eval.py` or `check.py`.
 
-1. Identity type (`Id`, `refl`, `J`; `cong`, `symm`, `trans` as definitions) -
-   needed before any equation can be stated, imported or rewritten with.
-2. Axiom/stub declarations with provenance and axiom-usage tracking.
+1. Identity type (`Id`, `refl`, `J`; `cong`, `symm`, `trans`, `transport` as
+   derivation rules) - needed before any equation can be stated, imported or
+   rewritten with. *Done:* `library/identity.py`, `derive.py`.
+2. Axiom/stub declarations with provenance and axiom-usage tracking. *Done:*
+   `decl.Provenance`, `Registry.axiom`, `decl.axioms_used`, `derive.axiom`,
+   `Judgement.axioms` / `.trust_report()`.
 3. Rewriting driven by `Id` proofs.
 4. Lean statement importer with a constant-mapping table and round-trip check.
 5. Universes and algebraic structures, as the library grows.

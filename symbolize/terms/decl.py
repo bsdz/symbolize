@@ -11,14 +11,16 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
-from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Tuple
+from typing import (Callable, Dict, FrozenSet, Iterable, List, Optional, Set,
+                    Tuple)
 
 from .arity import A0, Arrow, cross
 from .binding import free_vars, subst_many
 from .render.notation import ATOM, notation
 from .term import (Abs, App, Comb, Const, Sel, Term, TermError, Var,
-                   bound_occurrences)
+                   bound_occurrences, children)
 
 SET = Const("Set")
 """The sort of sets (types). There are no universes: ``Set`` has no type."""
@@ -33,6 +35,40 @@ def pvar(name: str, arity=A0) -> Var:
 
 class DeclarationError(TermError):
     """A declaration is malformed or clashes with an existing one."""
+
+
+@dataclass(frozen=True)
+class Provenance:
+    """Where an axiom came from.
+
+    An axiom is believed, not proved, so its source is part of the record.
+    ``statement`` is the original text as the source system states it; its
+    ``digest`` fingerprints that text so an upstream change can be noticed.
+    """
+
+    system: str = "local"
+    version: str = ""
+    name: str = ""
+    statement: str = ""
+    note: str = ""
+
+    @property
+    def digest(self) -> str:
+        """A short fingerprint of the original statement text."""
+        if not self.statement:
+            return ""
+        return hashlib.sha256(self.statement.encode("utf-8")).hexdigest()[:16]
+
+    def __str__(self) -> str:
+        parts = [self.system]
+        if self.version:
+            parts.append(self.version)
+        head = " ".join(parts)
+        if self.name:
+            head = "%s: %s" % (head, self.name)
+        if self.digest:
+            head = "%s [%s]" % (head, self.digest)
+        return head
 
 
 @dataclass(frozen=True)
@@ -301,6 +337,34 @@ class TypeFormer:
         )
 
 
+def axioms_used(term: Term, registry: "Registry") -> Tuple[Const, ...]:
+    """The axioms ``term`` depends on, by name.
+
+    Definitions are unfolded, so an axiom reached only through an
+    abbreviation is still reported. Hypotheses are not axioms: a judgement's
+    context already shows what it assumes.
+    """
+    found: Set[Const] = set()
+    seen: Set[Const] = set()
+
+    def visit(t: Term) -> None:
+        if isinstance(t, Const):
+            if t in seen:
+                return
+            seen.add(t)
+            if registry.is_axiom(t):
+                found.add(t)
+            definition = registry.definition(t)
+            if definition is not None:
+                visit(definition.body)
+            return
+        for child in children(t):
+            visit(child)
+
+    visit(term)
+    return tuple(sorted(found, key=lambda c: c.name))
+
+
 class Registry:
     """The declarations in scope: signatures, definitions and computation
     rules, plus which constants are constructors."""
@@ -312,6 +376,7 @@ class Registry:
         self._major: Dict[Const, Tuple[int, ...]] = {}
         self._formers: Dict[Const, TypeFormer] = {}
         self._constructors: Dict[Const, Const] = {}
+        self._axioms: Dict[Const, Provenance] = {}
 
     def declare(self, const: Const, signature: Signature) -> None:
         """Register the typing rule of a primitive constant."""
@@ -364,6 +429,34 @@ class Registry:
             sorted(set(self._major.get(rule.head, ())) | set(rule.major))
         )
         return rule
+
+    def axiom(
+        self,
+        const: Const,
+        signature: Signature,
+        provenance: Optional[Provenance] = None,
+    ) -> Provenance:
+        """Register ``const`` as an axiom: a statement believed without proof.
+
+        Mechanically this is a primitive constant -- a signature, no
+        definition and no computation rules -- so it is typed but opaque to
+        the evaluator. It is recorded separately so that derivations can
+        report what they are trusting; see ``axioms_used``.
+        """
+        self.declare(const, signature)
+        record = provenance if provenance is not None else Provenance()
+        self._axioms[const] = record
+        return record
+
+    def is_axiom(self, const: Const) -> bool:
+        return const in self._axioms
+
+    def provenance(self, const: Const) -> Optional[Provenance]:
+        return self._axioms.get(const)
+
+    def axioms(self) -> Tuple[Const, ...]:
+        """Every axiom in scope, by name."""
+        return tuple(sorted(self._axioms, key=lambda c: c.name))
 
     def definition(self, const: Const) -> Optional[Definition]:
         return self._definitions.get(const)

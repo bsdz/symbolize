@@ -411,6 +411,36 @@ from the sections above:
   graph-tool graph. Argument trees render to `\frac{}{}` LaTeX and to a
   text tree; the old HTML table form was not ported.
 
+## Importing statements (roadmap step 4)
+
+`terms/interop/lean.py` translates a Lean 4 theorem's *type* -- dumped as
+`Expr` JSON by `interop/Export.lean` -- into a symbolize set, and declares it
+as an axiom with its provenance. Proof terms never cross.
+
+- A `Rule` table (`STANDARD_RULES`) maps each Lean constant to a symbolize
+  term, naming how many arguments it consumes and which to keep, so instance
+  and type arguments (`HAdd.hAdd`, `OfNat.ofNat`) are dropped explicitly
+  rather than guessed at.
+- The importer refuses rather than guesses. Refusals carry the reason:
+  `Exists` (proof-irrelevant in Lean, strong here -- the hazard AGENTS.md
+  names), sorts (no universes), `Nat.sub` and division (junk-valued),
+  `Classical.*`, `True` (no unit set), `Iff` (not definitionally a
+  conjunction of implications, so unverifiable), projections, open terms,
+  unknown constants, and arity mismatches. A caller who accepts a caveat
+  overrides the table.
+- Every translated statement is run through the type checker
+  (`judge(term, SET)`), which catches a translation that is well formed but
+  meaningless.
+- `to_lean` renders a statement back as Lean source, and `round_trip` emits
+  `example : <translated> := <original>`. Lean accepts that exactly when the
+  translation is definitionally equal to the original type, which is the
+  strongest faithfulness check available without translating proofs.
+- `library/nat.py` gained `add` and `mul` as definitions over `natrec`,
+  recursing on the second argument as Lean's `Nat.add`/`Nat.mul` do, so an
+  imported statement about `Nat.add` is a statement about this `add`. The
+  constants are named `add`/`mul` because `+` is already the disjoint-union
+  former; `+` and `⋅` are their display symbols.
+
 ## Non-goals (for this iteration)
 
 - Universes (`Set ∈ Type`), and therefore polymorphic definitions. `SET` is a

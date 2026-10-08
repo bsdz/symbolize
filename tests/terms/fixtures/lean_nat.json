@@ -1,0 +1,1564 @@
+{
+ "declarations": [
+  {
+   "name": "Nat.add_zero",
+   "statement": "∀ (n : Nat), n + 0 = n",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "arg": {
+      "index": 0,
+      "kind": "bvar"
+     },
+     "fn": {
+      "arg": {
+       "arg": {
+        "arg": {
+         "arg": {
+          "kind": "lit",
+          "natVal": 0
+         },
+         "fn": {
+          "kind": "const",
+          "levels": [],
+          "name": "instOfNatNat"
+         },
+         "kind": "app"
+        },
+        "fn": {
+         "arg": {
+          "kind": "lit",
+          "natVal": 0
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "kind": "const",
+           "levels": [
+            "0"
+           ],
+           "name": "OfNat.ofNat"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "fn": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "instAddNat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "instHAdd"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0",
+              "0",
+              "0"
+             ],
+             "name": "HAdd.hAdd"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "kind": "const",
+        "levels": [],
+        "name": "Nat"
+       },
+       "fn": {
+        "kind": "const",
+        "levels": [
+         "1"
+        ],
+        "name": "Eq"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "app"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.zero_add",
+   "statement": "∀ (n : Nat), 0 + n = n",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "arg": {
+      "index": 0,
+      "kind": "bvar"
+     },
+     "fn": {
+      "arg": {
+       "arg": {
+        "index": 0,
+        "kind": "bvar"
+       },
+       "fn": {
+        "arg": {
+         "arg": {
+          "arg": {
+           "kind": "lit",
+           "natVal": 0
+          },
+          "fn": {
+           "kind": "const",
+           "levels": [],
+           "name": "instOfNatNat"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "lit",
+           "natVal": 0
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "OfNat.ofNat"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "fn": {
+         "arg": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "instAddNat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "instHAdd"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0",
+              "0",
+              "0"
+             ],
+             "name": "HAdd.hAdd"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "kind": "const",
+        "levels": [],
+        "name": "Nat"
+       },
+       "fn": {
+        "kind": "const",
+        "levels": [
+         "1"
+        ],
+        "name": "Eq"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "app"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.add_comm",
+   "statement": "∀ (n m : Nat), n + m = m + n",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "binderName": "m",
+     "binderType": {
+      "kind": "const",
+      "levels": [],
+      "name": "Nat"
+     },
+     "body": {
+      "arg": {
+       "arg": {
+        "index": 1,
+        "kind": "bvar"
+       },
+       "fn": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "instAddNat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "instHAdd"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0",
+              "0",
+              "0"
+             ],
+             "name": "HAdd.hAdd"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "index": 1,
+          "kind": "bvar"
+         },
+         "fn": {
+          "arg": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "instAddNat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0"
+             ],
+             "name": "instHAdd"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "kind": "const",
+              "levels": [
+               "0",
+               "0",
+               "0"
+              ],
+              "name": "HAdd.hAdd"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "fn": {
+        "arg": {
+         "kind": "const",
+         "levels": [],
+         "name": "Nat"
+        },
+        "fn": {
+         "kind": "const",
+         "levels": [
+          "1"
+         ],
+         "name": "Eq"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "forallE"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.mul_comm",
+   "statement": "∀ (n m : Nat), n * m = m * n",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "binderName": "m",
+     "binderType": {
+      "kind": "const",
+      "levels": [],
+      "name": "Nat"
+     },
+     "body": {
+      "arg": {
+       "arg": {
+        "index": 1,
+        "kind": "bvar"
+       },
+       "fn": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "instMulNat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "instHMul"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0",
+              "0",
+              "0"
+             ],
+             "name": "HMul.hMul"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "index": 1,
+          "kind": "bvar"
+         },
+         "fn": {
+          "arg": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "instMulNat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0"
+             ],
+             "name": "instHMul"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "kind": "const",
+              "levels": [
+               "0",
+               "0",
+               "0"
+              ],
+              "name": "HMul.hMul"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "fn": {
+        "arg": {
+         "kind": "const",
+         "levels": [],
+         "name": "Nat"
+        },
+        "fn": {
+         "kind": "const",
+         "levels": [
+          "1"
+         ],
+         "name": "Eq"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "forallE"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.add_assoc",
+   "statement": "∀ (n m k : Nat), n + m + k = n + (m + k)",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "binderName": "m",
+     "binderType": {
+      "kind": "const",
+      "levels": [],
+      "name": "Nat"
+     },
+     "body": {
+      "binderName": "k",
+      "binderType": {
+       "kind": "const",
+       "levels": [],
+       "name": "Nat"
+      },
+      "body": {
+       "arg": {
+        "arg": {
+         "arg": {
+          "index": 0,
+          "kind": "bvar"
+         },
+         "fn": {
+          "arg": {
+           "index": 1,
+           "kind": "bvar"
+          },
+          "fn": {
+           "arg": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "instAddNat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "kind": "const",
+              "levels": [
+               "0"
+              ],
+              "name": "instHAdd"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "arg": {
+               "kind": "const",
+               "levels": [],
+               "name": "Nat"
+              },
+              "fn": {
+               "kind": "const",
+               "levels": [
+                "0",
+                "0",
+                "0"
+               ],
+               "name": "HAdd.hAdd"
+              },
+              "kind": "app"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "fn": {
+         "arg": {
+          "index": 2,
+          "kind": "bvar"
+         },
+         "fn": {
+          "arg": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "instAddNat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0"
+             ],
+             "name": "instHAdd"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "kind": "const",
+              "levels": [
+               "0",
+               "0",
+               "0"
+              ],
+              "name": "HAdd.hAdd"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "fn": {
+        "arg": {
+         "arg": {
+          "index": 0,
+          "kind": "bvar"
+         },
+         "fn": {
+          "arg": {
+           "arg": {
+            "index": 1,
+            "kind": "bvar"
+           },
+           "fn": {
+            "arg": {
+             "index": 2,
+             "kind": "bvar"
+            },
+            "fn": {
+             "arg": {
+              "arg": {
+               "kind": "const",
+               "levels": [],
+               "name": "instAddNat"
+              },
+              "fn": {
+               "arg": {
+                "kind": "const",
+                "levels": [],
+                "name": "Nat"
+               },
+               "fn": {
+                "kind": "const",
+                "levels": [
+                 "0"
+                ],
+                "name": "instHAdd"
+               },
+               "kind": "app"
+              },
+              "kind": "app"
+             },
+             "fn": {
+              "arg": {
+               "kind": "const",
+               "levels": [],
+               "name": "Nat"
+              },
+              "fn": {
+               "arg": {
+                "kind": "const",
+                "levels": [],
+                "name": "Nat"
+               },
+               "fn": {
+                "arg": {
+                 "kind": "const",
+                 "levels": [],
+                 "name": "Nat"
+                },
+                "fn": {
+                 "kind": "const",
+                 "levels": [
+                  "0",
+                  "0",
+                  "0"
+                 ],
+                 "name": "HAdd.hAdd"
+                },
+                "kind": "app"
+               },
+               "kind": "app"
+              },
+              "kind": "app"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "fn": {
+           "arg": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "instAddNat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "kind": "const",
+              "levels": [
+               "0"
+              ],
+              "name": "instHAdd"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "arg": {
+               "kind": "const",
+               "levels": [],
+               "name": "Nat"
+              },
+              "fn": {
+               "kind": "const",
+               "levels": [
+                "0",
+                "0",
+                "0"
+               ],
+               "name": "HAdd.hAdd"
+              },
+              "kind": "app"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "fn": {
+         "arg": {
+          "kind": "const",
+          "levels": [],
+          "name": "Nat"
+         },
+         "fn": {
+          "kind": "const",
+          "levels": [
+           "1"
+          ],
+          "name": "Eq"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "forallE"
+     },
+     "kind": "forallE"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.mul_one",
+   "statement": "∀ (n : Nat), n * 1 = n",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "arg": {
+      "index": 0,
+      "kind": "bvar"
+     },
+     "fn": {
+      "arg": {
+       "arg": {
+        "arg": {
+         "arg": {
+          "kind": "lit",
+          "natVal": 1
+         },
+         "fn": {
+          "kind": "const",
+          "levels": [],
+          "name": "instOfNatNat"
+         },
+         "kind": "app"
+        },
+        "fn": {
+         "arg": {
+          "kind": "lit",
+          "natVal": 1
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "kind": "const",
+           "levels": [
+            "0"
+           ],
+           "name": "OfNat.ofNat"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "fn": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "instMulNat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "instHMul"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0",
+              "0",
+              "0"
+             ],
+             "name": "HMul.hMul"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "kind": "const",
+        "levels": [],
+        "name": "Nat"
+       },
+       "fn": {
+        "kind": "const",
+        "levels": [
+         "1"
+        ],
+        "name": "Eq"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "app"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.sub_self",
+   "statement": "∀ (n : Nat), n - n = 0",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "arg": {
+      "arg": {
+       "arg": {
+        "kind": "lit",
+        "natVal": 0
+       },
+       "fn": {
+        "kind": "const",
+        "levels": [],
+        "name": "instOfNatNat"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "kind": "lit",
+        "natVal": 0
+       },
+       "fn": {
+        "arg": {
+         "kind": "const",
+         "levels": [],
+         "name": "Nat"
+        },
+        "fn": {
+         "kind": "const",
+         "levels": [
+          "0"
+         ],
+         "name": "OfNat.ofNat"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "fn": {
+      "arg": {
+       "arg": {
+        "index": 0,
+        "kind": "bvar"
+       },
+       "fn": {
+        "arg": {
+         "index": 0,
+         "kind": "bvar"
+        },
+        "fn": {
+         "arg": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "instSubNat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [
+             "0"
+            ],
+            "name": "instHSub"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "kind": "const",
+           "levels": [],
+           "name": "Nat"
+          },
+          "fn": {
+           "arg": {
+            "kind": "const",
+            "levels": [],
+            "name": "Nat"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0",
+              "0",
+              "0"
+             ],
+             "name": "HSub.hSub"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "fn": {
+       "arg": {
+        "kind": "const",
+        "levels": [],
+        "name": "Nat"
+       },
+       "fn": {
+        "kind": "const",
+        "levels": [
+         "1"
+        ],
+        "name": "Eq"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "app"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Nat.le_refl",
+   "statement": "∀ (n : Nat), n ≤ n",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "arg": {
+      "index": 0,
+      "kind": "bvar"
+     },
+     "fn": {
+      "arg": {
+       "index": 0,
+       "kind": "bvar"
+      },
+      "fn": {
+       "arg": {
+        "kind": "const",
+        "levels": [],
+        "name": "instLENat"
+       },
+       "fn": {
+        "arg": {
+         "kind": "const",
+         "levels": [],
+         "name": "Nat"
+        },
+        "fn": {
+         "kind": "const",
+         "levels": [
+          "0"
+         ],
+         "name": "LE.le"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "app"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "Eq.refl",
+   "statement": "∀ {α : Sort u_1} (a : α), a = a",
+   "type": {
+    "binderName": "α",
+    "binderType": {
+     "kind": "sort",
+     "level": "u_1"
+    },
+    "body": {
+     "binderName": "a",
+     "binderType": {
+      "index": 0,
+      "kind": "bvar"
+     },
+     "body": {
+      "arg": {
+       "index": 0,
+       "kind": "bvar"
+      },
+      "fn": {
+       "arg": {
+        "index": 0,
+        "kind": "bvar"
+       },
+       "fn": {
+        "arg": {
+         "index": 1,
+         "kind": "bvar"
+        },
+        "fn": {
+         "kind": "const",
+         "levels": [
+          "u_1"
+         ],
+         "name": "Eq"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "app"
+     },
+     "kind": "forallE"
+    },
+    "kind": "forallE"
+   }
+  },
+  {
+   "name": "symbolize_fixture_exists",
+   "statement": "∀ (n : Nat), ∃ k, n + 0 = k",
+   "type": {
+    "binderName": "n",
+    "binderType": {
+     "kind": "const",
+     "levels": [],
+     "name": "Nat"
+    },
+    "body": {
+     "arg": {
+      "binderName": "k",
+      "binderType": {
+       "kind": "const",
+       "levels": [],
+       "name": "Nat"
+      },
+      "body": {
+       "arg": {
+        "index": 0,
+        "kind": "bvar"
+       },
+       "fn": {
+        "arg": {
+         "arg": {
+          "arg": {
+           "arg": {
+            "kind": "lit",
+            "natVal": 0
+           },
+           "fn": {
+            "kind": "const",
+            "levels": [],
+            "name": "instOfNatNat"
+           },
+           "kind": "app"
+          },
+          "fn": {
+           "arg": {
+            "kind": "lit",
+            "natVal": 0
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "kind": "const",
+             "levels": [
+              "0"
+             ],
+             "name": "OfNat.ofNat"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "fn": {
+          "arg": {
+           "index": 1,
+           "kind": "bvar"
+          },
+          "fn": {
+           "arg": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "instAddNat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "kind": "const",
+              "levels": [
+               "0"
+              ],
+              "name": "instHAdd"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "fn": {
+            "arg": {
+             "kind": "const",
+             "levels": [],
+             "name": "Nat"
+            },
+            "fn": {
+             "arg": {
+              "kind": "const",
+              "levels": [],
+              "name": "Nat"
+             },
+             "fn": {
+              "arg": {
+               "kind": "const",
+               "levels": [],
+               "name": "Nat"
+              },
+              "fn": {
+               "kind": "const",
+               "levels": [
+                "0",
+                "0",
+                "0"
+               ],
+               "name": "HAdd.hAdd"
+              },
+              "kind": "app"
+             },
+             "kind": "app"
+            },
+            "kind": "app"
+           },
+           "kind": "app"
+          },
+          "kind": "app"
+         },
+         "kind": "app"
+        },
+        "fn": {
+         "arg": {
+          "kind": "const",
+          "levels": [],
+          "name": "Nat"
+         },
+         "fn": {
+          "kind": "const",
+          "levels": [
+           "1"
+          ],
+          "name": "Eq"
+         },
+         "kind": "app"
+        },
+        "kind": "app"
+       },
+       "kind": "app"
+      },
+      "kind": "lam"
+     },
+     "fn": {
+      "arg": {
+       "kind": "const",
+       "levels": [],
+       "name": "Nat"
+      },
+      "fn": {
+       "kind": "const",
+       "levels": [
+        "1"
+       ],
+       "name": "Exists"
+      },
+      "kind": "app"
+     },
+     "kind": "app"
+    },
+    "kind": "forallE"
+   }
+  }
+ ],
+ "version": "4.34.1"
+}

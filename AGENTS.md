@@ -71,6 +71,14 @@ changes to `term.py`, `eval.py` or `check.py`.
    `motive_for`, `occurrences`; a suspended substitution `((x)b)(a)` renders
    as `b[x := a]` in the pretty styles.
 4. Lean statement importer with a constant-mapping table and round-trip check.
+   *Done:* `terms/interop/lean.py` (`LeanImporter`, `STANDARD_RULES`,
+   `to_lean`, `round_trip`), `terms/interop/Export.lean` (the Lean-side
+   dumper). Arithmetic (`add`, `mul` over `natrec`) was added to
+   `library/nat.py` so there is something for `Nat.add` to map onto.
+   Verified end to end against Lean 4.34.1: the dumper compiles, its output
+   imports, and the generated round-trip file compiles (and fails when the
+   translation is deliberately corrupted). `tests/terms/fixtures/` holds a
+   captured real dump so the suite needs no toolchain.
 5. Universes and algebraic structures, as the library grows.
 
 ## 2. Environment & Build
@@ -175,8 +183,12 @@ poetry run flake8 . || echo "flake8 not found/failed"
     - `eval.py`: The lazy evaluator - `whnf`, `nf`, `defeq`.
     - `check.py`: `Context` and the bidirectional `Checker`.
     - `derive.py`: `Judgement`, the natural-deduction rules, `Argument`.
-    - `library/`: Type formers (`pi`, `sigma`, `plus`, `falsum`, `nat`, `bool`)
-      and the connectives as definitions over them (`logic.py`).
+    - `library/`: Type formers (`pi`, `sigma`, `plus`, `falsum`, `nat`, `bool`,
+      `identity`), the connectives as definitions over them (`logic.py`), and
+      arithmetic (`add`, `mul`) as definitions over `natrec`.
+    - `interop/`: `lean.py` imports Lean 4 *statements* as axioms and exports
+      them back for round-trip checking; `Export.lean` is the Lean-side
+      dumper.
     - `render/`: Notation table plus typestring, unicode, LaTeX and graph
       renderers.
 - **`symbolize/`** (legacy, kept working; being moved under a `legacy`

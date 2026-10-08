@@ -13,14 +13,23 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from typing import (Callable, Dict, FrozenSet, Iterable, List, Optional, Set,
-                    Tuple)
+from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 from .arity import A0, Arrow, cross
 from .binding import free_vars, subst_many
 from .render.notation import ATOM, notation
-from .term import (Abs, App, Comb, Const, Sel, Term, TermError, Var,
-                   bound_occurrences, children)
+from .term import (
+    Abs,
+    App,
+    Comb,
+    Const,
+    Sel,
+    Term,
+    TermError,
+    Var,
+    bound_occurrences,
+    children,
+)
 
 SET = Const("Set")
 """The sort of sets (types). There are no universes: ``Set`` has no type."""

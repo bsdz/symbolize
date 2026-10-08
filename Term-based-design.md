@@ -379,6 +379,25 @@ from the sections above:
   as `a = b` in the pretty styles while typestring stays faithful.
   Propositional equality is deliberately weaker than the definitional
   equality decided by `defeq`; `refl` bridges the two.
+- **Axioms** (`decl.Provenance`, `Registry.axiom`, `decl.axioms_used`,
+  `derive.axiom`): a statement declared without proof is a constant with a
+  signature and no definition or rules, so it is typed and opaque. Context
+  dependencies become signature parameters, so an axiom over a variable set
+  is a re-instantiable schema. `Judgement.axioms` and `.trust_report()`
+  report what a derivation is believed on rather than proved from; this is
+  the mechanism for importing theorems proved in Lean 4.
+- **Rewriting** (`derive.rewrite`, aliased `.rw`): `t ∈ T` and
+  `p ∈ Id(A, a, b)` give `T[a := b]`, by abstracting the chosen occurrences
+  of `a` out of `T` into a family and transporting along `p`. `at=` selects
+  occurrences by index; `p.symm` rewrites right to left. The abstracted
+  family is checked to be a set over `A` before transporting, so an
+  ill-typed rewrite is refused.
+- **Substitution notation**: an abstraction applied to matching arguments is
+  a suspended substitution ([BN] 3.7) and renders as `b[x := a]` in the
+  unicode and LaTeX styles, recovering the display of the old
+  `SubstitutionExpression`. `typestring` keeps the application it structurally
+  is. No new node type was added: since nothing evaluates on construction, a
+  redex already *is* a suspended substitution.
 - **Rendering** (`render/`): notation is a table keyed by constant *name*
   (`render/notation.py`), registered by the library modules, so it is
   independent of the registry. One `TextRenderer` serves three styles:

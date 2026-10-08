@@ -67,7 +67,9 @@ changes to `term.py`, `eval.py` or `check.py`.
 2. Axiom/stub declarations with provenance and axiom-usage tracking. *Done:*
    `decl.Provenance`, `Registry.axiom`, `decl.axioms_used`, `derive.axiom`,
    `Judgement.axioms` / `.trust_report()`.
-3. Rewriting driven by `Id` proofs.
+3. Rewriting driven by `Id` proofs. *Done:* `derive.rewrite` / `.rw`,
+   `motive_for`, `occurrences`; a suspended substitution `((x)b)(a)` renders
+   as `b[x := a]` in the pretty styles.
 4. Lean statement importer with a constant-mapping table and round-trip check.
 5. Universes and algebraic structures, as the library grows.
 

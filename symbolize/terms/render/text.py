@@ -12,8 +12,7 @@ from typing import TYPE_CHECKING, Dict, Optional, Sequence, Set, Tuple
 
 from ..binding import free_vars, instantiate
 from ..term import Abs, App, Bound, Comb, Const, Sel, Term, Var, _fresh_names
-from .notation import (APPLY, BINDER, EQUATION, INFIX, PREFIX, QUANTIFIER,
-                       TUPLE, lookup)
+from .notation import APPLY, BINDER, EQUATION, INFIX, PREFIX, QUANTIFIER, TUPLE, lookup
 
 if TYPE_CHECKING:
     from ..check import Context
@@ -116,10 +115,41 @@ class TextRenderer:
                 return "(%s)" % ", ".join(self._render(a, scope) for a in args)
             head = sym
         else:
+            if isinstance(t.fn, Abs) and not self.faithful:
+                substitution = self._substitution(t.fn, args, scope)
+                if substitution is not None:
+                    return substitution
             head = self._render(t.fn, scope)
             if isinstance(t.fn, Abs):
                 head = "(%s)" % head
         return "%s(%s)" % (head, ", ".join(self._render(a, scope) for a in args))
+
+    def _substitution(
+        self, fn: Abs, args: Tuple[Term, ...], scope: Set[str]
+    ) -> Optional[str]:
+        """``b[x := a]`` for the redex ``((x)b)(a)``.
+
+        An abstraction applied to arguments is a suspended substitution, and
+        [BN] 3.7 writes it this way. Only the pretty styles use the bracket
+        form; ``typestring`` keeps the application it really is.
+        """
+        if len(args) != len(fn.arities):
+            return None  # arities adapted by beta; show the application
+        inner, opened, inner_scope = self._open(fn, scope)
+        assignments = ", ".join(
+            "%s %s %s" % (name, self._assign, self._render(arg, scope))
+            for name, arg in zip(inner, args)
+        )
+        body = self._wrap(opened, self._render(opened, inner_scope), (INFIX, EQUATION))
+        return "%s[%s]" % (body, assignments)
+
+    @property
+    def _assign(self) -> str:
+        """The ``:=`` of a substitution, in this style."""
+        if self.style == "latex":
+            # mathjax has no \coloneqq
+            return r"\mathrel{\vcenter{:}}="
+        return "≔"
 
     def _operand(self, t: Term, scope: Set[str]) -> str:
         """An operand of an infix connective, parenthesised if compound."""

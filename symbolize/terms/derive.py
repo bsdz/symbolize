@@ -21,10 +21,9 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from .arity import A0, Arrow, cross
 from .binding import abstract as _abstract_term
-from .binding import free_vars, instantiate, open_abs, subst, subst_many
-from .check import Checker, Context
-from .decl import (SET, Param, Provenance, Registry, Signature, axioms_used,
-                   pvar)
+from .binding import free_vars, instantiate, open_abs, subst, subst_many, transform
+from .check import Checker, Context, TypingError
+from .decl import SET, Param, Provenance, Registry, Signature, axioms_used, pvar
 from .eval import Evaluator
 from .library import STANDARD, Bool, Falsum
 from .library import Id as _Id
@@ -272,9 +271,21 @@ class Judgement:
         """``f.cong(p)``: congruence of this function over the identity ``p``."""
         return cong(self, p)
 
+    def cong_in(self, context: Abs) -> "Judgement":
+        """``p.cong_in((x)t)``: congruence of a term context over ``p``."""
+        return cong_in(context, self)
+
     def transport(self, p: "Judgement", c: "Judgement") -> "Judgement":
         """``P.transport(p, c)``: carry ``c`` along ``p``."""
         return transport(self, p, c)
+
+    def rewrite(
+        self, p: "Judgement", at: Optional[Sequence[int]] = None
+    ) -> "Judgement":
+        """``t.rewrite(p)``: rewrite this judgement's type with ``p``."""
+        return rewrite(self, p, at)
+
+    rw = rewrite
 
     def subst(self, var: "Judgement", value: "Judgement") -> "Judgement":
         return substitute(self, var, value)
@@ -873,6 +884,42 @@ def cong(f: Judgement, p: Judgement) -> Judgement:
     return elim(p, motive, base, type, f)
 
 
+def cong_in(context: Abs, p: Judgement) -> Judgement:
+    """Congruence in a *term* context: ``p ∈ Id(A, a, b)`` gives
+    ``Id(B, context(a), context(b))`` for a one-variable abstraction.
+
+    ``cong`` needs an element of ``A ⇒ B``; this takes the context directly,
+    so ``(x)succ(x)`` can be used without wrapping it in a ``lam``. The
+    codomain is inferred, which also checks the context is well typed.
+    """
+    engine = p.engine
+    A, a, b = endpoints(p)
+    if not isinstance(context, Abs) or len(context.arities) != 1:
+        raise DerivationError("%r is not a one-variable context" % (context,))
+    z = Var(
+        _fresh_names(
+            ["z"],
+            (),
+            set(p.ctx.names()) | {v.name for v in free_vars(context) | free_vars(A)},
+        )[0]
+    )
+    try:
+        B = engine.checker.infer(p.ctx.extend(z, A), instantiate(context, [z]))
+    except TypingError as error:
+        raise DerivationError(
+            "The context %r is not well typed over %r: %s" % (context, A, error)
+        )
+    if z in B:
+        raise DerivationError(
+            "The context %r has a dependent type; use transport instead" % (context,)
+        )
+    x, y, w = _fresh(p, context, A, B, a, b)
+    motive = _Id(B, _at(context, x), _at(context, y)).abstract(x, y, w)
+    base = _refl(_at(context, x)).abstract(x)
+    type = _Id(B, _at(context, a), _at(context, b))
+    return elim(p, motive, base, type)
+
+
 def transport(fam: Judgement, p: Judgement, c: Judgement) -> Judgement:
     """``P(z) set [z ∈ A]``, ``p ∈ Id(A, a, b)``, ``c ∈ P(a)``  ⊢  ``P(b)``.
 
@@ -886,19 +933,128 @@ def transport(fam: Judgement, p: Judgement, c: Judgement) -> Judgement:
     if not engine.defeq(fam.hyps[0][1], A):
         raise DerivationError("%r is not a family over %r" % (fam, A))
     _expect_type(c, _at(fam.term, a))
-    x, y, z = _fresh(fam, p, c, A, a, b)
-    motive = _implies(_at(fam.term, x), _at(fam.term, y)).abstract(x, y, z)
-    w = Var(_fresh_names(["w"], (), {v.name for v in free_vars(fam.term)})[0])
+    return _carry(fam.term, p, c, fam)
+
+
+def _carry(
+    family_term: Term, p: Judgement, c: Judgement, *inherit: Judgement
+) -> Judgement:
+    """``c ∈ P(a)`` carried along ``p ∈ Id(A, a, b)`` to ``P(b)``.
+
+    The J motive is ``(x, y, z) P(x) ⇒ P(y)`` with the reflexive case the
+    identity function, so ``J(...)`` is a function ``P(a) ⇒ P(b)``.
+    """
+    engine = p.engine
+    A, a, b = endpoints(p)
+    x, y, z = _fresh(p, c, family_term, A, a, b, *inherit)
+    motive = _implies(_at(family_term, x), _at(family_term, y)).abstract(x, y, z)
+    w = Var(_fresh_names(["w"], (), {v.name for v in free_vars(family_term)})[0])
     base = _lam(w.abstract(w)).abstract(x)
-    carrier = elim(p, motive, base, _implies(_at(fam.term, a), _at(fam.term, b)), fam)
+    carrier = elim(
+        p, motive, base, _implies(_at(family_term, a), _at(family_term, b)), *inherit
+    )
     return Judgement(
         merge(carrier.ctx, c.ctx),
         _apply(carrier.term, c.term),
-        _at(fam.term, b),
+        _at(family_term, b),
         engine=engine,
         check=False,
-        aliases=_aliases(fam, p, c),
+        aliases=_aliases(p, c, *inherit),
     )
+
+
+# -- rewriting -----------------------------------------------------------------------
+
+
+def occurrences(term: Term, pattern: Term) -> int:
+    """How many times ``pattern`` occurs in ``term``.
+
+    Occurrences are counted structurally (so up to alpha-equivalence) and
+    are not searched inside one another.
+    """
+    count = 0
+
+    def visit(t: Term, depth: int) -> Optional[Term]:
+        nonlocal count
+        if t == pattern:
+            count += 1
+            return t  # do not recurse into a match
+        return None
+
+    transform(term, visit)
+    return count
+
+
+def motive_for(
+    term: Term, pattern: Term, var: Var, at: Optional[Sequence[int]] = None
+) -> Abs:
+    """``(var) term`` with occurrences of ``pattern`` replaced by ``var``.
+
+    ``at`` selects which occurrences to abstract, by their zero-based index
+    in reading order; the default is all of them.
+    """
+    wanted = None if at is None else set(at)
+    seen = 0
+
+    def visit(t: Term, depth: int) -> Optional[Term]:
+        nonlocal seen
+        if t == pattern:
+            index = seen
+            seen += 1
+            if wanted is None or index in wanted:
+                return var
+            return t
+        return None
+
+    replaced = transform(term, visit)
+    if wanted is not None:
+        missing = sorted(i for i in wanted if i >= seen)
+        if missing:
+            raise DerivationError(
+                "There %s only %d occurrence(s) of %r, so %s cannot be selected"
+                % ("is" if seen == 1 else "are", seen, pattern, missing)
+            )
+    return _abstract_term(replaced, [var])
+
+
+def rewrite(
+    target: Judgement, p: Judgement, at: Optional[Sequence[int]] = None
+) -> Judgement:
+    """Rewrite ``target`` with the identity ``p``, left to right.
+
+    ``target ∈ T`` and ``p ∈ Id(A, a, b)`` give a judgement of
+    ``T[a := b]``, justified by transporting ``target`` along ``p``. Use
+    ``p.symm`` to rewrite right to left, and ``at`` to pick which
+    occurrences to rewrite (default: all).
+
+    The motive built from ``T`` is checked to be a family over ``A``, so a
+    rewrite that would be ill typed is refused rather than producing a
+    judgement that does not hold.
+    """
+    engine = target.engine
+    A, a, b = endpoints(p)
+    if occurrences(target.type, a) == 0:
+        raise DerivationError(
+            "%r does not occur in %r, so there is nothing to rewrite" % (a, target.type)
+        )
+    z = Var(
+        _fresh_names(
+            ["z"],
+            (),
+            set(target.ctx.names())
+            | set(p.ctx.names())
+            | {v.name for v in free_vars(target.type) | free_vars(A)},
+        )[0]
+    )
+    fam = motive_for(target.type, a, z, at)
+    inner = merge(target.ctx, p.ctx).extend(z, A)
+    try:
+        engine.checker.is_set(inner, instantiate(fam, [z]))
+    except TypingError as error:
+        raise DerivationError(
+            "Rewriting %r in %r is not type correct: %s" % (a, target.type, error)
+        )
+    return _carry(fam, p, target)
 
 
 def _fresh(*parts: Union[Judgement, Term]) -> Tuple[Var, ...]:

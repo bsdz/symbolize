@@ -277,7 +277,7 @@ class TestJudgements(unittest.TestCase):
         addone = prim(x, judge(succ(zero), N), f).abstract(x)
         self.assertEqual(
             addone.repr_unicode(),
-            "λ(x).(natrec((_)ℕ, x, succ(0), (x', y)(λ(n).λ(y').(succ(y')))(x')(y))) : ℕ ⟹ ℕ",
+            "λ(x).(natrec((_)ℕ, x, succ(0), (x', y)succ(y))) : ℕ ⟹ ℕ",
         )
 
     def test_unicode_argument(self):

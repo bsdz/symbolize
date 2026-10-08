@@ -161,10 +161,11 @@ class TestSigma(CheckerTest):
             self.infer(ctx, pair(a, b))  # B(a) not determined
         self.assertType(ctx, fst(p), A)
         self.assertType(ctx, snd(p), B)
-        # a bare pair is not inferable, so neither is a projection of one;
-        # the derivation layer supplies the type (see derive.py)
-        with self.assertRaises(TypingError):
-            self.infer(ctx, fst(pair(a, b)))
+        # a bare pair is not inferable, but a projection of one is: when the
+        # signature cannot be instantiated, infer falls back to the reduct,
+        # and fst(pair(a, b)) reduces to a
+        self.assertEqual(self.infer(ctx, fst(pair(a, b))), A)
+        self.assertEqual(self.infer(ctx, snd(pair(a, b))), B)
 
     def test_exists(self):
         P = Var("P", Arrow(A0, A0))

@@ -18,8 +18,7 @@ from .arity import A0
 from .binding import free_vars, instantiate, subst_many, transform
 from .decl import SET, Param, Registry, Signature, match
 from .eval import Evaluator, beta
-from .term import (Abs, App, Const, Term, TermError, Var, _fresh_names,
-                   is_closed)
+from .term import Abs, App, Const, Term, TermError, Var, _fresh_names, is_closed
 
 
 class TypingError(TermError):
@@ -124,7 +123,16 @@ class Checker:
         if isinstance(term, App):
             fn = term.fn
             if isinstance(fn, Const):
-                return self._infer_const(ctx, fn, term.args)
+                try:
+                    return self._infer_const(ctx, fn, term.args)
+                except TypingError:
+                    # the signature could not be instantiated, but the term
+                    # may still reduce to something inferable: apply(lam(b), a)
+                    # is definitionally b(a), and fst(pair(a, b)) is a
+                    reduced = self.evaluator.whnf(term)
+                    if reduced != term:
+                        return self.infer(ctx, reduced)
+                    raise
             if isinstance(fn, Var):
                 return self._infer_family(ctx, fn, term.args)
             if isinstance(fn, Abs):

@@ -653,7 +653,7 @@ def natrec(
     _expect_type(d, _at(motive, zero))
     avoid = {v.name for v in free_vars(f.term)}
     x, y = (Var(nm) for nm in _fresh_names(["x", "y"], (), avoid))
-    step = _apply(_apply(f.term, x), y).abstract(x, y)
+    step = _applied(_applied(f.term, x), y).abstract(x, y)
     _expect_type(
         f, _forall(N, _implies(_at(motive, x), _at(motive, succ(x))).abstract(x))
     )
@@ -1205,6 +1205,20 @@ def _at(fam: Term, arg: Term) -> Term:
     if isinstance(fam, Abs):
         return instantiate(fam, [arg])
     return App(fam, (arg,))
+
+
+def _applied(f: Term, arg: Term) -> Term:
+    """``apply(f, arg)``, opening ``f`` when it is literally ``lam((x)b)``.
+
+    A rule that has to feed arguments to a function the caller supplied
+    should not leave a redex behind: a bare ``lam`` carries no domain, so
+    ``apply(lam(b), a)`` is not re-checkable even though it is definitionally
+    ``b(a)``. Opening it keeps the constructed proof term checkable. A
+    function that is a variable or a constant is applied as usual.
+    """
+    if isinstance(f, App) and f.fn == _lam and isinstance(f.args[0], Abs):
+        return instantiate(f.args[0], [arg])
+    return _apply(f, arg)
 
 
 def _constant_codomain(fam: Term, j: Judgement) -> Term:

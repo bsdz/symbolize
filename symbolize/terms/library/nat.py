@@ -7,7 +7,16 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from ..arity import A0, Arrow, Cross
 from ..binding import abstract
-from ..decl import SET, Param, Registry, Rule, Signature, TypeFormer, pvar
+from ..decl import (
+    SET,
+    Operators,
+    Param,
+    Registry,
+    Rule,
+    Signature,
+    TypeFormer,
+    pvar,
+)
 from ..render.notation import ATOM, INFIX, notation
 from ..term import Abs, Const, Var
 
@@ -97,6 +106,8 @@ _MUL_BODY = abstract(
 
 
 def declare(registry: Registry) -> None:
-    """Add arithmetic to ``registry`` (the type former is added separately)."""
+    """Add arithmetic to ``registry`` (the type former is added separately),
+    with the operators that make ``n + 1`` mean ``add(n, succ(0))``."""
     registry.define(add, _ADD_BODY, _BINARY)
     registry.define(mul, _MUL_BODY, _BINARY)
+    registry.add_operators(Operators(N, add, mul, numeral=numeral))

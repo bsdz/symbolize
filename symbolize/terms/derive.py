@@ -23,7 +23,16 @@ from .arity import A0, Arrow, cross
 from .binding import abstract as _abstract_term
 from .binding import free_vars, instantiate, open_abs, subst, subst_many, transform
 from .check import Checker, Context, TypingError
-from .decl import SET, Param, Provenance, Registry, Signature, axioms_used, pvar
+from .decl import (
+    SET,
+    Operators,
+    Param,
+    Provenance,
+    Registry,
+    Signature,
+    axioms_used,
+    pvar,
+)
 from .eval import Evaluator
 from .library import STANDARD, Bool, Falsum
 from .library import Id as _Id
@@ -42,6 +51,7 @@ from .library import inl as _inl
 from .library import inr as _inr
 from .library import lam as _lam
 from .library import natrec as _natrec
+from .library import numeral as _numeral
 from .library import not_ as _not
 from .library import or_ as _or
 from .library import pair as _pair
@@ -323,6 +333,38 @@ class Judgement:
     def hyp(self, name: str) -> "Judgement":
         """A hypothesis ``name ∈ self`` (for a set judgement)."""
         return hyp(name, self)
+
+    # -- arithmetic on elements ------------------------------------------------
+    #
+    # Each builds the term and nothing more: x + 1 is add(x, 1), never
+    # simplified. An int operand is the literal of the other operand's set.
+    # Anything else is NotImplemented, so Python raises its usual TypeError.
+
+    def __add__(self, other: object) -> "Judgement":
+        return _binary("add", self, other)
+
+    def __radd__(self, other: object) -> "Judgement":
+        return _binary("add", other, self)
+
+    def __mul__(self, other: object) -> "Judgement":
+        return _binary("mul", self, other)
+
+    def __rmul__(self, other: object) -> "Judgement":
+        return _binary("mul", other, self)
+
+    def __sub__(self, other: object) -> "Judgement":
+        return _binary("sub", self, other)
+
+    def __rsub__(self, other: object) -> "Judgement":
+        return _binary("sub", other, self)
+
+    def __neg__(self) -> "Judgement":
+        return negate(self)
+
+    def __pow__(self, exponent: object) -> "Judgement":
+        if not _is_operand(exponent):
+            return NotImplemented
+        return power(self, exponent)  # type: ignore[arg-type]
 
     # -- spellings from the previous API -------------------------------------
 
@@ -709,6 +751,191 @@ def substitute(b: Judgement, x: Judgement, a: Judgement) -> Judgement:
         subst(b.type, var, a.term),
         engine=b.engine,
         check=False,
+    )
+
+
+# -- arithmetic ---------------------------------------------------------------------
+#
+# Terms carry no types, so the operators live on judgements, which do: the
+# set an element belongs to selects the Operators registered for it (see
+# decl.Operators). The operation's signature was checked against the carrier
+# when the operators were registered, so the results are well typed by
+# construction, as the rules' conclusions are.
+
+Operand = Union[Judgement, int]
+
+
+def _is_operand(x: object) -> bool:
+    return isinstance(x, Judgement) or (
+        isinstance(x, int) and not isinstance(x, bool)
+    )
+
+
+def operators(j: Judgement) -> Operators:
+    """The arithmetic of the set ``j`` is an element of."""
+    if j.is_set or j.is_family:
+        raise DerivationError(
+            "%s is a set; arithmetic is on its elements (∨ of sets is |)"
+            % (j.repr_unicode(),)
+        )
+    registry = j.engine.registry
+    found = registry.operators(j.type)
+    if found is None:
+        found = registry.operators(j.engine.whnf(j.type))
+    if found is None:
+        raise DerivationError(
+            "No arithmetic is declared on %s" % (j.type.repr_unicode(),)
+        )
+    return found
+
+
+def literal(k: int, set_: Judgement) -> Judgement:
+    """The element of ``set_`` denoted by the integer literal ``k``."""
+    _require_set(set_)
+    ops = set_.engine.registry.operators(set_.term)
+    if ops is None:
+        raise DerivationError(
+            "No arithmetic is declared on %s" % (set_.term.repr_unicode(),)
+        )
+    return Judgement(Context(), ops.literal(k), ops.carrier, engine=set_.engine)
+
+
+def _element(x: Operand, ops: Operators, like: Judgement) -> Judgement:
+    """``x`` as an element of ``ops.carrier``: a literal, or checked."""
+    if isinstance(x, Judgement):
+        _expect_type(x, ops.carrier)
+        return x
+    return Judgement(Context(), ops.literal(x), ops.carrier, engine=like.engine)
+
+
+def _operation(ops: Operators, name: str) -> Const:
+    const = getattr(ops, name)
+    if const is None:
+        raise DerivationError(
+            "%s has no %s" % (ops.carrier.repr_unicode(), _SPOKEN[name])
+        )
+    return const
+
+
+_SPOKEN = {
+    "add": "addition",
+    "mul": "multiplication",
+    "sub": "subtraction",
+    "neg": "negation",
+    "pow": "powers",
+}
+
+
+def _binary(name: str, a: object, b: object) -> Judgement:
+    if not (_is_operand(a) and _is_operand(b)):
+        return NotImplemented  # type: ignore[return-value]
+    anchor = a if isinstance(a, Judgement) else b
+    assert isinstance(anchor, Judgement)
+    ops = operators(anchor)
+    const = _operation(ops, name)
+    x = _element(a, ops, anchor)  # type: ignore[arg-type]
+    y = _element(b, ops, anchor)  # type: ignore[arg-type]
+    return Judgement(
+        merge(x.ctx, y.ctx),
+        const(x.term, y.term),
+        ops.carrier,
+        engine=anchor.engine,
+        check=False,
+        aliases=_aliases(x, y),
+    )
+
+
+def add(a: Operand, b: Operand) -> Judgement:
+    """``a + b`` in the set of whichever operand is a judgement."""
+    return _binary("add", a, b)
+
+
+def mul(a: Operand, b: Operand) -> Judgement:
+    """``a ⋅ b``."""
+    return _binary("mul", a, b)
+
+
+def sub(a: Operand, b: Operand) -> Judgement:
+    """``a - b``."""
+    return _binary("sub", a, b)
+
+
+def negate(a: Judgement) -> Judgement:
+    """``-a``."""
+    const = _operation(operators(a), "neg")
+    return Judgement(
+        a.ctx,
+        const(a.term),
+        a.type,
+        engine=a.engine,
+        check=False,
+        aliases=_aliases(a),
+    )
+
+
+def power(base: Judgement, exponent: Union[Judgement, int]) -> Judgement:
+    """``base^exponent``, the exponent a natural number or an element of N."""
+    ops = operators(base)
+    const = _operation(ops, "pow")
+    if isinstance(exponent, Judgement):
+        _expect_type(exponent, N)
+        n = exponent
+    elif exponent < 0:
+        raise DerivationError(
+            "%d is not a natural number; negative powers need a field"
+            % exponent
+        )
+    else:
+        n = Judgement(
+            Context(), _numeral(exponent), N, engine=base.engine, check=False
+        )
+    return Judgement(
+        merge(base.ctx, n.ctx),
+        const(base.term, n.term),
+        ops.carrier,
+        engine=base.engine,
+        check=False,
+        aliases=_aliases(base, n),
+    )
+
+
+def symbols(
+    names: str, set_: Judgement
+) -> Union[Judgement, Tuple[Judgement, ...]]:
+    """Hypotheses ``x, y, ... ∈ set_``, as sympy's ``symbols``.
+
+    ``names`` is split on spaces and commas; one name gives one judgement,
+    several give a tuple: ``x, y = symbols("x y", R)``.
+    """
+    split = [n for n in names.replace(",", " ").split() if n]
+    if not split:
+        raise DerivationError("symbols needs at least one name")
+    made = tuple(hyp(n, set_) for n in split)
+    return made[0] if len(made) == 1 else made
+
+
+def cite(
+    const: Const, *args: Judgement, engine: Optional[Engine] = None
+) -> Judgement:
+    """A declared constant -- an axiom or law, typically -- used at ``args``.
+
+    ``cite(REAL.add_comm, x, y)`` is ``x + y = y + x``. The conclusion is
+    the constant's signature instantiated at the arguments, found and
+    checked by the type checker, so citing a law at elements of the wrong
+    set is refused.
+    """
+    if args:
+        engine = args[0].engine
+    elif engine is None:
+        engine = DEFAULT
+    ctx = merge(*[a.ctx for a in args])
+    term = const(*[a.term for a in args]) if args else const
+    try:
+        type = engine.checker.infer(ctx, term)
+    except TypingError as error:
+        raise DerivationError("Cannot cite %r here: %s" % (const, error))
+    return Judgement(
+        ctx, term, type, engine=engine, check=False, aliases=_aliases(*args)
     )
 
 

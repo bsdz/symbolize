@@ -12,7 +12,26 @@ from typing import TYPE_CHECKING, Dict, Optional, Sequence, Set, Tuple
 
 from ..binding import free_vars, instantiate
 from ..term import Abs, App, Bound, Comb, Const, Sel, Term, Var, _fresh_names
-from .notation import APPLY, BINDER, EQUATION, INFIX, PREFIX, QUANTIFIER, TUPLE, lookup
+from .notation import (
+    APPLY,
+    BINDER,
+    EQUATION,
+    INFIX,
+    NUMERAL,
+    POWER,
+    PREFIX,
+    QUANTIFIER,
+    TUPLE,
+    UNARY,
+    Notation,
+    lookup,
+)
+
+# the notation kinds whose rendering is an operator applied to operands, so
+# that it may need parentheses when it is itself an operand
+_OPERATORS = (INFIX, EQUATION, QUANTIFIER, BINDER, UNARY, POWER)
+
+_SUPERSCRIPTS = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 if TYPE_CHECKING:
     from ..check import Context
@@ -92,16 +111,25 @@ class TextRenderer:
             sym = self._symbol(t.fn)
             if kind == INFIX and len(args) == 2:
                 return "%s %s %s" % (
-                    self._operand(args[0], scope),
+                    self._operand(args[0], scope, note),
                     sym,
-                    self._operand(args[1], scope),
+                    self._operand(args[1], scope, note, right=True),
                 )
             if kind == EQUATION and len(args) == 3:
                 return "%s %s %s" % (
-                    self._operand(args[1], scope),
+                    self._operand(args[1], scope, note),
                     sym,
-                    self._operand(args[2], scope),
+                    self._operand(args[2], scope, note, right=True),
                 )
+            if kind == UNARY and len(args) == 1:
+                return "%s%s" % (sym, self._operand(args[0], scope, note))
+            if kind == POWER and len(args) == 2:
+                return self._power(args[0], args[1], scope)
+            if kind == NUMERAL and len(args) == 1:
+                value = numeral_value(args[0])
+                if value is not None:
+                    return str(value)
+                return "%s%s" % (sym, self._operand(args[0], scope, note))
             if kind == QUANTIFIER and len(args) == 2:
                 return self._quantifier(sym, args[1], scope)
             if kind == BINDER and len(args) == 1 and isinstance(args[0], Abs):
@@ -151,12 +179,67 @@ class TextRenderer:
             return r"\mathrel{\vcenter{:}}="
         return "≔"
 
-    def _operand(self, t: Term, scope: Set[str]) -> str:
-        """An operand of an infix connective, parenthesised if compound."""
+    def _operand(
+        self,
+        t: Term,
+        scope: Set[str],
+        parent: Optional[Notation] = None,
+        right: bool = False,
+    ) -> str:
+        """An operand of the operator ``parent``, parenthesised if needed."""
         s = self._render(t, scope)
-        if self._kind(t) in (INFIX, EQUATION, QUANTIFIER, BINDER) or isinstance(t, Abs):
+        if self._needs_parens(t, parent, right):
             return "(%s)" % s
         return s
+
+    def _needs_parens(
+        self, t: Term, parent: Optional[Notation], right: bool
+    ) -> bool:
+        """Does ``t`` need parentheses as an operand of ``parent``?
+
+        A compound operand always does unless both operators have a
+        precedence and the operand binds more tightly -- or equally tightly,
+        on the left of a left-associative infix operator. A unary operand
+        binds at its own precedence, except that a nested unary operator is
+        bracketed so ``-(-x)`` is not read as a decrement.
+        """
+        if isinstance(t, Abs):
+            return True
+        kind = self._kind(t)
+        if kind not in _OPERATORS:
+            return False
+        if parent is None or parent.precedence is None:
+            return True
+        assert isinstance(t, App) and isinstance(t.fn, Const)
+        child = lookup(t.fn).precedence
+        if child is None:
+            return True
+        if parent.kind == UNARY:
+            return kind == UNARY or child < parent.precedence
+        if child > parent.precedence:
+            return False
+        return not (
+            child == parent.precedence and not right and parent.kind == INFIX
+        )
+
+    def _power(self, base: Term, exponent: Term, scope: Set[str]) -> str:
+        """``x²`` (unicode) or ``x^{2}`` (LaTeX); any operator as the base is
+        bracketed, so ``(-x)²`` and ``(x²)³`` read unambiguously."""
+        rendered = self._render(base, scope)
+        bracket = isinstance(base, Abs) or self._kind(base) in _OPERATORS
+        if self._kind(base) == NUMERAL and isinstance(base, App):
+            # a literal 2 needs no brackets, a cast ↑n does
+            bracket = numeral_value(base.args[0]) is None
+        if bracket:
+            rendered = "(%s)" % rendered
+        value = numeral_value(exponent)
+        if self.style == "latex":
+            if value is None:
+                return "%s^{%s}" % (rendered, self._render(exponent, scope))
+            return "%s^{%d}" % (rendered, value)
+        if value is not None:
+            return rendered + str(value).translate(_SUPERSCRIPTS)
+        return "%s^%s" % (rendered, self._operand(exponent, scope))
 
     def _quantifier(self, sym: str, body: Term, scope: Set[str]) -> str:
         """``∀x.B`` from ``∀(A, (x)B)``; a family ``P`` is shown as ``∀x.P(x)``."""
@@ -262,6 +345,22 @@ class TextRenderer:
             )
         label = "(%s)" % arg.label if arg.label else ""
         return r"\frac{%s}{%s}%s" % (top, self.render_judgement(arg.conclusion), label)
+
+
+def numeral_value(term: Term) -> Optional[int]:
+    """``k`` when ``term`` is the closed numeral ``succ(...succ(0))``.
+
+    Used where a natural number is displayed as a number -- an exponent, or
+    the argument of a cast into another set. ``N``'s own numerals keep their
+    constructor form elsewhere.
+    """
+    from ..library.nat import succ, zero
+
+    count = 0
+    while isinstance(term, App) and term.fn == succ and len(term.args) == 1:
+        count += 1
+        term = term.args[0]
+    return count if term == zero else None
 
 
 def typestring(term: Term, **kw) -> str:

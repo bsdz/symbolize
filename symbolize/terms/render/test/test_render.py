@@ -13,9 +13,10 @@ from symbolize.terms.decl import SET
 from symbolize.terms.derive import (Argument, Engine, cases, exists, family,
                                     forall,
                                     hyp, inl, inr, judge, pair, prim, set_var)
-from symbolize.terms.library import (Falsum, N, and_, apply, implies, lam,
-                                     natrec, not_, numeral, or_, standard,
-                                     succ, zero)
+from symbolize.terms.library import (REAL, Falsum, Id, N, R, and_, apply,
+                                     implies, lam, natrec, not_, numeral, or_,
+                                     standard, succ, zero)
+from symbolize.terms.library import add as nat_add
 from symbolize.terms.render import (TextRenderer, dot, latex, tree, typestring,
                                     unicode)
 
@@ -299,6 +300,93 @@ class TestJudgements(unittest.TestCase):
         text = Argument([x, a], a(x), label="⇒E").repr_unicode()
         self.assertEqual(text.splitlines()[0], "x : A   a : A ⟹ B")
         self.assertEqual(text.splitlines()[-1], "a(x) : B")
+
+
+class TestArithmetic(unittest.TestCase):
+    """Operators with a precedence: parentheses only where they are needed.
+
+    Built from the ring's constants directly, so rendering is tested without
+    an engine.
+    """
+
+    def setUp(self):
+        self.x, self.y, self.z = Var("x"), Var("y"), Var("z")
+        self.add, self.mul = REAL.add, REAL.mul
+        self.sub, self.neg, self.pow = REAL.sub, REAL.neg, REAL.pow
+
+    def check(self, term, text, tex):
+        self.assertEqual(unicode(term), text)
+        self.assertEqual(latex(term), tex)
+
+    def test_precedence(self):
+        x, y, z = self.x, self.y, self.z
+        self.check(self.add(x, self.mul(y, z)), "x + y ⋅ z", r"x + y \cdot z")
+        self.check(
+            self.mul(self.add(x, y), z), "(x + y) ⋅ z", r"(x + y) \cdot z"
+        )
+
+    def test_infix_operators_associate_to_the_left(self):
+        """Grouping is shown exactly where it differs from the reading
+        convention, since a proof has to know which one it has."""
+        x, y, z = self.x, self.y, self.z
+        self.check(self.add(self.add(x, y), z), "x + y + z", "x + y + z")
+        self.check(self.add(x, self.add(y, z)), "x + (y + z)", "x + (y + z)")
+        self.check(self.sub(self.sub(x, y), z), "x - y - z", "x - y - z")
+        self.check(self.sub(x, self.sub(y, z)), "x - (y - z)", "x - (y - z)")
+
+    def test_unary_minus(self):
+        x, y = self.x, self.y
+        self.check(self.neg(x), "-x", "-x")
+        self.check(self.neg(self.add(x, y)), "-(x + y)", "-(x + y)")
+        self.check(self.mul(self.neg(x), y), "-x ⋅ y", r"-x \cdot y")
+        self.check(self.neg(self.neg(x)), "-(-x)", "-(-x)")
+
+    def test_powers(self):
+        x, y = self.x, self.y
+        two, three = numeral(2), numeral(3)
+        self.check(self.pow(x, two), "x²", "x^{2}")
+        self.check(self.pow(self.add(x, y), two), "(x + y)²", "(x + y)^{2}")
+        self.check(self.neg(self.pow(x, two)), "-x²", "-x^{2}")
+        self.check(self.pow(self.neg(x), two), "(-x)²", "(-x)^{2}")
+        self.check(self.pow(self.pow(x, two), three), "(x²)³", "(x^{2})^{3}")
+        self.check(
+            self.mul(y, self.pow(x, numeral(12))), "y ⋅ x¹²", r"y \cdot x^{12}"
+        )
+
+    def test_a_variable_exponent(self):
+        n = Var("n")
+        self.check(self.pow(self.x, n), "x^n", "x^{n}")
+        self.check(self.pow(self.x, succ(n)), "x^succ(n)", "x^{succ(n)}")
+
+    def test_literals(self):
+        self.check(REAL.zero, "0", "0")
+        self.check(REAL.cast(numeral(7)), "7", "7")
+        self.check(self.pow(REAL.cast(numeral(2)), numeral(3)), "2³", "2^{3}")
+
+    def test_a_cast_that_is_not_a_literal(self):
+        n = Var("n")
+        self.check(REAL.cast(n), "↑n", r"{\uparrow}n")
+        self.check(
+            self.pow(REAL.cast(n), numeral(2)), "(↑n)²", r"({\uparrow}n)^{2}"
+        )
+
+    def test_equations_need_no_brackets_around_arithmetic(self):
+        x, y = self.x, self.y
+        t = Id(R, self.add(x, y), self.add(y, x))
+        self.check(t, "x + y = y + x", "x + y = y + x")
+
+    def test_operators_without_precedence_keep_their_brackets(self):
+        """N's addition has no precedence, so its rendering is unchanged."""
+        n = Var("n")
+        self.assertEqual(unicode(Id(N, nat_add(zero, n), n)), "(0 + n) = n")
+        self.assertEqual(
+            unicode(and_(Id(R, self.x, self.y), Id(R, self.y, self.x))),
+            "(x = y) ∧ (y = x)",
+        )
+
+    def test_typestring_is_faithful(self):
+        t = self.pow(self.add(self.x, REAL.one), numeral(2))
+        self.assertEqual(typestring(t), "R.pow(R.add(x, R.one), succ(succ(0)))")
 
 
 if __name__ == "__main__":

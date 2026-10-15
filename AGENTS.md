@@ -86,6 +86,19 @@ changes to `term.py`, `eval.py` or `check.py`.
    Universes themselves are still absent, which is why a polymorphic
    `length`/`append` would have to take its element set explicitly; the
    eliminator defines them at a concrete set meanwhile.
+6. Symbolic manipulation, the sympy-like layer. Every manipulation returns
+   a judgement of an equation, so it can be displayed and re-checked.
+   *Done:* operators on judgements (`x + 1`, `2 * x`, `x ** 2`, `-x`,
+   `symbols`, `cite`), dispatched through the `decl.Operators` registered
+   for the operand's set, since terms carry no types; and
+   `library/ring.py`, a commutative ring declared axiomatically over a
+   carrier, with `library/real.py`'s `R` as the instance
+   (`standard(reals=True)`). The ring laws are axioms with provenance;
+   subtraction, powers and literals are definitions. Next: a `ring_nf`
+   procedure that normalises polynomials and emits the chain of rewrites
+   (untrusted search, trusted check), giving `expand` and `collect` with
+   proofs; then field and order axioms for `R`. Lemmas are proved per
+   carrier until universes (step 5) let them be stated once.
 
 ## 2. Environment & Build
 
@@ -199,12 +212,17 @@ poetry run flake8 . || echo "flake8 not found/failed"
     - `decl.py`: `Signature`, `TypeFormer`, `Definition`, `Rule`, `Registry`.
     - `eval.py`: The lazy evaluator - `whnf`, `nf`, `defeq`.
     - `check.py`: `Context` and the bidirectional `Checker`.
-    - `derive.py`: `Judgement`, the natural-deduction rules, `Argument`.
+    - `derive.py`: `Judgement`, the natural-deduction rules, `Argument`,
+      and the arithmetic operators on judgements (`x + 1` builds
+      `add(x, 1)`, never simplifies).
     - `library/`: Type formers (`pi`, `sigma`, `plus`, `falsum`, `nat`, `bool`,
       `identity`, `list`), the connectives as definitions over them
       (`logic.py`), arithmetic (`add`, `mul`) as definitions over `natrec`,
       and the order on N (`order.py`: `le`, `lt`, `ge`, `gt`) as definitions
-      over Σ, `Id` and `add`.
+      over Σ, `Id` and `add`. `ring.py` declares a commutative ring over a
+      carrier (laws as axioms, subtraction/powers/literals as definitions);
+      `real.py` instantiates it as `R`, opt-in via `standard(reals=True)`
+      because the laws are believed, not proved.
     - `interop/`: `lean.py` imports Lean 4 *statements* as axioms and exports
       them back for round-trip checking; `Export.lean` is the Lean-side
       dumper.

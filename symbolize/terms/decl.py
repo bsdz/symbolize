@@ -13,7 +13,16 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
+from typing import (
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from .arity import A0, Arrow, cross
 from .binding import free_vars, subst_many
@@ -374,6 +383,42 @@ def axioms_used(term: Term, registry: "Registry") -> Tuple[Const, ...]:
     return tuple(sorted(found, key=lambda c: c.name))
 
 
+
+@dataclass(frozen=True)
+class Operators:
+    """What ``+``, ``*``, ``-`` and ``**`` mean on one set.
+
+    Terms carry no types, so ``x + y`` cannot choose an addition from the
+    terms alone; a judgement knows its set, and this table, registered per
+    carrier, is what the operators on that set denote. It plays the part of
+    Lean's instance resolution, with the carrier as the only key.
+
+    ``add`` and ``mul`` (and ``sub``) are binary on the carrier, ``neg`` is
+    unary, ``pow`` takes an element and a natural number. ``numeral(k)`` is
+    the element denoted by the literal ``k >= 0``; a negative literal is
+    ``neg`` of its absolute value, so needs ``neg``.
+    """
+
+    carrier: Term
+    add: Const
+    mul: Const
+    numeral: Callable[[int], Term] = field(compare=False)
+    neg: Optional[Const] = None
+    sub: Optional[Const] = None
+    pow: Optional[Const] = None
+
+    def literal(self, k: int) -> Term:
+        """The element denoted by the integer literal ``k``."""
+        if k < 0:
+            if self.neg is None:
+                raise DeclarationError(
+                    "%r has no negation, so %d is not an element of it"
+                    % (self.carrier, k)
+                )
+            return self.neg(self.numeral(-k))
+        return self.numeral(k)
+
+
 class Registry:
     """The declarations in scope: signatures, definitions and computation
     rules, plus which constants are constructors."""
@@ -386,6 +431,7 @@ class Registry:
         self._formers: Dict[Const, TypeFormer] = {}
         self._constructors: Dict[Const, Const] = {}
         self._axioms: Dict[Const, Provenance] = {}
+        self._operators: Dict[Term, Operators] = {}
 
     def declare(self, const: Const, signature: Signature) -> None:
         """Register the typing rule of a primitive constant."""
@@ -456,6 +502,51 @@ class Registry:
         record = provenance if provenance is not None else Provenance()
         self._axioms[const] = record
         return record
+
+    def add_operators(self, ops: Operators) -> Operators:
+        """Register the arithmetic of ``ops.carrier``.
+
+        Each operation must already be declared with a signature that fits
+        the carrier, so that a term built by an operator is well typed by
+        construction and need not be re-checked.
+        """
+        if ops.carrier in self._operators:
+            raise DeclarationError(
+                "%r already has operators declared" % (ops.carrier,)
+            )
+        shapes = (
+            (ops.add, 2, 2),
+            (ops.mul, 2, 2),
+            (ops.sub, 2, 2),
+            (ops.neg, 1, 1),
+            (ops.pow, 2, 1),  # the exponent is not an element of the carrier
+        )
+        for const, arity, on_carrier in shapes:
+            if const is None:
+                continue
+            sig = self.signature(const)
+            if sig is None:
+                raise DeclarationError(
+                    "%r must be declared before it is an operator" % (const,)
+                )
+            fits = (
+                len(sig.params) == arity
+                and sig.result == ops.carrier
+                and all(
+                    p.type == ops.carrier for p in sig.params[:on_carrier]
+                )
+            )
+            if not fits:
+                raise DeclarationError(
+                    "%r does not have the shape of an operator on %r"
+                    % (const, ops.carrier)
+                )
+        self._operators[ops.carrier] = ops
+        return ops
+
+    def operators(self, carrier: Term) -> Optional[Operators]:
+        """The arithmetic declared on ``carrier``, if any."""
+        return self._operators.get(carrier)
 
     def is_axiom(self, const: Const) -> bool:
         return const in self._axioms

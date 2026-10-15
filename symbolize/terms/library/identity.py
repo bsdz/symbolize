@@ -28,7 +28,9 @@ Id = Const("Id", Arrow(Cross((A0, A0, A0)), A0))
 refl = Const("refl", Arrow(A0, A0))
 J = Const("J", Arrow(Cross((FAM3, A0, FAM)), A0))
 
-notation(Id, EQUATION, latex="=", unicode="=", typestring="Id")
+# precedence 50, below every arithmetic operator, so x + y = y + x needs no
+# parentheses; operators with no precedence are still parenthesised under it
+notation(Id, EQUATION, latex="=", unicode="=", typestring="Id", precedence=50)
 notation(refl, PREFIX)
 
 _A, _a, _b, _c = pvar("A"), pvar("a"), pvar("b"), pvar("c")

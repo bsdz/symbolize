@@ -77,7 +77,7 @@ changes to `term.py`, `eval.py` or `check.py`.
    `library/nat.py` so there is something for `Nat.add` to map onto.
    Verified end to end against Lean 4.34.1: the dumper compiles, its output
    imports, and the generated round-trip file compiles (and fails when the
-   translation is deliberately corrupted). `tests/terms/fixtures/` holds a
+   translation is deliberately corrupted). `interop/test/fixtures/` holds a
    captured real dump so the suite needs no toolchain.
 5. Universes and algebraic structures, as the library grows.
 
@@ -96,16 +96,27 @@ poetry install
 
 **Running Tests (`unittest`):**
 Tests are the primary verification mechanism. Always run relevant tests after changes.
+Tests live in a `test/` subfolder of the package they exercise (see §4), so
+discovery starts from the package with the repository root as the top-level
+directory:
 ```bash
-# Run the full test suite
-poetry run python3 -m unittest discover tests
+# Run the full test suite (either form)
+poetry run python3 -m unittest discover -s symbolize -t .
+poetry run python3 -m symbolize.test
 
-# Run a specific test file (e.g., test_groups.py)
-poetry run python3 -m unittest tests/test_groups.py
+# Run a specific test module (e.g., groups)
+poetry run python3 -m unittest symbolize.test.test_groups
 
 # Run a specific test case (e.g., test_render in GroupTest)
-poetry run python3 -m unittest tests.test_groups.GroupTest.test_render
+poetry run python3 -m unittest symbolize.test.test_groups.GroupTest.test_render
 ```
+The suite must pass in any order. Several derivation entry points default to
+the module-level `derive.DEFAULT` engine, whose weak-head-normal-form cache
+lives for the whole process; because display hints are excluded from term
+equality, a cache hit can return another test's binder names. A test that
+asserts on rendered output should therefore build its own
+`Engine(standard())` and thread it through every `judge`/`set_var`/`family`
+call, as `terms/render/test/test_render.py` does.
 
 **Linting & Formatting:**
 Code must pass these checks before being considered complete.
@@ -203,7 +214,14 @@ poetry run flake8 . || echo "flake8 not found/failed"
   inclusion-exclusion and quantification rendering) and `Argument.repr_html`.
   Prefer `symbolize.terms` for anything new; touch the legacy tree only to
   keep it working or to port a feature across.
-- **`tests/`**: Unit tests, mirroring the source structure.
+- **Tests** live in a `test/` subfolder of the package they exercise, so
+  `symbolize/terms/test/`, `symbolize/terms/library/test/`,
+  `symbolize/terms/render/test/`, `symbolize/terms/interop/test/`, and
+  likewise for the legacy tree. A test named `test_<module>.py` covers
+  `<module>.py` in the parent package; a test of a feature spanning the
+  package sits there too (`terms/test/test_rewrite.py`,
+  `test_induction.py` and `test_axioms.py` all exercise `derive.py`).
+  Fixtures go in a `fixtures/` directory beside the test that reads them.
 - **`examples/`**: Usage examples, including paired notebooks that show the
   same derivations on the legacy and term-based cores.
 
@@ -213,7 +231,7 @@ poetry run flake8 . || echo "flake8 not found/failed"
     - Read relevant files using `read`.
     - Search for usage patterns using `grep` or `glob`.
     - Understand existing conventions before writing code.
-    - Check for existing tests in `tests/` that cover the area of change.
+    - Check the `test/` subfolder of the package you are changing.
 
 2.  **Plan & Design:**
     - Formulate a clear plan for the change.

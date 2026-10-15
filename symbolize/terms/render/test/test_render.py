@@ -10,10 +10,12 @@ import unittest
 
 from symbolize.terms import A0, Arrow, Const, Var
 from symbolize.terms.decl import SET
-from symbolize.terms.derive import (Argument, cases, exists, family, forall,
+from symbolize.terms.derive import (Argument, Engine, cases, exists, family,
+                                    forall,
                                     hyp, inl, inr, judge, pair, prim, set_var)
 from symbolize.terms.library import (Falsum, N, and_, apply, implies, lam,
-                                     natrec, not_, numeral, or_, succ, zero)
+                                     natrec, not_, numeral, or_, standard,
+                                     succ, zero)
 from symbolize.terms.render import (TextRenderer, dot, latex, tree, typestring,
                                     unicode)
 
@@ -158,7 +160,14 @@ class TestJudgements(unittest.TestCase):
     """Cells of Type Theory - Logic V2.ipynb."""
 
     def setUp(self):
-        self.A, self.B, self.C = set_var("A"), set_var("B"), set_var("C")
+        # A private engine. The module-level DEFAULT caches weak head normal
+        # forms for the life of the process, and because display hints are
+        # excluded from term equality, a cache hit can come back carrying
+        # another test's binder names.
+        self.engine = Engine(standard())
+        self.A, self.B, self.C = (
+            set_var(name, engine=self.engine) for name in ("A", "B", "C")
+        )
 
     def test_conjunction(self):
         A, B = self.A, self.B
@@ -243,7 +252,7 @@ class TestJudgements(unittest.TestCase):
     def test_quantifiers(self):
         A = self.A
         x, a = hyp("x", A), hyp("a", A)
-        P = family("P", A)
+        P = family("P", A, engine=self.engine)
         f = hyp("f", forall(x, P(x)))
         self.assertEqual(f.repr_latex(), r"f : \forall{x}.P(x)")
         self.assertEqual(f(a).repr_latex(), "f(a) : P(a)")
@@ -266,15 +275,19 @@ class TestJudgements(unittest.TestCase):
     def test_context(self):
         A = self.A
         x = hyp("x", A)
-        P = family("P", A)
+        P = family("P", A, engine=self.engine)
         p = hyp("p", P(x))
         self.assertEqual(p.repr_context(), "[A : Set, P(z), x : A, p : P(x)]")
 
     def test_naturals(self):
-        Nset = judge(N, SET)
+        Nset = judge(N, SET, engine=self.engine)
         x, y, n = hyp("x", Nset), hyp("y", Nset), hyp("n", Nset)
-        f = judge(succ(y.term), N, y.ctx).abstract(y).abstract(n)
-        addone = prim(x, judge(succ(zero), N), f).abstract(x)
+        f = (
+            judge(succ(y.term), N, y.ctx, engine=self.engine)
+            .abstract(y)
+            .abstract(n)
+        )
+        addone = prim(x, judge(succ(zero), N, engine=self.engine), f).abstract(x)
         self.assertEqual(
             addone.repr_unicode(),
             "λ(x).(natrec((_)ℕ, x, succ(0), (x', y)succ(y))) : ℕ ⟹ ℕ",

@@ -333,7 +333,7 @@ Each milestone leaves the repository green.
 | 2 | `eval.py` with β/selection/δ, `whnf`/`nf`/`defeq`, fuel, cache. | Tests over hand-built terms; a deliberately looping definition raises `ReductionLimit`. |
 | 3 | `decl.py` + `library/` for `Π Σ + ⊥ N Bool` and the logic definitions; ι-rules wired into `eval`. | `nf(addone(succ(zero)))`, `cases`/`ifthenelse` reductions; every rule in [ST] ch. 4 & §4.7 transcribed with a test. |
 | 4 | `check.py` bidirectional checker, `Context`, `Judgement`. | `infer`/`check` tests for each rule; the `natrec` family example above. |
-| 5 | `derive.py` + `Argument`; compatibility shim. | `tests/logic/typetheory/*` pass against the new core (ported or via shim). |
+| 5 | `derive.py` + `Argument`; compatibility shim. | `logic/typetheory/test/*` pass against the new core (ported or via shim). |
 | 6 | `render/` parity. | README example and `Type Theory - Logic V2.ipynb` render identically. |
 | 7 | Decide fate of `symbolize.expressions`. | Separate proposal. |
 

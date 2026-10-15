@@ -79,7 +79,13 @@ changes to `term.py`, `eval.py` or `check.py`.
    imports, and the generated round-trip file compiles (and fails when the
    translation is deliberately corrupted). `interop/test/fixtures/` holds a
    captured real dump so the suite needs no toolchain.
-5. Universes and algebraic structures, as the library grows.
+5. Universes and algebraic structures, as the library grows. *Partly
+   done:* `library/list.py` (the `List` former with `listrec`) and
+   `library/order.py` close the two gaps that blocked retiring the legacy
+   `definitions/misc.py` lists and `definitions/operators.py` inequalities.
+   Universes themselves are still absent, which is why a polymorphic
+   `length`/`append` would have to take its element set explicitly; the
+   eliminator defines them at a concrete set meanwhile.
 
 ## 2. Environment & Build
 
@@ -195,8 +201,10 @@ poetry run flake8 . || echo "flake8 not found/failed"
     - `check.py`: `Context` and the bidirectional `Checker`.
     - `derive.py`: `Judgement`, the natural-deduction rules, `Argument`.
     - `library/`: Type formers (`pi`, `sigma`, `plus`, `falsum`, `nat`, `bool`,
-      `identity`), the connectives as definitions over them (`logic.py`), and
-      arithmetic (`add`, `mul`) as definitions over `natrec`.
+      `identity`, `list`), the connectives as definitions over them
+      (`logic.py`), arithmetic (`add`, `mul`) as definitions over `natrec`,
+      and the order on N (`order.py`: `le`, `lt`, `ge`, `gt`) as definitions
+      over Σ, `Id` and `add`.
     - `interop/`: `lean.py` imports Lean 4 *statements* as axioms and exports
       them back for round-trip checking; `Export.lean` is the Lean-side
       dumper.

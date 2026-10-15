@@ -146,10 +146,29 @@ class Checker:
 
     def check(self, ctx: Context, term: Term, type: Term) -> None:
         """Verify ``term ∈ type`` in ``ctx``; raises ``TypingError``."""
-        if isinstance(term, App) and isinstance(term.fn, Const):
-            signature = self.registry.signature(term.fn)
+        # A constant applied to its arguments, or a saturated constant with
+        # none, is checked against the expected type rather than inferred:
+        # that is what determines the parameters the result type leaves
+        # open. nil needs this as much as pair does -- its signature is
+        # () -> List(?A), so without an expected type ?A is unknowable.
+        head: Term = term.fn if isinstance(term, App) else term
+        args = term.args if isinstance(term, App) else ()
+        if isinstance(head, Const) and term.arity == A0:
+            signature = self.registry.signature(head)
             if signature is not None:
-                actual = self._apply_signature(ctx, signature, term.args, type)
+                try:
+                    actual = self._apply_signature(ctx, signature, args, type)
+                except TypingError:
+                    # As in infer: the signature could not be instantiated,
+                    # but the term may still reduce to something checkable.
+                    # apply(lam(b), a) is the case that matters -- a bare lam
+                    # carries no domain, so the redex cannot be typed by the
+                    # signature even though it is definitionally b(a).
+                    reduced = self.evaluator.whnf(term)
+                    if reduced != term:
+                        self.check(ctx, reduced, type)
+                        return
+                    raise
                 self._expect(ctx, term, actual, type)
                 return
         actual = self.infer(ctx, term)
@@ -290,6 +309,14 @@ class Checker:
         except TypingError as e:
             raise _NeedsExpected(e)
         if not match(param.type, inferred, pattern_vars, bindings, eq=self.defeq):
+            if unbound:
+                # The schema still mentions variables no premise has fixed,
+                # so this is not yet a mismatch: a later premise may bind
+                # them. listrec's motive, for instance, can only be checked
+                # once the list argument has fixed the element set. If the
+                # argument really is ill typed, the retry reports it once
+                # the schema is closed.
+                return False
             raise TypingError(
                 "%r has type %r, which does not fit %r"
                 % (arg, inferred, _instantiate(param.type, bindings))

@@ -5,10 +5,10 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 """
 import unittest
 
-from symbolize.logic.typetheory.proposition import implies, forall
-from symbolize.logic.typetheory.proof import ProofExpression
-from symbolize.logic.typetheory.proposition import PropositionSymbol
-from symbolize.logic.typetheory.natural import N, zero, succ, prim
+from symbolize.legacy.logic.typetheory.proposition import implies, forall
+from symbolize.legacy.logic.typetheory.proof import ProofExpression
+from symbolize.legacy.logic.typetheory.proposition import PropositionSymbol
+from symbolize.legacy.logic.typetheory.natural import N, zero, succ, prim
 
 
 class TestNaturalNumbers(unittest.TestCase):

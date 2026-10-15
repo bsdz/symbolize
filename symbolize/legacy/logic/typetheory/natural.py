@@ -4,7 +4,7 @@ Copyright (C) 2018  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 """
 
-from ...expressions.arity import A0, ArityArrow, ArityCross
+from ....expressions.arity import A0, ArityArrow, ArityCross
 from .proposition import PropositionSymbol
 from .proof import ProofSymbol
 

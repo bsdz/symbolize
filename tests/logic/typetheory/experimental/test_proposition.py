@@ -6,11 +6,11 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.logic.typetheory.experimental.proposition import (  # noqa: F401
+from symbolize.legacy.logic.typetheory.experimental.proposition import (  # noqa: F401
     Proposition,
     get_proposition_class,
 )
-from symbolize.logic.typetheory.experimental.variables import A, B  # noqa: F401
+from symbolize.legacy.logic.typetheory.experimental.variables import A, B  # noqa: F401
 
 
 class PropositionTest(unittest.TestCase):

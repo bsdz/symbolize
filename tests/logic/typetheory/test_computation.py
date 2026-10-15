@@ -6,9 +6,9 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.logic.typetheory.boolean import False_, True_, ifthenelse
-from symbolize.logic.typetheory.natural import N, prim, succ, zero
-from symbolize.logic.typetheory.proof import (
+from symbolize.legacy.logic.typetheory.boolean import False_, True_, ifthenelse
+from symbolize.legacy.logic.typetheory.natural import N, prim, succ, zero
+from symbolize.legacy.logic.typetheory.proof import (
     Fst,
     ProofExpressionCombination,
     Snd,
@@ -18,8 +18,8 @@ from symbolize.logic.typetheory.proof import (
     inr,
     snd,
 )
-from symbolize.logic.typetheory.proposition import PropositionSymbol, implies
-from symbolize.logic.typetheory.variables import A, B, C
+from symbolize.legacy.logic.typetheory.proposition import PropositionSymbol, implies
+from symbolize.legacy.logic.typetheory.variables import A, B, C
 
 
 class TestComputationRules(unittest.TestCase):

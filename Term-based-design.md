@@ -11,7 +11,7 @@ is open to change.
 
 | Question | Decision |
 |---|---|
-| Scope | New core package built alongside the existing `symbolize.expressions`. `symbolize.logic.typetheory` migrates first, using its current tests as the specification. `expressions` (integrals, groups, `Syntax.ipynb`) is untouched until parity, then becomes a facade or is retired. |
+| Scope | New core package built alongside the existing `symbolize.expressions`. `symbolize.legacy.logic.typetheory` migrates first, using its current tests as the specification. `expressions` (integrals, groups, `Syntax.ipynb`) is untouched until parity, then becomes a facade or is retired. |
 | Propositions | Martin-Löf: propositions *are* types. `∃` is `Σ`, the witness is extractable. No `Prop`, no proof irrelevance. See `Other-proof-engines.md` §1. |
 | Arities | Kept. The term language *is* Nordström's theory of expressions ([BN] ch. 3): every term has an arity, and arity is checked at construction. Types (`a ∈ A`) are a second, separate discipline checked by the type checker. |
 | Type formers | Declaration-driven. Each former is a data declaration (formation, constructors, eliminator, computation rules) in a registry. No Python class per operation. The declaration shape is chosen so a general inductive schema with generated recursors can be added later. |

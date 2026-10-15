@@ -6,8 +6,8 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 """
 # from textwrap import dedent
 
-from ..expressions import Expression, Symbol
-from ..utility import generate_random_string
+from ...expressions import Expression, Symbol
+from ...utility import generate_random_string
 
 
 class Argument:

@@ -6,8 +6,8 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 import unittest
 
-from symbolize.logic.typetheory.proposition import and_, implies, or_, forall, exists
-from symbolize.logic.typetheory.proof import (
+from symbolize.legacy.logic.typetheory.proposition import and_, implies, or_, forall, exists
+from symbolize.legacy.logic.typetheory.proof import (
     ProofExpressionCombination,
     ProofExpression,
     fst,
@@ -18,9 +18,9 @@ from symbolize.logic.typetheory.proof import (
     Fst,
     Snd,
 )
-from symbolize.logic.typetheory.boolean import bool_, True_, False_, ifthenelse
-from symbolize.logic.typetheory.variables import A, B, C
-from symbolize.logic.typetheory.proposition import PropositionSymbol
+from symbolize.legacy.logic.typetheory.boolean import bool_, True_, False_, ifthenelse
+from symbolize.legacy.logic.typetheory.variables import A, B, C
+from symbolize.legacy.logic.typetheory.proposition import PropositionSymbol
 
 
 class TestDeductionRules(unittest.TestCase):

@@ -191,11 +191,18 @@ poetry run flake8 . || echo "flake8 not found/failed"
       dumper.
     - `render/`: Notation table plus typestring, unicode, LaTeX and graph
       renderers.
-- **`symbolize/`** (legacy, kept working; being moved under a `legacy`
-  submodule): `expressions/` (the class-per-operation `Expression` hierarchy),
-  `logic/` (the older proofs and propositions), `definitions/`, `groups.py`,
-  `natural.py`. Prefer `symbolize.terms` for anything new; touch the legacy
-  tree only to keep it working or to port a feature across.
+- **`symbolize/legacy/`**: superseded code, kept working. `logic/` (the
+  older proofs, propositions and `Argument`) now lives here, including the
+  `typetheory/experimental/` dead end, which nothing outside its own tests
+  references.
+- **`symbolize/`** (legacy, not yet moved): `expressions/` (the
+  class-per-operation `Expression` hierarchy), `definitions/` (the predefined
+  symbols), `groups.py`, `natural.py`, `utility.py`. These still have no
+  `terms` equivalent -- the symbol library (`divide`, `in_`, `R`,
+  `integral`/`sum_`/`product`), `extensions.py` (integral,
+  inclusion-exclusion and quantification rendering) and `Argument.repr_html`.
+  Prefer `symbolize.terms` for anything new; touch the legacy tree only to
+  keep it working or to port a feature across.
 - **`tests/`**: Unit tests, mirroring the source structure.
 - **`examples/`**: Usage examples, including paired notebooks that show the
   same derivations on the legacy and term-based cores.

@@ -11,9 +11,9 @@ python -m pip install git+https://github.com/bsdz/symbolize.git
 # Example
 
 ```python
-from symbolize.logic.argument import Argument
-from symbolize.logic.typetheory.proposition import implies, ImpliesPropositionExpression, not_
-from symbolize.logic.typetheory.variables import A, B, C, Falsum
+from symbolize.legacy.logic.argument import Argument
+from symbolize.legacy.logic.typetheory.proposition import implies, ImpliesPropositionExpression, not_
+from symbolize.legacy.logic.typetheory.variables import A, B, C, Falsum
 
 A_implies_B = implies(A, B)
 B_implies_C = implies(B, C)

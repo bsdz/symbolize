@@ -10,11 +10,11 @@ from symbolize.expressions import A0, ArityArrow, ArityCross, ExpressionCombinat
 from symbolize.definitions.logic import and_, implies, or_
 from symbolize.definitions.functions import fst, snd, inl, inr, cases
 
-from symbolize.logic.typetheory.experimental.proposition import (
+from symbolize.legacy.logic.typetheory.experimental.proposition import (
     Proposition,
     get_proposition_class,
 )
-from symbolize.logic.typetheory.experimental.deduction_rules import (
+from symbolize.legacy.logic.typetheory.experimental.deduction_rules import (
     conjunction_introduction,
     conjunction_elimination_1,
     conjunction_elimination_2,
@@ -24,7 +24,7 @@ from symbolize.logic.typetheory.experimental.deduction_rules import (
     disjunction_introduction_2,
     disjunction_elimination,
 )
-from symbolize.logic.typetheory.experimental.variables import A, B, C
+from symbolize.legacy.logic.typetheory.experimental.variables import A, B, C
 
 
 class TestDeductionRules(unittest.TestCase):

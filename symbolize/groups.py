@@ -14,7 +14,7 @@ from .expressions import (
     A0,
 )
 from .definitions.operators import in_
-from symbolize.logic.argument import Argument
+from symbolize.legacy.logic.argument import Argument
 
 make_group = Symbol(
     "Group", arity=ArityArrow(ArityCross(A0, ArityArrow(ArityCross(A0, A0), A0)), A0)

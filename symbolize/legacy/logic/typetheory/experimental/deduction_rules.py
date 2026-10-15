@@ -4,10 +4,10 @@ Copyright (C) 2017  Blair Azzopardi
 Distributed under the terms of the GNU General Public License (GPL v3)
 """
 
-from ....expressions import ExpressionCombination
+from .....expressions import ExpressionCombination
 
-from ....definitions.functions import fst, snd, inl, inr, cases
-from ....definitions.logic import and_, implies, or_
+from .....definitions.functions import fst, snd, inl, inr, cases
+from .....definitions.logic import and_, implies, or_
 
 from .proposition import get_proposition_class
 

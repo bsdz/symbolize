@@ -19,6 +19,7 @@ from symbolize.terms.derive import (
     Engine,
     add,
     cite,
+    eq,
     judge,
     literal,
     mul,
@@ -45,6 +46,9 @@ class ArithmeticTest(unittest.TestCase):
         self.engine = Engine(standard(reals=True))
         self.R = judge(R, SET, engine=self.engine)
         self.x, self.y, self.z = symbols("x y z", self.R)
+
+    def show_set(self, j):
+        return j.repr_unicode()
 
     def show(self, j):
         return j.repr_unicode().split(" : ")[1]
@@ -102,6 +106,35 @@ class TestBuilding(ArithmeticTest):
     def test_an_element_of_n_as_exponent(self):
         n = judge(N, SET, engine=self.engine).hyp("n")
         self.assertEqual((self.x**n).term, REAL.pow(self.x.term, n.term))
+
+
+class TestEquations(ArithmeticTest):
+    """An equation's side may be a literal or a bare term of the other's
+    set, so ``(x + 1).eq(0)`` needs no ``literal(0, R)``."""
+
+    def test_an_int_literal(self):
+        e = ((self.x + 1) ** 2 - 2 * self.x * self.y).eq(0)
+        self.assertEqual(self.show_set(e), "(x + 1)² - 2 ⋅ x ⋅ y = 0")
+        self.assertEqual(e.term.args[2], REAL.zero)
+
+    def test_a_literal_on_the_left(self):
+        e = eq(2, self.x)
+        self.assertEqual(self.show_set(e), "2 = x")
+
+    def test_a_bare_term(self):
+        self.assertEqual(self.x.eq(REAL.zero), self.x.eq(0))
+        e = self.x.eq(REAL.add(self.x.term, REAL.one))
+        self.assertEqual(self.show_set(e), "x = x + 1")
+
+    def test_a_bare_term_of_another_set_is_refused(self):
+        with self.assertRaises(TypingError):
+            self.x.eq(numeral(0))
+
+    def test_refusals(self):
+        for a, b in [(0, 0), (self.x, "0"), (self.x, True)]:
+            with self.subTest(a=a, b=b):
+                with self.assertRaises(DerivationError):
+                    eq(a, b)
 
 
 class TestSymbols(ArithmeticTest):

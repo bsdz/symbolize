@@ -325,6 +325,12 @@ class TestArithmetic(unittest.TestCase):
             self.mul(self.add(x, y), z), "(x + y) ⋅ z", r"(x + y) \cdot z"
         )
 
+    def test_names_are_escaped_for_latex(self):
+        """An underscore in a law's name would otherwise subscript the next
+        letter: ``R.mul_{a}dd``."""
+        law = REAL.mul_add(self.x, self.y, Var("z_1"))
+        self.check(law, "R.mul_add(x, y, z_1)", r"R.mul\_add(x, y, z\_1)")
+
     def test_infix_operators_associate_to_the_left(self):
         """Grouping is shown exactly where it differs from the reading
         convention, since a proof has to know which one it has."""

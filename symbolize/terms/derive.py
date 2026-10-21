@@ -17,7 +17,18 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
+import itertools
+
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from .arity import A0, Arrow, cross
 from .binding import abstract as _abstract_term
@@ -58,6 +69,10 @@ from .library import pair as _pair
 from .library import refl as _refl
 from .library import snd as _snd
 from .library import succ, zero
+from .library.identity import cong as _cong
+from .library.identity import symm as _symm
+from .library.identity import trans as _trans
+from .library.identity import transport as _transport
 from .term import Abs, App, Const, Term, TermError, Var, _fresh_names
 
 
@@ -262,8 +277,9 @@ class Judgement:
     def abort(self, set_: "Judgement") -> "Judgement":
         return abort(self, set_)
 
-    def eq(self, other: "Judgement") -> "Judgement":
-        """The set ``Id(A, self, other)``."""
+    def eq(self, other: "Side") -> "Judgement":
+        """The set ``Id(A, self, other)``; ``other`` may be an int literal
+        or a term of ``A``, as in ``(x + 1).eq(0)``."""
         return eq(self, other)
 
     @property
@@ -299,6 +315,57 @@ class Judgement:
 
     def subst(self, var: "Judgement", value: "Judgement") -> "Judgement":
         return substitute(self, var, value)
+
+    # -- equations -------------------------------------------------------------
+    #
+    # Balanced manipulation, as sympy users do with Eq: on a proof h : a = b,
+    # each step yields a proof of the new equation (h + 1 : a + 1 = b + 1),
+    # by congruence and so without new axioms. Only forward steps are free;
+    # undoing one (cancelling, dividing) needs a law.
+
+    @property
+    def is_equation(self) -> bool:
+        """A proof of an equation ``a = b`` (not the statement ``a = b``)."""
+        return _equation(self) is not None
+
+    @property
+    def lhs(self) -> "Judgement":
+        """The left side of an equation, or of a proof of one."""
+        return _sides(self)[0]
+
+    @property
+    def rhs(self) -> "Judgement":
+        """The right side of an equation, or of a proof of one."""
+        return _sides(self)[1]
+
+    def flip(self) -> "Judgement":
+        """``b = a``: ``symm`` of a proof, or the statement turned round."""
+        return flip(self)
+
+    def subs(self, p: "Judgement", at: Where = "both") -> "Judgement":
+        """Replace ``p``'s left side by its right side, in this proof's
+        equation: ``at`` is ``"lhs"``, ``"rhs"`` or ``"both"``, or the
+        occurrence indices ``rewrite`` takes."""
+        return subs(self, p, at)
+
+    def lhs_by(self, p: "Judgement") -> "Judgement":
+        """``a′ = b`` from this ``a = b`` and ``p`` relating ``a`` and
+        ``a′`` (either way round)."""
+        return lhs_by(self, p)
+
+    def rhs_by(self, p: "Judgement") -> "Judgement":
+        """``a = b′`` from this ``a = b`` and ``p`` relating ``b`` and
+        ``b′`` (either way round)."""
+        return rhs_by(self, p)
+
+    def assume(self, name: Optional[str] = None) -> "Judgement":
+        """A hypothesis of this set, named ``h``, ``h'``... unless named."""
+        return assume(self, name)
+
+    def discharge(self, *hypotheses: "Judgement") -> "Judgement":
+        """⇒I over the given hypotheses: ``h2.discharge(h)`` turns what was
+        derived from ``h : e`` into the theorem ``e ⇒ e′``."""
+        return self.abstract(*hypotheses)
 
     # -- computation ---------------------------------------------------------------
 
@@ -370,8 +437,16 @@ class Judgement:
 
     get_proof = hyp
 
-    def apply(self, *args: "Judgement") -> "Judgement":
-        return self(*args)
+    def apply(self, *args: object) -> "Judgement":
+        """``f.apply(a)`` is ``f(a)``; on a proof of ``a = b``,
+        ``h.apply(f)`` is ``f(a) = f(b)``, ``f`` a function judgement, an
+        abstraction or a Python function (``h.apply(lambda t: t ** 2)``)."""
+        if len(args) == 1 and self.is_equation:
+            f = args[0]
+            if isinstance(f, Judgement):
+                return cong(f, self)
+            return cong_in(f, self)  # type: ignore[arg-type]
+        return self(*args)  # type: ignore[arg-type]
 
     def select(self, i: int) -> "Judgement":
         """``p.select(0)`` / ``p.select(1)`` are ``fst`` / ``snd``."""
@@ -475,8 +550,22 @@ def exists(x: Judgement, body: Judgement) -> Judgement:
     return _quantify(_exists, x, body)
 
 
-def eq(a: Judgement, b: Judgement) -> Judgement:
-    """Id-formation: ``a ∈ A``, ``b ∈ A``  ⊢  ``Id(A, a, b) set``."""
+def eq(a: Side, b: Side) -> Judgement:
+    """Id-formation: ``a ∈ A``, ``b ∈ A``  ⊢  ``Id(A, a, b) set``.
+
+    One side may be an int literal of ``A``'s arithmetic, or a bare term,
+    which is checked against the other side's set in its context:
+    ``x.eq(0)`` and ``x.eq(REAL.zero)`` both state ``x = 0``.
+    """
+    if not isinstance(a, Judgement):
+        if not isinstance(b, Judgement):
+            raise DerivationError(
+                "Cannot tell the set of %r = %r: neither side is a judgement"
+                % (a, b)
+            )
+        a = _side(a, b)
+    else:
+        b = _side(b, a)
     engine = a.engine
     if not engine.defeq(a.type, b.type):
         raise DerivationError(
@@ -491,6 +580,17 @@ def eq(a: Judgement, b: Judgement) -> Judgement:
         check=False,
         aliases=_aliases(a, b),
     )
+
+
+def _side(x: Side, other: Judgement) -> Judgement:
+    """``x`` as an element of ``other``'s set, for one side of an equation."""
+    if isinstance(x, Judgement):
+        return x
+    if isinstance(x, Term):
+        return Judgement(other.ctx, x, other.type, engine=other.engine)
+    if _is_operand(x):
+        return _element(x, operators(other), other)
+    raise DerivationError("Cannot equate %r with %r" % (other, x))
 
 
 def apply_family(fam: Judgement, *args: Judgement) -> Judgement:
@@ -764,6 +864,9 @@ def substitute(b: Judgement, x: Judgement, a: Judgement) -> Judgement:
 
 Operand = Union[Judgement, int]
 
+# one side of an equation: an operand, or a bare term of the other's set
+Side = Union[Judgement, int, Term]
+
 
 def _is_operand(x: object) -> bool:
     return isinstance(x, Judgement) or (
@@ -773,6 +876,12 @@ def _is_operand(x: object) -> bool:
 
 def operators(j: Judgement) -> Operators:
     """The arithmetic of the set ``j`` is an element of."""
+    if j.is_set and _identity(j.engine, j.term) is not None:
+        raise DerivationError(
+            "%s is the statement of an equation, not a proof of it; assume it"
+            " (e.assume()) or prove it, then manipulate the proof"
+            % (j.repr_unicode(),)
+        )
     if j.is_set or j.is_family:
         raise DerivationError(
             "%s is a set; arithmetic is on its elements (∨ of sets is |)"
@@ -829,6 +938,8 @@ _SPOKEN = {
 def _binary(name: str, a: object, b: object) -> Judgement:
     if not (_is_operand(a) and _is_operand(b)):
         return NotImplemented  # type: ignore[return-value]
+    if _is_equation(a) or _is_equation(b):
+        return _balanced(name, a, b)  # type: ignore[arg-type]
     anchor = a if isinstance(a, Judgement) else b
     assert isinstance(anchor, Judgement)
     ops = operators(anchor)
@@ -861,7 +972,9 @@ def sub(a: Operand, b: Operand) -> Judgement:
 
 
 def negate(a: Judgement) -> Judgement:
-    """``-a``."""
+    """``-a``; for a proof of ``a = b``, ``-a = -b``."""
+    if _is_equation(a):
+        return cong_in(lambda t: negate(t), a)
     const = _operation(operators(a), "neg")
     return Judgement(
         a.ctx,
@@ -874,7 +987,10 @@ def negate(a: Judgement) -> Judgement:
 
 
 def power(base: Judgement, exponent: Union[Judgement, int]) -> Judgement:
-    """``base^exponent``, the exponent a natural number or an element of N."""
+    """``base^exponent``, the exponent a natural number or an element of N;
+    for a proof of ``a = b``, ``a^n = b^n``."""
+    if _is_equation(base):
+        return cong_in(lambda t: power(t, exponent), base)
     ops = operators(base)
     const = _operation(ops, "pow")
     if isinstance(exponent, Judgement):
@@ -937,6 +1053,200 @@ def cite(
     return Judgement(
         ctx, term, type, engine=engine, check=False, aliases=_aliases(*args)
     )
+
+
+# -- equations -----------------------------------------------------------------
+#
+# The sympy Eq workflow on proofs. Each function returns a judgement whose
+# term says how the new equation follows from the old, by the derived
+# rules of identity.py, so none adds an axiom.
+
+Where = Union[str, Sequence[int]]
+
+
+def _identity(engine: Engine, t: Term) -> Optional[Tuple[Term, Term, Term]]:
+    """``(A, a, b)`` when ``t`` is (or unfolds to) ``Id(A, a, b)``."""
+    t = engine.whnf(t)
+    if isinstance(t, App) and t.fn == _Id:
+        return t.args[0], t.args[1], t.args[2]
+    return None
+
+
+def _equation(j: object) -> Optional[Tuple[Term, Term, Term]]:
+    """The endpoints of ``j`` if it is a proof of an equation."""
+    if not isinstance(j, Judgement) or j.is_set or j.is_family:
+        return None
+    return _identity(j.engine, j.type)
+
+
+def _is_equation(j: object) -> bool:
+    return _equation(j) is not None
+
+
+def _sides(j: Judgement) -> Tuple[Judgement, Judgement]:
+    """Both sides of an equation statement or proof, as judgements whose
+    contexts keep only the hypotheses each side mentions."""
+    found = _identity(j.engine, j.term) if j.is_set else _equation(j)
+    if found is None:
+        raise DerivationError("%r is not an equation" % (j,))
+    A, a, b = found
+    return tuple(  # type: ignore[return-value]
+        Judgement(
+            _restrict(j.ctx, side),
+            side,
+            A,
+            engine=j.engine,
+            check=False,
+            aliases=_aliases(j),
+        )
+        for side in (a, b)
+    )
+
+
+def _restrict(ctx: Context, term: Term) -> Context:
+    """The entries of ``ctx`` that ``term`` needs, transitively, in order."""
+    needed = set(free_vars(term))
+    keep: List[Param] = []
+    for entry in reversed(ctx.entries):
+        if entry.var not in needed:
+            continue
+        keep.append(entry)
+        if entry.type is not None:
+            needed |= free_vars(entry.type)
+        for z, t in entry.hyps:
+            needed |= free_vars(t)
+            needed.discard(z)
+    return Context(list(reversed(keep)))
+
+
+def flip(j: Judgement) -> Judgement:
+    """``b = a`` from ``a = b``: ``symm`` of a proof, or a statement turned
+    round (still only a statement)."""
+    if j.is_set:
+        found = _identity(j.engine, j.term)
+        if found is None:
+            raise DerivationError("%r is not an equation" % (j,))
+        A, a, b = found
+        return Judgement(
+            j.ctx,
+            _Id(A, b, a),
+            SET,
+            engine=j.engine,
+            check=False,
+            aliases=_aliases(j),
+        )
+    return symm(j)
+
+
+def _balanced(name: str, a: Operand, b: Operand) -> Judgement:
+    """The operation ``name`` applied to both sides.
+
+    With one proof ``h : a = b`` and an operand ``c``, congruence gives
+    ``a ∘ c = b ∘ c`` (or ``c ∘ a = c ∘ b``). With two, ``h : a = b`` and
+    ``g : c = d``, it is ``a ∘ c = b ∘ c = b ∘ d`` joined by ``trans``.
+    """
+
+    def op(u: Operand, v: Operand) -> Judgement:
+        return _binary(name, u, v)
+
+    if _is_equation(a) and _is_equation(b):
+        assert isinstance(a, Judgement) and isinstance(b, Judgement)
+        c, right = b.lhs, a.rhs
+        return trans(
+            cong_in(lambda t: op(t, c), a),
+            cong_in(lambda t: op(right, t), b),
+        )
+    if _is_equation(a):
+        assert isinstance(a, Judgement)
+        return cong_in(lambda t: op(t, b), a)
+    assert isinstance(b, Judgement)
+    return cong_in(lambda t: op(a, t), b)
+
+
+def subs(target: Judgement, p: Judgement, at: Where = "both") -> Judgement:
+    """Rewrite ``target`` with ``p : c = d``, replacing ``c`` by ``d``.
+
+    For a proof of an equation, ``at`` may name the side: ``"lhs"``,
+    ``"rhs"`` or ``"both"``; otherwise it is the occurrence indices of
+    ``rewrite``. ``p.flip()`` substitutes the other way.
+    """
+    if target.is_set:
+        raise DerivationError(
+            "%s is a statement; substitution needs a proof of it (assume it"
+            " first)" % (target.repr_unicode(),)
+        )
+    if not isinstance(at, str):
+        return rewrite(target, p, at)
+    if at not in ("lhs", "rhs", "both"):
+        raise DerivationError(
+            "at must be 'lhs', 'rhs', 'both' or occurrence indices, not %r"
+            % (at,)
+        )
+    found = _equation(target)
+    if found is None:
+        if at == "both":
+            return rewrite(target, p)
+        raise DerivationError(
+            "%r is not an equation, so has no %s" % (target, at)
+        )
+    A, a, b = found
+    _, c, _ = endpoints(p)
+    before, left, right = (occurrences(t, c) for t in (A, a, b))
+    chosen = {
+        "lhs": range(before, before + left),
+        "rhs": range(before + left, before + left + right),
+        "both": range(before, before + left + right),
+    }[at]
+    if not chosen:
+        raise DerivationError(
+            "%s does not occur in the %s of %s"
+            % (
+                c.repr_unicode(),
+                {"lhs": "left side", "rhs": "right side"}.get(at, "equation"),
+                target.repr_unicode(),
+            )
+        )
+    return rewrite(target, p, list(chosen))
+
+
+def _oriented(p: Judgement, start: Term, what: str) -> Judgement:
+    """``p`` as an equation starting at ``start``, flipped if need be."""
+    engine = p.engine
+    _, c, d = endpoints(p)
+    if engine.defeq(c, start):
+        return p
+    if engine.defeq(d, start):
+        return symm(p)
+    raise DerivationError(
+        "%s relates %s and %s, neither of which is the %s %s"
+        % (
+            p.repr_unicode(),
+            c.repr_unicode(),
+            d.repr_unicode(),
+            what,
+            start.repr_unicode(),
+        )
+    )
+
+
+def rhs_by(h: Judgement, p: Judgement) -> Judgement:
+    """``a = b′`` from ``h : a = b`` and ``p`` between ``b`` and ``b′``."""
+    _, _, b = endpoints(h)
+    return trans(h, _oriented(p, b, "right side"))
+
+
+def lhs_by(h: Judgement, p: Judgement) -> Judgement:
+    """``a′ = b`` from ``h : a = b`` and ``p`` between ``a`` and ``a′``."""
+    _, a, _ = endpoints(h)
+    return trans(symm(_oriented(p, a, "left side")), h)
+
+
+def assume(statement: Judgement, name: Optional[str] = None) -> Judgement:
+    """A hypothesis of ``statement``, named ``h`` (primed until fresh) unless
+    ``name`` is given: ``h = assume(x.eq(2 * y))``."""
+    if name is None:
+        (name,) = _fresh_names(["h"], (), set(statement.ctx.names()))
+    return hyp(name, statement)
 
 
 # -- axioms and imported statements ---------------------------------------------------
@@ -1064,12 +1374,16 @@ def elim(
 
 
 def symm(p: Judgement) -> Judgement:
-    """``p ∈ Id(A, a, b)``  ⊢  ``Id(A, b, a)``."""
+    """``p ∈ Id(A, a, b)``  ⊢  ``symm(p) ∈ Id(A, b, a)``."""
     A, a, b = endpoints(p)
-    x, y, z = _fresh(p, A, a, b)
-    motive = _Id(A, y, x).abstract(x, y, z)
-    base = _refl(x).abstract(x)
-    return elim(p, motive, base, _Id(A, b, a))
+    return Judgement(
+        p.ctx,
+        _symm(A, a, b, p.term),
+        _Id(A, b, a),
+        engine=p.engine,
+        check=False,
+        aliases=_aliases(p),
+    )
 
 
 def trans(p: Judgement, q: Judgement) -> Judgement:
@@ -1078,17 +1392,16 @@ def trans(p: Judgement, q: Judgement) -> Judgement:
     A, a, b = endpoints(p)
     A2, b2, c = endpoints(q)
     if not engine.defeq(A, A2):
-        raise DerivationError("%r and %r are identities in different sets" % (p, q))
+        raise DerivationError(
+            "%r and %r are identities in different sets" % (p, q)
+        )
     if not engine.defeq(b, b2):
-        raise DerivationError("%r ends at %r but %r starts at %r" % (p, b, q, b2))
-    x, y, z = _fresh(p, q, A, a, b, c)
-    motive = _implies(_Id(A, a, x), _Id(A, a, y)).abstract(x, y, z)
-    w = Var(_fresh_names(["w"], (), {v.name for v in free_vars(A) | free_vars(a)})[0])
-    base = _lam(w.abstract(w)).abstract(x)
-    composed = elim(q, motive, base, _implies(_Id(A, a, b), _Id(A, a, c)), p)
+        raise DerivationError(
+            "%r ends at %r but %r starts at %r" % (p, b, q, b2)
+        )
     return Judgement(
-        composed.ctx,
-        _apply(composed.term, p.term),
+        merge(p.ctx, q.ctx),
+        _trans(A, a, b, c, p.term, q.term),
         _Id(A, a, c),
         engine=engine,
         check=False,
@@ -1097,54 +1410,111 @@ def trans(p: Judgement, q: Judgement) -> Judgement:
 
 
 def cong(f: Judgement, p: Judgement) -> Judgement:
-    """``f ∈ A ⇒ B``, ``p ∈ Id(A, a, b)``  ⊢  ``Id(B, f(a), f(b))``."""
+    """``f ∈ A ⇒ B``, ``p ∈ Id(A, a, b)``  ⊢  ``Id(B, f(a), f(b))``.
+
+    The proof is ``cong`` in the context ``(x) f(x)``.
+    """
     engine = f.engine
     dom, fam = _expect_former(f, Pi, "a function")
     B = _constant_codomain(fam, f)
     A, a, b = endpoints(p)
     if not engine.defeq(dom, A):
         raise DerivationError("%r does not accept elements of %r" % (f, A))
-    x, y, z = _fresh(f, p, A, B, a, b)
-    motive = _Id(B, _apply(f.term, x), _apply(f.term, y)).abstract(x, y, z)
-    base = _refl(_apply(f.term, x)).abstract(x)
-    type = _Id(B, _apply(f.term, a), _apply(f.term, b))
-    return elim(p, motive, base, type, f)
+    (x,) = _fresh(f, p, A, B, a, b)[:1]
+    context = _abstract_term(_apply(f.term, x), [x])
+    return Judgement(
+        merge(p.ctx, f.ctx),
+        _cong(A, B, a, b, context, p.term),
+        _Id(B, _apply(f.term, a), _apply(f.term, b)),
+        engine=engine,
+        check=False,
+        aliases=_aliases(p, f),
+    )
 
 
-def cong_in(context: Abs, p: Judgement) -> Judgement:
+Context_ = Union[Abs, Callable[[Judgement], object]]
+
+
+def cong_in(context: Context_, p: Judgement) -> Judgement:
     """Congruence in a *term* context: ``p ∈ Id(A, a, b)`` gives
-    ``Id(B, context(a), context(b))`` for a one-variable abstraction.
+    ``Id(B, context(a), context(b))`` for a one-variable context.
 
-    ``cong`` needs an element of ``A ⇒ B``; this takes the context directly,
-    so ``(x)succ(x)`` can be used without wrapping it in a ``lam``. The
-    codomain is inferred, which also checks the context is well typed.
+    The context is an abstraction ``(x)t``, or a Python function from an
+    element of ``A`` to a judgement, which is called on a fresh hypothesis
+    and abstracted: ``cong_in(lambda t: t + 1, p)`` is the context
+    ``(t)t + 1``. ``cong`` needs an element of ``A ⇒ B``; this needs no
+    ``lam``. The codomain is inferred, which also checks the context is
+    well typed.
     """
     engine = p.engine
     A, a, b = endpoints(p)
-    if not isinstance(context, Abs) or len(context.arities) != 1:
-        raise DerivationError("%r is not a one-variable context" % (context,))
+    abs_, ctx = _context(context, p, A)
     z = Var(
         _fresh_names(
             ["z"],
             (),
-            set(p.ctx.names()) | {v.name for v in free_vars(context) | free_vars(A)},
+            set(ctx.names())
+            | {v.name for v in free_vars(abs_) | free_vars(A)},
         )[0]
     )
     try:
-        B = engine.checker.infer(p.ctx.extend(z, A), instantiate(context, [z]))
+        B = engine.checker.infer(ctx.extend(z, A), instantiate(abs_, [z]))
     except TypingError as error:
         raise DerivationError(
-            "The context %r is not well typed over %r: %s" % (context, A, error)
+            "The context %r is not well typed over %r: %s" % (abs_, A, error)
         )
     if z in B:
         raise DerivationError(
-            "The context %r has a dependent type; use transport instead" % (context,)
+            "The context %r has a dependent type; use transport instead"
+            % (abs_,)
         )
-    x, y, w = _fresh(p, context, A, B, a, b)
-    motive = _Id(B, _at(context, x), _at(context, y)).abstract(x, y, w)
-    base = _refl(_at(context, x)).abstract(x)
-    type = _Id(B, _at(context, a), _at(context, b))
-    return elim(p, motive, base, type)
+    return Judgement(
+        ctx,
+        _cong(A, B, a, b, abs_, p.term),
+        _Id(B, _at(abs_, a), _at(abs_, b)),
+        engine=engine,
+        check=False,
+        aliases=_aliases(p),
+    )
+
+
+def _context(
+    context: Context_, p: Judgement, A: Term
+) -> Tuple[Abs, Context]:
+    """A one-variable abstraction from ``context``, and the hypotheses the
+    congruence over ``p`` depends on: ``p``'s and the context's own."""
+    if isinstance(context, Abs):
+        if len(context.arities) != 1:
+            raise DerivationError(
+                "%r is not a one-variable context" % (context,)
+            )
+        return context, p.ctx
+    if isinstance(context, Judgement) or not callable(context):
+        raise DerivationError(
+            "%r is not a context: give an abstraction (x)t or a function"
+            % (context,)
+        )
+    # the hole is a variable no user symbol can share, so a symbol the
+    # function closes over is never captured; its name survives only as
+    # the display hint, taken from the function's parameter
+    code = getattr(context, "__code__", None)
+    hint = code.co_varnames[0] if code is not None and code.co_argcount else "t"
+    hole = Var("%s#%d" % (hint, next(_HOLES)))
+    t = Judgement(
+        p.ctx.extend(hole, A), hole, A, engine=p.engine, check=False
+    )
+    body = context(t)
+    if not isinstance(body, Judgement):
+        body = _side(body, t)  # type: ignore[arg-type]
+    if body.is_set or body.is_family:
+        raise DerivationError(
+            "The context %r gives a set, not an element" % (context,)
+        )
+    ctx = merge(p.ctx, discharge(body.ctx, hole))
+    return _abstract_term(body.term, [hole], hints=[hint]), ctx
+
+
+_HOLES = itertools.count(1)
 
 
 def transport(fam: Judgement, p: Judgement, c: Judgement) -> Judgement:
@@ -1166,25 +1536,14 @@ def transport(fam: Judgement, p: Judgement, c: Judgement) -> Judgement:
 def _carry(
     family_term: Term, p: Judgement, c: Judgement, *inherit: Judgement
 ) -> Judgement:
-    """``c ∈ P(a)`` carried along ``p ∈ Id(A, a, b)`` to ``P(b)``.
-
-    The J motive is ``(x, y, z) P(x) ⇒ P(y)`` with the reflexive case the
-    identity function, so ``J(...)`` is a function ``P(a) ⇒ P(b)``.
-    """
-    engine = p.engine
+    """``c ∈ P(a)`` carried along ``p ∈ Id(A, a, b)`` to ``P(b)``, as
+    ``transport(p, c)``."""
     A, a, b = endpoints(p)
-    x, y, z = _fresh(p, c, family_term, A, a, b, *inherit)
-    motive = _implies(_at(family_term, x), _at(family_term, y)).abstract(x, y, z)
-    w = Var(_fresh_names(["w"], (), {v.name for v in free_vars(family_term)})[0])
-    base = _lam(w.abstract(w)).abstract(x)
-    carrier = elim(
-        p, motive, base, _implies(_at(family_term, a), _at(family_term, b)), *inherit
-    )
     return Judgement(
-        merge(carrier.ctx, c.ctx),
-        _apply(carrier.term, c.term),
+        merge(p.ctx, *[j.ctx for j in inherit], c.ctx),
+        _transport(A, family_term, a, b, p.term, c.term),
         _at(family_term, b),
-        engine=engine,
+        engine=p.engine,
         check=False,
         aliases=_aliases(p, c, *inherit),
     )

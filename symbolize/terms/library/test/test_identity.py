@@ -216,6 +216,62 @@ class TestRendering(IdentityTest):
         self.assertEqual(s.repr_typestring(), "Id(N, succ(0), succ(succ(0)))")
 
 
+class TestDerivedRules(IdentityTest):
+    """symm, trans, cong and transport are definitions over J. A proof that
+    uses one is checked against its signature without unfolding it, so each
+    body must have the type its signature promises."""
+
+    def test_each_body_has_its_signature(self):
+        from symbolize.terms.binding import instantiate, subst_many
+        from symbolize.terms.check import Context
+        from symbolize.terms.derive import DEFAULT
+        from symbolize.terms.library.identity import _derived
+
+        for const, signature, body in _derived():
+            with self.subTest(const.name):
+                # plain variables for the parameters: the signature's own
+                # ?-variables would clash with those of J's signature
+                plain = {}
+                ctx = Context()
+                for param in signature.params:
+                    hyps = []
+                    for z, t in param.hyps:
+                        plain[z] = Var(z.name[1:], z.arity)
+                        hyps.append((plain[z], subst_many(t, plain)))
+                    var = Var(param.var.name[1:], param.var.arity)
+                    ctx = ctx.extend(var, subst_many(param.type, plain), hyps)
+                    plain[param.var] = var
+                args = [plain[p.var] for p in signature.params]
+                DEFAULT.checker.check(
+                    ctx,
+                    instantiate(body, args),
+                    subst_many(signature.result, plain),
+                )
+
+    def test_proofs_name_the_rule(self):
+        self.assertEqual(symm(self.p).repr_unicode(), "symm(p) : b = a")
+        self.assertEqual(
+            trans(self.p, self.q).repr_unicode(), "trans(p, q) : a = c"
+        )
+        f = hyp("f", self.A >> self.B)
+        self.assertEqual(
+            cong(f, self.p).repr_unicode(), "cong((x)f(x), p) : f(a) = f(b)"
+        )
+
+    def test_typestring_shows_the_implicit_arguments(self):
+        self.assertEqual(
+            symm(self.p).repr_typestring(), "symm(A, a, b, p) : Id(A, b, a)"
+        )
+
+    def test_they_unfold_to_j(self):
+        from symbolize.terms.derive import DEFAULT
+
+        self.assertEqual(DEFAULT.whnf(symm(self.p).term).fn, J)
+
+    def test_no_axioms(self):
+        self.assertEqual(trans(symm(self.p), self.p).axioms, ())
+
+
 class TestRegistry(IdentityTest):
     def test_declared(self):
         for c in (Id, refl_const, J):

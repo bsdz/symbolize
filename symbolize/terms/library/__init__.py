@@ -6,7 +6,7 @@ Distributed under the terms of the GNU General Public License (GPL v3)
 """
 
 from ..decl import Registry
-from . import logic, nat, order, real
+from . import identity, logic, nat, order, real
 from .bool import BOOL, Bool, boolrec, false, ifthenelse, true
 from .falsum import FALSUM, Falsum, abort
 from .identity import IDENTITY, Id, J, refl
@@ -33,6 +33,7 @@ def standard(reals: bool = False) -> Registry:
     registry = Registry()
     for former in FORMERS:
         registry.add_former(former)
+    identity.declare(registry)
     nat.declare(registry)
     order.declare(registry)
     logic.declare(registry)

@@ -41,6 +41,10 @@ class Notation:
     where they are ambiguous: ``x + y ⋅ z`` but ``(x + y) ⋅ z``. Infix
     operators with a precedence associate to the left. Where either side has
     no precedence every compound operand is parenthesised, as it always was.
+
+    ``implicit`` leading arguments of a prefix application are hidden in the
+    pretty styles, as Lean hides implicit arguments: ``trans(p, q)`` for
+    ``trans(A, a, b, c, p, q)``. The typestring style shows them all.
     """
 
     kind: str = PREFIX
@@ -48,6 +52,7 @@ class Notation:
     latex: Optional[str] = None
     unicode: Optional[str] = None
     precedence: Optional[int] = None
+    implicit: int = 0
 
     def symbol(self, style: str, default: str) -> str:
         value = getattr(self, style)
@@ -66,9 +71,10 @@ def notation(
     unicode: Optional[str] = None,
     typestring: Optional[str] = None,
     precedence: Optional[int] = None,
+    implicit: int = 0,
 ) -> Notation:
     """Register how ``const`` renders."""
-    entry = Notation(kind, typestring, latex, unicode, precedence)
+    entry = Notation(kind, typestring, latex, unicode, precedence, implicit)
     _TABLE[const.name] = entry
     return entry
 

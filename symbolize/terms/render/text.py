@@ -31,6 +31,9 @@ from .notation import (
 # that it may need parentheses when it is itself an operand
 _OPERATORS = (INFIX, EQUATION, QUANTIFIER, BINDER, UNARY, POWER)
 
+# characters that mean something to LaTeX in math mode
+_LATEX_ESCAPES = {c: "\\" + c for c in "_#%&$"}
+
 _SUPERSCRIPTS = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 if TYPE_CHECKING:
@@ -59,7 +62,14 @@ class TextRenderer:
         return self._render(term, set())
 
     def _symbol(self, const: Const) -> str:
-        return lookup(const).symbol(self.style, const.name)
+        return lookup(const).symbol(self.style, self._name(const.name))
+
+    def _name(self, name: str) -> str:
+        """A plain name, escaped for LaTeX so ``R.mul_add`` keeps its
+        underscore instead of subscripting the letter after it."""
+        if self.style != "latex":
+            return name
+        return "".join(_LATEX_ESCAPES.get(c, c) for c in name)
 
     def _kind(self, term: Term) -> str:
         """The notation kind of an application's head (prefix if faithful)."""
@@ -77,7 +87,7 @@ class TextRenderer:
         if t in self.aliases:
             return self.aliases[t]
         if isinstance(t, Var):
-            return t.name
+            return self._name(t.name)
         if isinstance(t, Const):
             return self._symbol(t)
         if isinstance(t, Bound):
@@ -85,7 +95,7 @@ class TextRenderer:
         if isinstance(t, Abs):
             inner, body, scope = self._open(t, scope)
             return "(%s)%s" % (
-                ", ".join(inner),
+                ", ".join(map(self._name, inner)),
                 self._wrap(body, self._render(body, scope), ("abs",)),
             )
         if isinstance(t, Comb):
@@ -141,6 +151,8 @@ class TextRenderer:
                 return "%s(%s)" % (head, self._render(args[1], scope))
             if kind == TUPLE:
                 return "(%s)" % ", ".join(self._render(a, scope) for a in args)
+            if kind == PREFIX and not self.faithful:
+                args = args[note.implicit :]
             head = sym
         else:
             if isinstance(t.fn, Abs) and not self.faithful:
@@ -165,7 +177,8 @@ class TextRenderer:
             return None  # arities adapted by beta; show the application
         inner, opened, inner_scope = self._open(fn, scope)
         assignments = ", ".join(
-            "%s %s %s" % (name, self._assign, self._render(arg, scope))
+            "%s %s %s"
+            % (self._name(name), self._assign, self._render(arg, scope))
             for name, arg in zip(inner, args)
         )
         body = self._wrap(opened, self._render(opened, inner_scope), (INFIX, EQUATION))
@@ -250,9 +263,10 @@ class TextRenderer:
             avoid = {v.name for v in free_vars(body)} | scope
             inner = _fresh_names(["x"], (), avoid)
             wrapped = "%s(%s)" % (self._render(body, scope), inner[0])
+        names = ", ".join(map(self._name, inner))
         if self.style == "latex":
-            return "%s{%s}.%s" % (sym, ", ".join(inner), wrapped)
-        return "%s%s.%s" % (sym, ", ".join(inner), wrapped)
+            return "%s{%s}.%s" % (sym, names, wrapped)
+        return "%s%s.%s" % (sym, names, wrapped)
 
     def _binder(self, sym: str, body: Abs, scope: Set[str]) -> str:
         """``λx.b``; an application body is parenthesised, a nested binder
@@ -265,9 +279,10 @@ class TextRenderer:
             TUPLE,
         ):
             rendered = "(%s)" % rendered
+        names = ", ".join(map(self._name, inner))
         if self.style == "latex":
-            return "%s{}(%s).%s" % (sym, ", ".join(inner), rendered)
-        return "%s(%s).%s" % (sym, ", ".join(inner), rendered)
+            return "%s{}(%s).%s" % (sym, names, rendered)
+        return "%s(%s).%s" % (sym, names, rendered)
 
     def _wrap(self, t: Term, rendered: str, when: Sequence[str]) -> str:
         """Parenthesise ``rendered`` (of ``t``) if its shape is in ``when``:
@@ -284,7 +299,7 @@ class TextRenderer:
 
     def render_judgement(self, j: "Judgement") -> str:
         if j.is_family:
-            args = ", ".join(x.name for x, _ in j.hyps)
+            args = ", ".join(self._name(x.name) for x, _ in j.hyps)
             return "%s(%s)" % (self.render(j.term), args)
         if j.is_set:
             return self.render(j.term)
@@ -296,7 +311,7 @@ class TextRenderer:
             if entry.type is None:
                 continue
             if entry.hyps:
-                args = ", ".join(x.name for x, _ in entry.hyps)
+                args = ", ".join(self._name(x.name) for x, _ in entry.hyps)
                 parts.append("%s(%s)" % (self.render(entry.var), args))
             else:
                 parts.append(
